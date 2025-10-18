@@ -12,7 +12,7 @@ namespace FirstAidAPI.Data
         }
 
         public DbSet<Technique> Techniques { get; set; }
-        public DbSet<ScenarioStep> ScenarioSteps { get; set; }
+        public DbSet<TechniqueStep> TechniqueSteps { get; set; }
         public DbSet<Scenario> Scenarios { get; set; }
         public DbSet<QuizQuestion> QuizQuestions { get; set; }
         public DbSet<AnswerOption> AnswerOptions { get; set; }
@@ -20,14 +20,14 @@ namespace FirstAidAPI.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Technique>()
-                .HasMany(t => t.ScenarioSteps)
-                .WithOne()
+                .HasMany(t => t.TechniqueSteps)
+                .WithOne(ts => ts.Technique)
                 .HasForeignKey(s => s.TechniqueId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Scenario>()
-                .HasMany(s => s.ScenarioSteps)
-                .WithOne()
+                .HasMany(s => s.Techniques)
+                .WithOne(t => t.Scenario)
                 .HasForeignKey(s => s.ScenarioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -36,14 +36,6 @@ namespace FirstAidAPI.Data
                 .WithOne()
                 .HasForeignKey(a => a.QuizQuestionId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ScenarioStep>()
-                .Property(s => s.TechniqueId)
-                .IsRequired(false);
-
-            modelBuilder.Entity<ScenarioStep>()
-                .Property(s => s.ScenarioId)
-                .IsRequired(false);
 
             base.OnModelCreating(modelBuilder);
         }

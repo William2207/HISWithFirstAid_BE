@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    [Migration("20250921032819_AddScenariosAndQuiz")]
-    partial class AddScenariosAndQuiz
+    [Migration("20251007145700_TechniqueModelVideoProp")]
+    partial class TechniqueModelVideoProp
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -87,13 +87,13 @@ namespace FirstAidAPI.Migrations
                     b.Property<int>("Duration")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ModelUrl")
+                    b.Property<string>("Icon")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
-                    b.Property<string>("ThumbnailUrl")
+                    b.Property<string>("Title")
                         .HasColumnType("text");
 
                     b.Property<string>("Type")
@@ -104,7 +104,57 @@ namespace FirstAidAPI.Migrations
                     b.ToTable("Scenarios");
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.ScenarioStep", b =>
+            modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Difficulty")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Duration")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ScenarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ScenarioId1")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScenarioId");
+
+                    b.HasIndex("ScenarioId1");
+
+                    b.ToTable("Techniques");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.TechniqueStep", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -127,63 +177,19 @@ namespace FirstAidAPI.Migrations
                     b.Property<int?>("ScenarioId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("ScenarioId1")
-                        .HasColumnType("integer");
-
                     b.Property<int>("StepNumber")
                         .HasColumnType("integer");
 
                     b.Property<int?>("TechniqueId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TechniqueId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ScenarioId");
 
-                    b.HasIndex("ScenarioId1");
-
                     b.HasIndex("TechniqueId");
 
-                    b.HasIndex("TechniqueId1");
-
-                    b.ToTable("ScenarioSteps");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Difficulty")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Duration")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ModelUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ThumbnailUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Techniques");
+                    b.ToTable("TechniqueSteps");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.AnswerOption", b =>
@@ -195,10 +201,10 @@ namespace FirstAidAPI.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.ScenarioStep", b =>
+            modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
                 {
                     b.HasOne("FirstAidAPI.Models.Scenario", null)
-                        .WithMany("ScenarioSteps")
+                        .WithMany("Techniques")
                         .HasForeignKey("ScenarioId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -206,18 +212,21 @@ namespace FirstAidAPI.Migrations
                         .WithMany()
                         .HasForeignKey("ScenarioId1");
 
+                    b.Navigation("Scenario");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.TechniqueStep", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Scenario", "Scenario")
+                        .WithMany()
+                        .HasForeignKey("ScenarioId");
+
                     b.HasOne("FirstAidAPI.Models.Technique", null)
-                        .WithMany("ScenarioSteps")
+                        .WithMany("TechniqueSteps")
                         .HasForeignKey("TechniqueId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("FirstAidAPI.Models.Technique", "Technique")
-                        .WithMany()
-                        .HasForeignKey("TechniqueId1");
-
                     b.Navigation("Scenario");
-
-                    b.Navigation("Technique");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
@@ -227,12 +236,12 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Scenario", b =>
                 {
-                    b.Navigation("ScenarioSteps");
+                    b.Navigation("Techniques");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
                 {
-                    b.Navigation("ScenarioSteps");
+                    b.Navigation("TechniqueSteps");
                 });
 #pragma warning restore 612, 618
         }

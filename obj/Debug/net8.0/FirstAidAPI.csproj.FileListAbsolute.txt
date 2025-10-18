@@ -134,3 +134,4 @@ D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\refint\FirstAidAPI.
 D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\FirstAidAPI.pdb
 D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\FirstAidAPI.genruntimeconfig.cache
 D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\ref\FirstAidAPI.dll
+D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\FirstAidAPI.sourcelink.json
