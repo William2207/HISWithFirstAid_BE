@@ -31,7 +31,7 @@ namespace FirstAidAPI.Controllers
         public async Task<ActionResult<Scenario>> GetScenario(int id)
         {
             var scenario = await _context.Scenarios
-                .Include(s => s.ScenarioSteps)
+                .Include(s => s.Techniques)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (scenario == null)

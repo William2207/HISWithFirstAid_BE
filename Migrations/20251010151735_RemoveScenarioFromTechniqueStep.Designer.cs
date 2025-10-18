@@ -2,6 +2,7 @@
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20251010151735_RemoveScenarioFromTechniqueStep")]
+    partial class RemoveScenarioFromTechniqueStep
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -130,6 +133,9 @@ namespace FirstAidAPI.Migrations
                     b.Property<int?>("ScenarioId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ScenarioId1")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Title")
                         .HasColumnType("text");
 
@@ -142,6 +148,8 @@ namespace FirstAidAPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ScenarioId");
+
+                    b.HasIndex("ScenarioId1");
 
                     b.ToTable("Techniques");
                 });
@@ -190,22 +198,24 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Scenario", "Scenario")
+                    b.HasOne("FirstAidAPI.Models.Scenario", null)
                         .WithMany("Techniques")
                         .HasForeignKey("ScenarioId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("FirstAidAPI.Models.Scenario", "Scenario")
+                        .WithMany()
+                        .HasForeignKey("ScenarioId1");
 
                     b.Navigation("Scenario");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.TechniqueStep", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Technique", "Technique")
+                    b.HasOne("FirstAidAPI.Models.Technique", null)
                         .WithMany("TechniqueSteps")
                         .HasForeignKey("TechniqueId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Technique");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
