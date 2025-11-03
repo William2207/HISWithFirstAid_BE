@@ -1,1 +1,8 @@
-.vs/
+﻿.vs/
+## Sensitive files - KHÔNG push
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+
+## Ngoại trừ template
+!appsettings.json

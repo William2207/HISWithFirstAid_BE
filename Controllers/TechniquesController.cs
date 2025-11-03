@@ -1,64 +1,35 @@
-﻿using FirstAidAPI.Data;
-using FirstAidAPI.DTO;
-using FirstAidAPI.Extensions;
+﻿using FirstAidAPI.DTO;
 using FirstAidAPI.Models;
+using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
+
 namespace FirstAidAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TechniquesController : Controller
+    public class TechniquesController : ControllerBase
     {
-        private readonly FirstAidContext _context;
+        // Thay thế DbContext bằng ITechniqueService
+        private readonly ITechniqueService _service;
 
-        public TechniquesController(FirstAidContext context)
+        public TechniquesController(ITechniqueService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: api/techniques
         [HttpGet]
-        public async Task<ActionResult<PagedResult<Technique>>> GetTechniques([FromQuery] int page = 1, [FromQuery] int pageSize = 9,
-            [FromQuery] List<string>? difficulties = null, [FromQuery] List<string>? types = null, [FromQuery] string? search = null)
-
+        public async Task<ActionResult<PagedResult<Technique>>> GetTechniques(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 9,
+            [FromQuery] List<string>? difficulties = null,
+            [FromQuery] List<string>? types = null,
+            [FromQuery] string? search = null)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 9;
-            if (pageSize > 100) pageSize = 100;
-            var query = _context.Techniques.AsQueryable();
-
-            // Filter theo difficulties
-            if (difficulties != null && difficulties.Any())
-            {
-                query = query.Where(t => difficulties.Contains(t.Difficulty));
-            }
-
-            // Filter theo types
-            if (types != null && types.Any())
-            {
-                query = query.Where(t => types.Contains(t.Type));
-            }
-
-            // Filter theo search
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var searchLower = search.ToLower();
-                query = query.Where(t =>
-                    t.Title.ToLower().Contains(searchLower) ||
-                    t.Description.ToLower().Contains(searchLower)
-                );
-            }
-
-            query = query.OrderBy(t => t.Id);
-
-            var result = await query.ToPagedResultAsync(page, pageSize);
-            //Console.WriteLine("du lieu trang technique" + JsonSerializer.Serialize(result));
+            // Toàn bộ logic phức tạp đã được chuyển đi, chỉ còn một lời gọi service
+            var result = await _service.GetTechniquesAsync(page, pageSize, difficulties, types, search);
             return Ok(result);
         }
 
@@ -66,17 +37,13 @@ namespace FirstAidAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Technique>> GetTechnique(int id)
         {
-            var technique = await _context.Techniques
-                .Include(t => t.TechniqueSteps.OrderBy(s => s.StepNumber))
-                .FirstOrDefaultAsync(t => t.Id == id);
+            var technique = await _service.GetTechniqueByIdAsync(id);
 
             if (technique == null)
             {
                 return NotFound();
             }
-
-            return technique;
+            return Ok(technique);
         }
-
     }
 }

@@ -5,6 +5,97 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/Account/register": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Account/login": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Account/confirm-email": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Quiz/technique/{techniqueId}": {
       "get": {
         "tags": [
@@ -59,32 +150,70 @@
         "tags": [
           "Scenarios"
         ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 9
+            }
+          },
+          {
+            "name": "difficulties",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Scenario"
-                  }
+                  "$ref": "#/components/schemas/ScenarioPagedResult"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Scenario"
-                  }
+                  "$ref": "#/components/schemas/ScenarioPagedResult"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Scenario"
-                  }
+                  "$ref": "#/components/schemas/ScenarioPagedResult"
                 }
               }
             }
@@ -137,32 +266,70 @@
         "tags": [
           "Techniques"
         ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 9
+            }
+          },
+          {
+            "name": "difficulties",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "types",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Technique"
-                  }
+                  "$ref": "#/components/schemas/TechniquePagedResult"
                 }
               },
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Technique"
-                  }
+                  "$ref": "#/components/schemas/TechniquePagedResult"
                 }
               },
               "text/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Technique"
-                  }
+                  "$ref": "#/components/schemas/TechniquePagedResult"
                 }
               }
             }
@@ -209,6 +376,41 @@
           }
         }
       }
+    },
+    "/api/Users/{id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -230,6 +432,26 @@
           },
           "isCorrect": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginDto": {
+        "required": [
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string",
+            "format": "password"
           }
         },
         "additionalProperties": false
@@ -263,6 +485,36 @@
         },
         "additionalProperties": false
       },
+      "RegisterDto": {
+        "required": [
+          "dateOfBirth",
+          "email",
+          "fullName",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "minLength": 1,
+            "type": "string",
+            "format": "email"
+          },
+          "fullName": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date"
+          },
+          "password": {
+            "minLength": 1,
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "additionalProperties": false
+      },
       "Scenario": {
         "type": "object",
         "properties": {
@@ -271,6 +523,10 @@
             "format": "int32"
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
             "type": "string",
             "nullable": true
           },
@@ -290,12 +546,15 @@
             "type": "integer",
             "format": "int32"
           },
-          "modelUrl": {
+          "icon": {
             "type": "string",
             "nullable": true
           },
-          "thumbnailUrl": {
-            "type": "string",
+          "scenarioTechniques": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioTechnique"
+            },
             "nullable": true
           },
           "scenarioSteps": {
@@ -304,6 +563,50 @@
               "$ref": "#/components/schemas/ScenarioStep"
             },
             "nullable": true
+          },
+          "passingScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPublished": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioPagedResult": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Scenario"
+            },
+            "nullable": true
+          },
+          "currentPage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "hasNext": {
+            "type": "boolean",
+            "readOnly": true
           }
         },
         "additionalProperties": false
@@ -315,12 +618,237 @@
             "type": "integer",
             "format": "int32"
           },
+          "scenarioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stepType": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "question": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "videoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxScore": {
+            "type": "integer",
+            "format": "int32"
+          },
           "techniqueId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
           },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StepOption"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScenarioTechnique": {
+        "type": "object",
+        "properties": {
           "scenarioId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "techniqueId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StepOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stepId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "optionKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isCorrect": {
+            "type": "boolean"
+          },
+          "scoreValue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "feedbackCorrect": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedbackIncorrect": {
+            "type": "string",
+            "nullable": true
+          },
+          "explanation": {
+            "type": "string",
+            "nullable": true
+          },
+          "nextStepId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "endScenario": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Technique": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true
+          },
+          "videoUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "scenarioTechniques": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioTechnique"
+            },
+            "nullable": true
+          },
+          "techniqueSteps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TechniqueStep"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechniquePagedResult": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Technique"
+            },
+            "nullable": true
+          },
+          "currentPage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasPrevious": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "hasNext": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TechniqueStep": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "techniqueId": {
             "type": "integer",
             "format": "int32",
             "nullable": true
@@ -343,57 +871,6 @@
           },
           "imageUrl": {
             "type": "string",
-            "nullable": true
-          },
-          "technique": {
-            "$ref": "#/components/schemas/Technique"
-          },
-          "scenario": {
-            "$ref": "#/components/schemas/Scenario"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Technique": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true
-          },
-          "duration": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "modelUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "thumbnailUrl": {
-            "type": "string",
-            "nullable": true
-          },
-          "scenarioSteps": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ScenarioStep"
-            },
             "nullable": true
           }
         },
