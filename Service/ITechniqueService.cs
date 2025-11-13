@@ -9,14 +9,18 @@ namespace FirstAidAPI.Service
     {
         Task<IEnumerable<Technique>> GetAllTechniquesAsync();
 
-        Task<PagedResult<Technique>> GetTechniquesAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
+        Task<PagedResult<Technique>> GetTechniquesAsync(int page, int pageSize, List<string>? difficulties, List<int>? typeIds, string? search);
 
         Task<Technique?> GetTechniqueByIdAsync(int id);
 
-        Task<Technique> CreateTechniqueAsync(Technique technique);
+        Task<TechniqueDto> CreateAsync(CreateTechniqueDto dto);
 
-        Task<bool> UpdateTechniqueAsync(int id, Technique technique);
+        Task<TechniqueDto?> UpdateAsync(int id, UpdateTechniqueDto dto);
 
-        Task<bool> DeleteTechniqueAsync(int id);
+        Task<List<TechniqueStepDto>> UpdateStepsAsync(int techniqueId, UpdateTechniqueStepsDto dto);
+
+        Task<bool> DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(int id);
     }
 }

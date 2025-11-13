@@ -31,6 +31,7 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AnswerText")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsCorrect")
@@ -55,9 +56,11 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("QuestionText")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("TechniqueId")
@@ -116,9 +119,11 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Duration")
@@ -131,15 +136,18 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("PassingScore")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -230,9 +238,11 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("MaxScore")
@@ -242,12 +252,14 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Question")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("ScenarioId")
                         .HasColumnType("integer");
 
                     b.Property<string>("StepType")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int?>("TechniqueId")
@@ -257,9 +269,11 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("VideoUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -486,6 +500,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("UserAnswer")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -509,12 +524,15 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Explanation")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FeedbackCorrect")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FeedbackIncorrect")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
@@ -527,6 +545,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("OptionKey")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("ScoreValue")
@@ -536,6 +555,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Text")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -968,33 +988,40 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Duration")
                         .HasColumnType("integer");
 
                     b.Property<string>("Icon")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("TechniqueTypeId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("VideoUrl")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TechniqueTypeId");
 
                     b.ToTable("Techniques");
                 });
@@ -1011,12 +1038,14 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ExpectedAction")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Instruction")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("StepNumber")
@@ -1030,6 +1059,33 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("TechniqueId");
 
                     b.ToTable("TechniqueSteps");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.TechniqueType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TechniqueTypes");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.User", b =>
@@ -1103,6 +1159,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Role")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
@@ -1144,6 +1201,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("EarnedAt")
@@ -1152,6 +1210,7 @@ namespace FirstAidAPI.Migrations
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Icon")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
@@ -1394,11 +1453,13 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.AnswerOption", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.QuizQuestion", null)
+                    b.HasOne("FirstAidAPI.Models.QuizQuestion", "QuizQuestion")
                         .WithMany("AnswerOptions")
                         .HasForeignKey("QuizQuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("QuizQuestion");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
@@ -1514,6 +1575,17 @@ namespace FirstAidAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Step");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.TechniqueType", "Type")
+                        .WithMany("Techniques")
+                        .HasForeignKey("TechniqueTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.TechniqueStep", b =>
@@ -1655,6 +1727,11 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("ScenarioTechniques");
 
                     b.Navigation("TechniqueSteps");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.TechniqueType", b =>
+                {
+                    b.Navigation("Techniques");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.User", b =>

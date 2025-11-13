@@ -1,6 +1,7 @@
 ﻿using FirstAidAPI.DTO;
 using FirstAidAPI.Models;
 using FirstAidAPI.Service;
+using FirstAidAPI.Service.Implement;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,9 +17,12 @@ namespace FirstAidAPI.Controllers
         // Thay thế DbContext bằng IScenarioService
         private readonly IScenarioService _service;
 
-        public ScenariosController(IScenarioService service)
+        private readonly ILogger<ScenariosController> _logger;
+
+        public ScenariosController(IScenarioService service, ILogger<ScenariosController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         // GET: api/scenarios
@@ -47,6 +51,93 @@ namespace FirstAidAPI.Controllers
             }
 
             return Ok(scenario);
+        }
+
+        [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<ScenarioDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<ScenarioDto>>> GetAllScenarios()
+        {
+            try
+            {
+                var scenarios = await _service.GetAllScenariosAsync();
+                return Ok(scenarios);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting all scenarios");
+                return StatusCode(500, "An error occurred while retrieving scenarios");
+            }
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(ScenarioDetailDto), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ScenarioDetailDto>> CreateScenario([FromBody] CreateScenarioDto createDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var createdScenario = await _service.CreateScenarioAsync(createDto);
+                return CreatedAtAction(
+                    nameof(GetScenario),
+                    new { id = createdScenario.Id },
+                    createdScenario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating scenario");
+                return StatusCode(500, "An error occurred while creating the scenario");
+            }
+        }
+
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(ScenarioDetailDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ScenarioDetailDto>> UpdateScenario(int id, [FromBody] UpdateScenarioDto updateDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var updatedScenario = await _service.UpdateScenarioAsync(id, updateDto);
+                return Ok(updatedScenario);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Scenario with ID {ScenarioId} not found", id);
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating scenario with ID {ScenarioId}", id);
+                return StatusCode(500, "An error occurred while updating the scenario");
+            }
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteScenario(int id)
+        {
+            try
+            {
+                await _service.DeleteScenarioAsync(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Scenario with ID {ScenarioId} not found", id);
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting scenario with ID {ScenarioId}", id);
+                return StatusCode(500, "An error occurred while deleting the scenario");
+            }
         }
     }
 }

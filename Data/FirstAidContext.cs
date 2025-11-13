@@ -21,13 +21,14 @@ namespace FirstAidAPI.Data
         public DbSet<ScenarioStep> ScenarioSteps { get; set; }
         public DbSet<StepOption> StepOptions { get; set; }
         public DbSet<ScenarioTechnique> ScenarioTechniques { get; set; }
-
         public DbSet<UserScenarioProgress> UserScenarioProgresses { get; set; }
         public DbSet<UserTechniqueProgress> UserTechniqueProgresses { get; set; }
         public DbSet<SavedTechnique> SavedTechniques { get; set; }
         public DbSet<ScenarioAttempt> ScenarioAttempts { get; set; }
         public DbSet<StepAnswer> StepAnswers { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
+
+        public DbSet<TechniqueType> TechniqueTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -81,6 +82,12 @@ namespace FirstAidAPI.Data
                 .HasForeignKey(s => s.TechniqueId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Technique>()
+                .HasOne(t => t.Type)
+                .WithMany(tt => tt.Techniques)
+                .HasForeignKey(t => t.TechniqueTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<ScenarioTechnique>()
                 .HasKey(st => new { st.ScenarioId, st.TechniqueId });
 
@@ -98,7 +105,7 @@ namespace FirstAidAPI.Data
 
             modelBuilder.Entity<QuizQuestion>()
                 .HasMany(q => q.AnswerOptions)
-                .WithOne()
+                .WithOne(a => a.QuizQuestion)
                 .HasForeignKey(a => a.QuizQuestionId)
                 .OnDelete(DeleteBehavior.Cascade);
 

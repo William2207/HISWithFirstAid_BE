@@ -84,6 +84,32 @@ public class UsersController : ControllerBase
         return Ok(userDto);
     }
 
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateCurrentUser([FromBody] UpdateUserDto updateUserDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+        var user = await _userService.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+        // Cập nhật thông tin người dùng
+        user.FullName = updateUserDto.FullName ?? user.FullName;
+        user.PhoneNumber = updateUserDto.PhoneNumber ?? user.PhoneNumber;
+        user.Email = updateUserDto.Email ?? user.Email;
+        var updateResult = await _userService.UpdateUserAsync(userId, user);
+        if (updateResult)
+        {
+            return Ok(new { message = "User updated successfully." });
+        }
+        return BadRequest(new { message = "Failed to update user." });
+    }
+
     [HttpPost("me/avatar")]
     [Authorize]
     public async Task<IActionResult> AddAvatar(IFormFile file)
@@ -141,7 +167,8 @@ public class UsersController : ControllerBase
         {
             Id = st.Id,
             Name = st.Technique.Name,
-            Type = st.Technique.Type, // Giả sử Model Technique có thuộc tính Type
+            TypeId = st.Technique.TechniqueTypeId,
+            TypeName = st.Technique.Type.Name,
             Difficulty = st.Technique.Difficulty // Giả sử Model Technique có thuộc tính Difficulty
         });
 

@@ -20,8 +20,15 @@ namespace FirstAidAPI.Repository.Implement
 
         public async Task<IEnumerable<Scenario>> GetAllAsync()
         {
-            // Khi lấy danh sách, thường không cần tải các collection con để tránh dữ liệu quá lớn
-            return await _context.Scenarios.ToListAsync();
+            return await _context.Scenarios
+                .Include(s => s.ScenarioTechniques)
+                    .ThenInclude(st => st.Technique)
+                .Include(s => s.ScenarioSteps)
+                    .ThenInclude(ss => ss.Options)
+                .Include(s => s.ScenarioSteps)
+                    .ThenInclude(ss => ss.Technique)
+                .OrderBy(s => s.Id)
+                .ToListAsync();
         }
 
         public async Task<PagedResult<Scenario>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
@@ -65,24 +72,36 @@ namespace FirstAidAPI.Repository.Implement
             .FirstOrDefaultAsync(s => s.Id == id);
         }
 
-        public async Task AddAsync(Scenario scenario)
+        public async Task<Scenario> CreateAsync(Scenario scenario)
         {
-            await _context.Scenarios.AddAsync(scenario);
+            _context.Scenarios.Add(scenario);
+            await _context.SaveChangesAsync();
+            return scenario;
         }
 
-        public void Update(Scenario scenario)
+        public async Task<Scenario> UpdateAsync(Scenario scenario)
         {
-            _context.Scenarios.Update(scenario);
+            _context.Entry(scenario).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return scenario;
         }
 
-        public void Delete(Scenario scenario)
+        public async Task<bool> DeleteAsync(int id)
         {
+            var scenario = await _context.Scenarios.FindAsync(id);
+            if (scenario == null)
+            {
+                return false;
+            }
+
             _context.Scenarios.Remove(scenario);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        public async Task<bool> SaveChangesAsync()
+        public async Task<bool> ExistsAsync(int id)
         {
-            return (await _context.SaveChangesAsync() > 0);
+            return await _context.Scenarios.AnyAsync(s => s.Id == id);
         }
     }
 }

@@ -15,7 +15,9 @@
         /// <summary>
         /// Loại kỹ thuật (ví dụ: Chấn thương, Tim mạch, lấy từ Technique.Type).
         /// </summary>
-        public string Type { get; set; } = string.Empty;
+        public int TypeId { get; set; }
+
+        public string TypeName { get; set; } = string.Empty;
 
         /// <summary>
         /// Độ khó của kỹ thuật (ví dụ: Dễ, Trung bình, Khó, lấy từ Technique.Difficulty).

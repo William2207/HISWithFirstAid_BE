@@ -1,15 +1,18 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace FirstAidAPI.Models
 {
     public class StepOption
     {
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         public int StepId { get; set; }
 
         public string OptionKey { get; set; } = string.Empty;
         public string Text { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; } = string.Empty;
 
         // ⚠️ Không gửi xuống client
         public bool IsCorrect { get; set; }

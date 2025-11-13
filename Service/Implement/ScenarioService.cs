@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.DTO;
+﻿using AutoMapper;
+using FirstAidAPI.DTO;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
 using System.Collections.Generic;
@@ -9,15 +10,18 @@ namespace FirstAidAPI.Service.Implement
     public class ScenarioService : IScenarioService
     {
         private readonly IScenarioRepository _scenarioRepository;
+        private readonly IMapper _mapper;
 
-        public ScenarioService(IScenarioRepository scenarioRepository)
+        public ScenarioService(IScenarioRepository scenarioRepository, IMapper mapper)
         {
             _scenarioRepository = scenarioRepository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Scenario>> GetAllScenariosAsync()
+        public async Task<IEnumerable<ScenarioDto>> GetAllScenariosAsync()
         {
-            return await _scenarioRepository.GetAllAsync();
+            var scenarios = await _scenarioRepository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ScenarioDto>>(scenarios);
         }
 
         public async Task<PagedResult<Scenario>> GetScenariosAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
@@ -35,49 +39,66 @@ namespace FirstAidAPI.Service.Implement
             return await _scenarioRepository.GetByIdAsync(id);
         }
 
-        public async Task<Scenario> CreateScenarioAsync(Scenario scenario)
+        public async Task<ScenarioDetailDto> CreateScenarioAsync(CreateScenarioDto createDto)
         {
-            // Nơi để thêm business logic, ví dụ:
-            // - Kiểm tra xem tên Scenario đã tồn tại chưa.
-            // - Đặt IsPublished = false cho kịch bản mới tạo để chờ duyệt.
-            await _scenarioRepository.AddAsync(scenario);
-            await _scenarioRepository.SaveChangesAsync();
-            return scenario;
+            var scenario = _mapper.Map<Scenario>(createDto);
+
+            // Set ScenarioId cho ScenarioTechniques
+            foreach (var technique in scenario.ScenarioTechniques)
+            {
+                technique.ScenarioId = scenario.Id;
+            }
+
+            // Set Order cho ScenarioSteps
+            for (int i = 0; i < scenario.ScenarioSteps.Count; i++)
+            {
+                scenario.ScenarioSteps[i].Order = i + 1;
+                scenario.ScenarioSteps[i].ScenarioId = scenario.Id;
+            }
+
+            var createdScenario = await _scenarioRepository.CreateAsync(scenario);
+            return _mapper.Map<ScenarioDetailDto>(createdScenario);
         }
 
-        public async Task<bool> UpdateScenarioAsync(int id, Scenario scenario)
+        public async Task<ScenarioDetailDto> UpdateScenarioAsync(int id, UpdateScenarioDto updateDto)
         {
             var existingScenario = await _scenarioRepository.GetByIdAsync(id);
             if (existingScenario == null)
+                throw new KeyNotFoundException($"Scenario with ID {id} not found");
+
+            // Xóa các ScenarioTechniques cũ
+            existingScenario.ScenarioTechniques.Clear();
+
+            // Xóa các ScenarioSteps cũ
+            existingScenario.ScenarioSteps.Clear();
+
+            // Map dữ liệu mới
+            _mapper.Map(updateDto, existingScenario);
+
+            // Set ScenarioId cho ScenarioTechniques
+            foreach (var technique in existingScenario.ScenarioTechniques)
             {
-                return false;
+                technique.ScenarioId = id;
             }
 
-            // Ánh xạ các thuộc tính có thể thay đổi
-            existingScenario.Name = scenario.Name;
-            existingScenario.Title = scenario.Title;
-            existingScenario.Description = scenario.Description;
-            existingScenario.Type = scenario.Type;
-            existingScenario.Difficulty = scenario.Difficulty;
-            existingScenario.Duration = scenario.Duration;
-            existingScenario.Icon = scenario.Icon;
-            existingScenario.PassingScore = scenario.PassingScore;
-            existingScenario.IsPublished = scenario.IsPublished;
+            // Set Order và ScenarioId cho ScenarioSteps
+            for (int i = 0; i < existingScenario.ScenarioSteps.Count; i++)
+            {
+                existingScenario.ScenarioSteps[i].Order = i + 1;
+                existingScenario.ScenarioSteps[i].ScenarioId = id;
+            }
 
-            _scenarioRepository.Update(existingScenario);
-            return await _scenarioRepository.SaveChangesAsync();
+            var updatedScenario = await _scenarioRepository.UpdateAsync(existingScenario);
+            return _mapper.Map<ScenarioDetailDto>(updatedScenario);
         }
 
         public async Task<bool> DeleteScenarioAsync(int id)
         {
-            var scenarioToDelete = await _scenarioRepository.GetByIdAsync(id);
-            if (scenarioToDelete == null)
-            {
-                return false;
-            }
+            var exists = await _scenarioRepository.ExistsAsync(id);
+            if (!exists)
+                throw new KeyNotFoundException($"Scenario with ID {id} not found");
 
-            _scenarioRepository.Delete(scenarioToDelete);
-            return await _scenarioRepository.SaveChangesAsync();
+            return await _scenarioRepository.DeleteAsync(id);
         }
     }
 }

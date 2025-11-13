@@ -13,12 +13,12 @@ namespace FirstAidAPI.Repository
 
         Task<Scenario?> GetByIdAsync(int id);
 
-        Task AddAsync(Scenario scenario);
+        Task<Scenario> CreateAsync(Scenario scenario);
 
-        void Update(Scenario scenario);
+        Task<Scenario> UpdateAsync(Scenario scenario);
 
-        void Delete(Scenario scenario);
+        Task<bool> DeleteAsync(int id);
 
-        Task<bool> SaveChangesAsync();
+        Task<bool> ExistsAsync(int id);
     }
 }
