@@ -9,9 +9,9 @@ namespace FirstAidAPI.Repository
     {
         Task<IEnumerable<Scenario>> GetAllAsync();
 
-        Task<PagedResult<Scenario>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
+        Task<PagedResult<ScenarioDto>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
 
-        Task<Scenario?> GetByIdAsync(int id);
+        Task<ScenarioDetailDto?> GetByIdAsync(int id);
 
         Task<Scenario> CreateAsync(Scenario scenario);
 

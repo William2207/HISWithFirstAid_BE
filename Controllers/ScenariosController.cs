@@ -6,13 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-// Các using không cần thiết nữa: Microsoft.EntityFrameworkCore, FirstAidAPI.Data, FirstAidAPI.Extensions
-
 namespace FirstAidAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ScenariosController : ControllerBase // Dùng ControllerBase cho API
+    public class ScenariosController : ControllerBase
     {
         // Thay thế DbContext bằng IScenarioService
         private readonly IScenarioService _service;
@@ -27,7 +25,7 @@ namespace FirstAidAPI.Controllers
 
         // GET: api/scenarios
         [HttpGet]
-        public async Task<ActionResult<PagedResult<Scenario>>> GetScenarios(
+        public async Task<ActionResult<PagedResult<ScenarioDto>>> GetScenarios(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 9,
             [FromQuery] List<string>? difficulties = null,
@@ -41,7 +39,7 @@ namespace FirstAidAPI.Controllers
 
         // GET: api/scenarios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Scenario>> GetScenario(int id)
+        public async Task<ActionResult<ScenarioDetailDto>> GetScenario(int id)
         {
             var scenario = await _service.GetScenarioByIdAsync(id);
 

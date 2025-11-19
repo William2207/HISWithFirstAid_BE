@@ -240,5 +240,5 @@ public class UsersController : ControllerBase
         return Ok(techniqueProgressesDto);
     }
 
-    // Các endpoints khác cho Get All, Create, Update, Delete...
+
 }

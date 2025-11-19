@@ -9,9 +9,16 @@ namespace FirstAidAPI.Mappings
         public ScenarioMappingProfile()
         {
             // Scenario mappings
-            CreateMap<Scenario, ScenarioDto>();
+            CreateMap<Scenario, ScenarioDto>()
+                .ForMember(dest => dest.StepCount,
+                    opt => opt.MapFrom(src => src.ScenarioSteps.Count));
 
-            CreateMap<Scenario, ScenarioDetailDto>();
+            CreateMap<Scenario, ScenarioDetailDto>()
+                .IncludeBase<Scenario, ScenarioDto>()
+                .ForMember(dest => dest.StepCount,
+                    opt => opt.MapFrom(src => src.ScenarioSteps.Count))
+                .ForMember(dest => dest.ScenarioSteps,
+                    opt => opt.MapFrom(src => src.ScenarioSteps.OrderBy(s => s.Order)));
 
             CreateMap<CreateScenarioDto, Scenario>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -25,7 +32,8 @@ namespace FirstAidAPI.Mappings
 
             // ScenarioTechnique mappings
             CreateMap<ScenarioTechnique, ScenarioTechniqueDto>()
-                .ForMember(dest => dest.Technique, opt => opt.MapFrom(src => src.Technique));
+                .ForMember(dest => dest.Technique, opt => opt.MapFrom(src => src.Technique))
+                .ForPath(dest => dest.Technique!.Name, opt => opt.MapFrom(src => src.Technique.Name));
 
             CreateMap<CreateScenarioTechniqueDto, ScenarioTechnique>()
                 .ForMember(dest => dest.ScenarioId, opt => opt.Ignore())

@@ -12,6 +12,7 @@
         public string Icon { get; set; } = string.Empty;
         public int PassingScore { get; set; }
         public bool IsPublished { get; set; }
+        public int StepCount { get; set; }
     }
 
     public class ScenarioDetailDto : ScenarioDto

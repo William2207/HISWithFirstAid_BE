@@ -24,7 +24,7 @@ namespace FirstAidAPI.Service.Implement
             return _mapper.Map<IEnumerable<ScenarioDto>>(scenarios);
         }
 
-        public async Task<PagedResult<Scenario>> GetScenariosAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
+        public async Task<PagedResult<ScenarioDto>> GetScenariosAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
         {
             // Chuyển logic validation từ Controller vào đây
             if (page < 1) page = 1;
@@ -34,7 +34,7 @@ namespace FirstAidAPI.Service.Implement
             return await _scenarioRepository.GetAllFilteredAndPagedAsync(page, pageSize, difficulties, types, search);
         }
 
-        public async Task<Scenario?> GetScenarioByIdAsync(int id)
+        public async Task<ScenarioDetailDto?> GetScenarioByIdAsync(int id)
         {
             return await _scenarioRepository.GetByIdAsync(id);
         }
@@ -63,33 +63,33 @@ namespace FirstAidAPI.Service.Implement
         public async Task<ScenarioDetailDto> UpdateScenarioAsync(int id, UpdateScenarioDto updateDto)
         {
             var existingScenario = await _scenarioRepository.GetByIdAsync(id);
-            if (existingScenario == null)
-                throw new KeyNotFoundException($"Scenario with ID {id} not found");
+            //if (existingScenario == null)
+            //    throw new KeyNotFoundException($"Scenario with ID {id} not found");
 
-            // Xóa các ScenarioTechniques cũ
-            existingScenario.ScenarioTechniques.Clear();
+            //// Xóa các ScenarioTechniques cũ
+            //existingScenario.ScenarioTechniques.Clear();
 
-            // Xóa các ScenarioSteps cũ
-            existingScenario.ScenarioSteps.Clear();
+            //// Xóa các ScenarioSteps cũ
+            //existingScenario.ScenarioSteps.Clear();
 
-            // Map dữ liệu mới
-            _mapper.Map(updateDto, existingScenario);
+            //// Map dữ liệu mới
+            //_mapper.Map(updateDto, existingScenario);
 
-            // Set ScenarioId cho ScenarioTechniques
-            foreach (var technique in existingScenario.ScenarioTechniques)
-            {
-                technique.ScenarioId = id;
-            }
+            //// Set ScenarioId cho ScenarioTechniques
+            //foreach (var technique in existingScenario.ScenarioTechniques)
+            //{
+            //    technique.ScenarioId = id;
+            //}
 
-            // Set Order và ScenarioId cho ScenarioSteps
-            for (int i = 0; i < existingScenario.ScenarioSteps.Count; i++)
-            {
-                existingScenario.ScenarioSteps[i].Order = i + 1;
-                existingScenario.ScenarioSteps[i].ScenarioId = id;
-            }
+            //// Set Order và ScenarioId cho ScenarioSteps
+            //for (int i = 0; i < existingScenario.ScenarioSteps.Count; i++)
+            //{
+            //    existingScenario.ScenarioSteps[i].Order = i + 1;
+            //    existingScenario.ScenarioSteps[i].ScenarioId = id;
+            //}
 
-            var updatedScenario = await _scenarioRepository.UpdateAsync(existingScenario);
-            return _mapper.Map<ScenarioDetailDto>(updatedScenario);
+            //var updatedScenario = await _scenarioRepository.UpdateAsync(existingScenario);
+            return _mapper.Map<ScenarioDetailDto>(existingScenario);
         }
 
         public async Task<bool> DeleteScenarioAsync(int id)
