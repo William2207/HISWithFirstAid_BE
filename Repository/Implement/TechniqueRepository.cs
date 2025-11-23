@@ -24,7 +24,6 @@ namespace FirstAidAPI.Repository.Implement
             // Sử dụng Include để tải các danh sách liên quan
             return await _context.Techniques
                 .Include(t => t.Type) // Thêm dòng này
-                .Include(t => t.ScenarioTechniques)
                 .Include(t => t.TechniqueSteps)
                 .OrderBy(t => t.Id) // Nên thêm ordering
                 .ToListAsync();

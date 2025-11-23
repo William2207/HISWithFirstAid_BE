@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FirstAidAPI.Extensions;
+using FirstAidAPI.DTO.Technique;
 
 namespace FirstAidAPI.Controllers
 {

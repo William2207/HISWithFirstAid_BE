@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Models;
 
 namespace FirstAidAPI.Mappings

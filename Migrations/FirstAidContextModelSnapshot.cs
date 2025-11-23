@@ -262,9 +262,6 @@ namespace FirstAidAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("TechniqueId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("TimeLimit")
                         .HasColumnType("integer");
 
@@ -279,8 +276,6 @@ namespace FirstAidAPI.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ScenarioId");
-
-                    b.HasIndex("TechniqueId");
 
                     b.ToTable("ScenarioSteps");
 
@@ -427,50 +422,6 @@ namespace FirstAidAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.ScenarioTechnique", b =>
-                {
-                    b.Property<int>("ScenarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TechniqueId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.HasKey("ScenarioId", "TechniqueId");
-
-                    b.HasIndex("TechniqueId");
-
-                    b.ToTable("ScenarioTechniques");
-
-                    b.HasData(
-                        new
-                        {
-                            ScenarioId = 1,
-                            TechniqueId = 1,
-                            Order = 1
-                        },
-                        new
-                        {
-                            ScenarioId = 1,
-                            TechniqueId = 4,
-                            Order = 2
-                        },
-                        new
-                        {
-                            ScenarioId = 1,
-                            TechniqueId = 16,
-                            Order = 3
-                        },
-                        new
-                        {
-                            ScenarioId = 2,
-                            TechniqueId = 2,
-                            Order = 1
-                        });
-                });
-
             modelBuilder.Entity("FirstAidAPI.Models.StepAnswer", b =>
                 {
                     b.Property<int>("Id")
@@ -524,15 +475,12 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Explanation")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FeedbackCorrect")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FeedbackIncorrect")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
@@ -1519,32 +1467,7 @@ namespace FirstAidAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FirstAidAPI.Models.Technique", "Technique")
-                        .WithMany()
-                        .HasForeignKey("TechniqueId");
-
                     b.Navigation("Scenario");
-
-                    b.Navigation("Technique");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.ScenarioTechnique", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Scenario", "Scenario")
-                        .WithMany("ScenarioTechniques")
-                        .HasForeignKey("ScenarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.Technique", "Technique")
-                        .WithMany("ScenarioTechniques")
-                        .HasForeignKey("TechniqueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Scenario");
-
-                    b.Navigation("Technique");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.StepAnswer", b =>
@@ -1706,8 +1629,6 @@ namespace FirstAidAPI.Migrations
             modelBuilder.Entity("FirstAidAPI.Models.Scenario", b =>
                 {
                     b.Navigation("ScenarioSteps");
-
-                    b.Navigation("ScenarioTechniques");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.ScenarioAttempt", b =>
@@ -1723,8 +1644,6 @@ namespace FirstAidAPI.Migrations
             modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
                 {
                     b.Navigation("QuizQuestions");
-
-                    b.Navigation("ScenarioTechniques");
 
                     b.Navigation("TechniqueSteps");
                 });

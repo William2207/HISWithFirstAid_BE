@@ -15,7 +15,6 @@ namespace FirstAidAPI.Models
         public string Difficulty { get; set; } = string.Empty;
         public int Duration { get; set; }
         public string? Icon { get; set; } = string.Empty;
-        public List<ScenarioTechnique> ScenarioTechniques { get; set; } = new List<ScenarioTechnique>();
         public List<ScenarioStep> ScenarioSteps { get; set; } = new List<ScenarioStep>();
         public int PassingScore { get; set; } = 70;
         public bool IsPublished { get; set; } = true;

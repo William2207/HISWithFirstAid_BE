@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using FirstAidAPI.DTO.Scenario;
 
 namespace FirstAidAPI.Repository.Implement
 {
@@ -24,12 +25,8 @@ namespace FirstAidAPI.Repository.Implement
         public async Task<IEnumerable<Scenario>> GetAllAsync()
         {
             return await _context.Scenarios
-                .Include(s => s.ScenarioTechniques)
-                    .ThenInclude(st => st.Technique)
                 .Include(s => s.ScenarioSteps)
                     .ThenInclude(ss => ss.Options)
-                .Include(s => s.ScenarioSteps)
-                    .ThenInclude(ss => ss.Technique)
                 .OrderBy(s => s.Id)
                 .ToListAsync();
         }
@@ -80,16 +77,14 @@ namespace FirstAidAPI.Repository.Implement
             return await dtoQuery.ToPagedResultAsync(page, pageSize);
         }
 
-        public async Task<ScenarioDetailDto?> GetByIdAsync(int id)
+        public async Task<Scenario?> GetByIdAsync(int id)
         {
             var scenario = await _context.Scenarios
-               .Include(s => s.ScenarioTechniques)
-                   .ThenInclude(st => st.Technique)
                .Include(s => s.ScenarioSteps)
                    .ThenInclude(ss => ss.Options)
                .FirstOrDefaultAsync(s => s.Id == id);
 
-            return _mapper.Map<ScenarioDetailDto>(scenario);
+            return scenario;
         }
 
         public async Task<Scenario> CreateAsync(Scenario scenario)
@@ -101,7 +96,6 @@ namespace FirstAidAPI.Repository.Implement
 
         public async Task<Scenario> UpdateAsync(Scenario scenario)
         {
-            _context.Entry(scenario).State = EntityState.Modified;
             await _context.SaveChangesAsync();
             return scenario;
         }

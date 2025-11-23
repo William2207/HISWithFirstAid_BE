@@ -1,4 +1,5 @@
 ﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;

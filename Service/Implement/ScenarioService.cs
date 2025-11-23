@@ -1,21 +1,22 @@
 ﻿using AutoMapper;
 using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Scenario;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace FirstAidAPI.Service.Implement
 {
     public class ScenarioService : IScenarioService
     {
         private readonly IScenarioRepository _scenarioRepository;
+        private readonly IScenarioStepRepository _scenarioStepRepository;
         private readonly IMapper _mapper;
 
-        public ScenarioService(IScenarioRepository scenarioRepository, IMapper mapper)
+        public ScenarioService(IScenarioRepository scenarioRepository, IMapper mapper, IScenarioStepRepository scenarioStepRepository)
         {
             _scenarioRepository = scenarioRepository;
             _mapper = mapper;
+            _scenarioStepRepository = scenarioStepRepository;
         }
 
         public async Task<IEnumerable<ScenarioDto>> GetAllScenariosAsync()
@@ -36,24 +37,21 @@ namespace FirstAidAPI.Service.Implement
 
         public async Task<ScenarioDetailDto?> GetScenarioByIdAsync(int id)
         {
-            return await _scenarioRepository.GetByIdAsync(id);
+            var scenario = await _scenarioRepository.GetByIdAsync(id);
+            if (scenario == null)
+                return null;
+            return _mapper.Map<ScenarioDetailDto>(scenario);
         }
 
         public async Task<ScenarioDetailDto> CreateScenarioAsync(CreateScenarioDto createDto)
         {
             var scenario = _mapper.Map<Scenario>(createDto);
 
-            // Set ScenarioId cho ScenarioTechniques
-            foreach (var technique in scenario.ScenarioTechniques)
-            {
-                technique.ScenarioId = scenario.Id;
-            }
-
             // Set Order cho ScenarioSteps
             for (int i = 0; i < scenario.ScenarioSteps.Count; i++)
             {
                 scenario.ScenarioSteps[i].Order = i + 1;
-                scenario.ScenarioSteps[i].ScenarioId = scenario.Id;
+                //scenario.ScenarioSteps[i].ScenarioId = scenario.Id;
             }
 
             var createdScenario = await _scenarioRepository.CreateAsync(scenario);
@@ -63,32 +61,81 @@ namespace FirstAidAPI.Service.Implement
         public async Task<ScenarioDetailDto> UpdateScenarioAsync(int id, UpdateScenarioDto updateDto)
         {
             var existingScenario = await _scenarioRepository.GetByIdAsync(id);
-            //if (existingScenario == null)
-            //    throw new KeyNotFoundException($"Scenario with ID {id} not found");
 
-            //// Xóa các ScenarioTechniques cũ
-            //existingScenario.ScenarioTechniques.Clear();
+            if (existingScenario == null)
+                throw new KeyNotFoundException($"Scenario with ID {id} not found");
 
-            //// Xóa các ScenarioSteps cũ
-            //existingScenario.ScenarioSteps.Clear();
+            _mapper.Map(updateDto, existingScenario);
+            if (updateDto.ScenarioSteps != null)
+            {
+                var incomingStepIds = new HashSet<int>(updateDto.ScenarioSteps.Where(s => s.Id > 0).Select(s => s.Id));
+                var incomingOptionIds = updateDto.ScenarioSteps
+                    .Where(s => s.Options != null)
+                    .SelectMany(s => s.Options!)
+                    .Where(o => o.Id.HasValue && o.Id > 0)
+                    .Select(o => o.Id!.Value)
+                    .ToHashSet();
 
-            //// Map dữ liệu mới
-            //_mapper.Map(updateDto, existingScenario);
+                var stepToRemove = existingScenario.ScenarioSteps.Where(s => !incomingStepIds.Contains(s.Id)).ToList();
+                foreach (var step in stepToRemove)
+                {
+                    existingScenario.ScenarioSteps.Remove(step);
+                }
 
-            //// Set ScenarioId cho ScenarioTechniques
-            //foreach (var technique in existingScenario.ScenarioTechniques)
-            //{
-            //    technique.ScenarioId = id;
-            //}
+                foreach (var step in existingScenario.ScenarioSteps)
+                {
+                    var optionsToRemove = step.Options
+                        .Where(o => !incomingOptionIds.Contains(o.Id))
+                        .ToList();
+                    foreach (var option in optionsToRemove)
+                    {
+                        step.Options.Remove(option);
+                    }
+                }
+                var existingStepsDict = existingScenario.ScenarioSteps.ToDictionary(s => s.Id);
 
-            //// Set Order và ScenarioId cho ScenarioSteps
-            //for (int i = 0; i < existingScenario.ScenarioSteps.Count; i++)
-            //{
-            //    existingScenario.ScenarioSteps[i].Order = i + 1;
-            //    existingScenario.ScenarioSteps[i].ScenarioId = id;
-            //}
+                foreach (var stepDto in updateDto.ScenarioSteps)
+                {
+                    if (stepDto.Id > 0 && existingStepsDict.TryGetValue(stepDto.Id, out var existingStep))
+                    {
+                        _mapper.Map(stepDto, existingStep);
 
-            //var updatedScenario = await _scenarioRepository.UpdateAsync(existingScenario);
+                        if (stepDto.Options != null)
+                        {
+                            var existingOptionsDict = existingStep.Options.ToDictionary(o => o.Id);
+
+                            foreach (var optionDto in stepDto.Options)
+                            {
+                                if (optionDto.Id.HasValue && optionDto.Id is > 0)
+                                {
+                                    if (existingOptionsDict.TryGetValue(optionDto.Id.Value, out var existingOption))
+                                    {
+                                        _mapper.Map(optionDto, existingOption);
+                                    }
+                                    else
+                                    {
+                                        throw new KeyNotFoundException($"Option with ID {optionDto.Id} not found in Step ID {existingStep.Id}");
+                                    }
+                                }
+                                else
+                                {
+                                    var newOption = _mapper.Map<StepOption>(optionDto);
+                                    newOption.StepId = existingStep.Id;
+                                    existingStep.Options.Add(newOption);
+                                }
+                            }
+                        }
+                    }
+                    else if (stepDto.Id <= 0)
+                    {
+                        var newStep = _mapper.Map<ScenarioStep>(stepDto);
+                        newStep.ScenarioId = existingScenario.Id;
+                        existingScenario.ScenarioSteps.Add(newStep);
+                    }
+                }
+            }
+            await _scenarioRepository.UpdateAsync(existingScenario);
+
             return _mapper.Map<ScenarioDetailDto>(existingScenario);
         }
 

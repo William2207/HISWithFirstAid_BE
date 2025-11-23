@@ -20,7 +20,6 @@ namespace FirstAidAPI.Models
         public int TechniqueTypeId { get; set; } // Foreign key
         public TechniqueType Type { get; set; } = null!;
         public List<QuizQuestion> QuizQuestions { get; set; } = new List<QuizQuestion>();
-        public List<ScenarioTechnique> ScenarioTechniques { get; set; } = new List<ScenarioTechnique>();
         public List<TechniqueStep> TechniqueSteps { get; set; } = new List<TechniqueStep>();
     }
 }

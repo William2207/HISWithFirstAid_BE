@@ -1,4 +1,7 @@
 ﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.User;
+using FirstAidAPI.DTO.Technique;
+using FirstAidAPI.DTO.Scenario;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -239,6 +242,4 @@ public class UsersController : ControllerBase
 
         return Ok(techniqueProgressesDto);
     }
-
-
 }

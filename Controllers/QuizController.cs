@@ -1,5 +1,5 @@
 ﻿using FirstAidAPI.Data;
-using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Quiz;
 using FirstAidAPI.Models;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Mvc;

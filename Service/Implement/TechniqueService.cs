@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;

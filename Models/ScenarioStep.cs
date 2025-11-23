@@ -18,14 +18,10 @@ namespace FirstAidAPI.Models
 
         public int TimeLimit { get; set; } = 0;
         public int MaxScore { get; set; } = 10;
-        public int? TechniqueId { get; set; }
 
         public List<StepOption> Options { get; set; } = new List<StepOption>();
 
         [JsonIgnore]
         public Scenario Scenario { get; set; } = null!;
-
-        [JsonIgnore]
-        public Technique? Technique { get; set; }
     }
 }

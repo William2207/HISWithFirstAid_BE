@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using FirstAidAPI.DTO;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
 using FirstAidAPI.Extensions;
+using FirstAidAPI.DTO.Quiz;
 
 namespace FirstAidAPI.Service.Implement
 {
@@ -131,7 +131,6 @@ namespace FirstAidAPI.Service.Implement
             existingQuestion.QuestionText = updateDto.QuestionText;
             existingQuestion.Difficulty = updateDto.Difficulty;
 
-            // Map AnswerOptions (nếu có)
             if (updateDto.AnswerOptions != null)
             {
                 // Lấy danh sách IDs của options mới

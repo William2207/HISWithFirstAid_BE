@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO;
+﻿using FirstAidAPI.DTO.Quiz;
 
 namespace FirstAidAPI.Service
 {

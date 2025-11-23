@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
 using Microsoft.EntityFrameworkCore;

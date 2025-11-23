@@ -1,4 +1,5 @@
 ﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Scenario;
 using FirstAidAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace FirstAidAPI.Repository
 
         Task<PagedResult<ScenarioDto>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
 
-        Task<ScenarioDetailDto?> GetByIdAsync(int id);
+        Task<Scenario?> GetByIdAsync(int id);
 
         Task<Scenario> CreateAsync(Scenario scenario);
 

@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using FirstAidAPI.Service;
-using FirstAidAPI.DTO;
 using FirstAidAPI.Models;
 using System.Security.Claims;
+using FirstAidAPI.DTO.Scenario;
 
 namespace FirstAidAPI.Controllers
 {
