@@ -34,10 +34,11 @@ public class AccountController : ControllerBase
             UserName = registerDto.Email, // Identity yêu cầu UserName
             Email = registerDto.Email,
             FullName = registerDto.FullName,
-            DateOfBirth = registerDto.DateOfBirth.Date,
+            DateOfBirth = DateTime.SpecifyKind(registerDto.DateOfBirth, DateTimeKind.Utc),
         };
 
         var result = await _userManager.CreateAsync(user, registerDto.Password);
+        await _userManager.AddToRoleAsync(user, "User");
 
         if (!result.Succeeded)
         {
@@ -98,7 +99,12 @@ public class AccountController : ControllerBase
         return Ok(new
         {
             Message = "Đăng nhập thành công!",
-            Token = _tokenService.CreateToken(user, roles)
+            Token = _tokenService.CreateToken(user, roles),
+            User = new
+            {
+                Email = user.Email,
+                Roles = roles
+            }
         });
     }
 

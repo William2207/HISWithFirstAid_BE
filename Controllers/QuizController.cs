@@ -2,6 +2,7 @@
 using FirstAidAPI.DTO.Quiz;
 using FirstAidAPI.Models;
 using FirstAidAPI.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,18 +24,6 @@ namespace FirstAidAPI.Controllers
             _service = service;
             _logger = logger;
         }
-
-        // GET: api/quiz/technique/1
-        //[HttpGet("technique/{techniqueId}")]
-        //public async Task<ActionResult<IEnumerable<QuizQuestion>>> GetQuizQuestionsByTechnique(int techniqueId)
-        //{
-        //    var questions = await _context.QuizQuestions
-        //        .Where(q => q.TechniqueId == techniqueId)
-        //        .Include(q => q.AnswerOptions)
-        //        .ToListAsync();
-
-        //    return questions;
-        //}
 
         [HttpGet("{id}")]
         public async Task<ActionResult<QuizQuestionDto>> GetById(int id)
@@ -84,6 +73,7 @@ namespace FirstAidAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<QuizQuestionDto>> Create([FromBody] CreateQuizQuestionDto createDto)
         {
@@ -106,6 +96,7 @@ namespace FirstAidAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateQuizQuestionDto updateDto)
         {
@@ -132,6 +123,7 @@ namespace FirstAidAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -155,6 +147,7 @@ namespace FirstAidAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("answeroption/{id}")]
         public async Task<IActionResult> DeleteAnswerOption(int id)
         {

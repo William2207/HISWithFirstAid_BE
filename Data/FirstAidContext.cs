@@ -112,10 +112,6 @@ namespace FirstAidAPI.Data
                     .IsRequired()
                     .HasMaxLength(200);
 
-                entity.Property(u => u.Role)
-                    .HasMaxLength(50)
-                    .HasDefaultValue("User");
-
                 entity.Property(u => u.CreatedAt)
                     .HasDefaultValueSql("NOW()");
 

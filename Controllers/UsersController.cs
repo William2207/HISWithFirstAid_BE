@@ -1,9 +1,11 @@
 ﻿using FirstAidAPI.DTO;
-using FirstAidAPI.DTO.User;
-using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.DTO.Scenario;
+using FirstAidAPI.DTO.Technique;
+using FirstAidAPI.DTO.User;
+using FirstAidAPI.Models;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,11 +17,13 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IPhotoService _photoService;
+    private readonly UserManager<User> _userManager;
 
-    public UsersController(IUserService userService, IPhotoService photoService)
+    public UsersController(IUserService userService, IPhotoService photoService, UserManager<User> userManager)
     {
         _userService = userService;
         _photoService = photoService;
+        _userManager = userManager;
     }
 
     [HttpGet("{id}")]
@@ -34,6 +38,8 @@ public class UsersController : ControllerBase
         {
             return BadRequest("User email is required");
         }
+        var roles = await _userManager.GetRolesAsync(user);
+
         var userDto = new UserDto
         {
             Id = user.Id,
@@ -42,7 +48,7 @@ public class UsersController : ControllerBase
             PhoneNumber = user.PhoneNumber,
             Avatar = user.Avatar,
             DateOfBirth = user.DateOfBirth,
-            Role = user.Role,
+            Role = roles,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt
         };
@@ -70,6 +76,7 @@ public class UsersController : ControllerBase
         {
             return BadRequest("User email is required");
         }
+        var roles = await _userManager.GetRolesAsync(user);
 
         var userDto = new UserDto
         {
@@ -79,7 +86,7 @@ public class UsersController : ControllerBase
             PhoneNumber = user.PhoneNumber,
             Avatar = user.Avatar,
             DateOfBirth = user.DateOfBirth,
-            Role = user.Role,
+            Role = roles,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt
         };

@@ -1,5 +1,6 @@
 ﻿using FirstAidAPI.Configurations;
 using FirstAidAPI.Data;
+using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -75,6 +76,7 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+//await app.SeedRolesAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

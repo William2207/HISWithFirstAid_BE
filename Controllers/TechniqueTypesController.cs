@@ -1,5 +1,6 @@
 ﻿using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FirstAidAPI.Controllers
@@ -47,6 +48,7 @@ namespace FirstAidAPI.Controllers
         /// <summary>
         /// Create new technique type
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(typeof(TechniqueTypeDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -66,6 +68,7 @@ namespace FirstAidAPI.Controllers
         /// <summary>
         /// Update technique type
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         [ProducesResponseType(typeof(TechniqueTypeDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -90,6 +93,7 @@ namespace FirstAidAPI.Controllers
         /// <summary>
         /// Delete technique type
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
