@@ -26,8 +26,10 @@ namespace FirstAidAPI.Data
         public DbSet<ScenarioAttempt> ScenarioAttempts { get; set; }
         public DbSet<StepAnswer> StepAnswers { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
-
         public DbSet<TechniqueType> TechniqueTypes { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<PracticalCourse> PracticalCourses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -275,6 +277,56 @@ namespace FirstAidAPI.Data
                     .HasDefaultValueSql("NOW()");
             });
 
+            modelBuilder.Entity<Cart>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Cart có nhiều CartItems (One-to-Many)
+                entity.HasMany(c => c.CartItems)
+                    .WithOne(ci => ci.Cart)
+                    .HasForeignKey(ci => ci.CartId)
+                    .OnDelete(DeleteBehavior.Cascade); // Xóa Cart thì xóa hết CartItems
+
+                // Index để tìm Cart theo UserId nhanh hơn
+                entity.HasIndex(e => e.UserId);
+            });
+
+            // Cấu hình CartItem
+            modelBuilder.Entity<CartItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // CartItem thuộc về 1 Cart (đã cấu hình ở trên)
+
+                // CartItem tham chiếu đến 1 PracticalCourse
+                entity.HasOne(ci => ci.PracticalCourse)
+                    .WithMany() // PracticalCourse có thể có nhiều CartItem
+                    .HasForeignKey(ci => ci.PracticalCourseId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không cho xóa Course nếu đang có trong giỏ
+
+                // Đặt precision cho decimal
+                entity.Property(e => e.Price)
+                    .HasColumnType("decimal(18,2)");
+
+                // Index để tìm CartItem theo CartId và CourseId
+                entity.HasIndex(e => new { e.CartId, e.PracticalCourseId });
+            });
+
+            // Cấu hình PracticalCourse
+            modelBuilder.Entity<PracticalCourse>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Đặt precision cho decimal
+                entity.Property(e => e.Price)
+                    .HasColumnType("decimal(18,2)");
+
+                // Index cho tìm kiếm khóa học đã publish
+                entity.HasIndex(e => e.IsPublished);
+
+                // Index cho tìm kiếm theo ngày
+                entity.HasIndex(e => e.StartDate);
+            });
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }
     }

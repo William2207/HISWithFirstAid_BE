@@ -9,14 +9,13 @@ namespace FirstAidAPI.Service.Implement
     public class ScenarioService : IScenarioService
     {
         private readonly IScenarioRepository _scenarioRepository;
-        private readonly IScenarioStepRepository _scenarioStepRepository;
+
         private readonly IMapper _mapper;
 
-        public ScenarioService(IScenarioRepository scenarioRepository, IMapper mapper, IScenarioStepRepository scenarioStepRepository)
+        public ScenarioService(IScenarioRepository scenarioRepository, IMapper mapper)
         {
             _scenarioRepository = scenarioRepository;
             _mapper = mapper;
-            _scenarioStepRepository = scenarioStepRepository;
         }
 
         public async Task<IEnumerable<ScenarioDto>> GetAllScenariosAsync()
@@ -27,7 +26,6 @@ namespace FirstAidAPI.Service.Implement
 
         public async Task<PagedResult<ScenarioDto>> GetScenariosAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
         {
-            // Chuyển logic validation từ Controller vào đây
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 9;
             if (pageSize > 100) pageSize = 100;

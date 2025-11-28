@@ -1,8 +1,6 @@
 ﻿using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Scenario;
-using FirstAidAPI.Models;
 using FirstAidAPI.Service;
-using FirstAidAPI.Service.Implement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -14,7 +12,6 @@ namespace FirstAidAPI.Controllers
     [ApiController]
     public class ScenariosController : ControllerBase
     {
-        // Thay thế DbContext bằng IScenarioService
         private readonly IScenarioService _service;
 
         private readonly ILogger<ScenariosController> _logger;
