@@ -1,7 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
+using MailKit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace FirstAidAPI.Data
 
@@ -30,6 +34,8 @@ namespace FirstAidAPI.Data
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<PracticalCourse> PracticalCourses { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -326,6 +332,70 @@ namespace FirstAidAPI.Data
 
                 // Index cho tìm kiếm theo ngày
                 entity.HasIndex(e => e.StartDate);
+                entity.Property(e => e.Highlights).HasJsonConversion();
+                entity.Property(e => e.Requirements).HasJsonConversion();
+            });
+
+            //Cấu hình Order
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.Id);
+
+                entity.Property(o => o.OrderNumber)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.HasIndex(o => o.OrderNumber)
+                    .IsUnique(); // Đảm bảo OrderNumber là duy nhất
+
+                entity.Property(o => o.TotalAmount)
+                    .HasColumnType("decimal(18,2)"); // Chính xác cho tiền
+
+                entity.Property(o => o.PaymentMethod)
+                    .HasConversion<int>(); // Lưu enum dưới dạng int
+
+                entity.Property(o => o.PaymentStatus)
+                    .HasConversion<int>();
+
+                entity.Property(o => o.OrderStatus)
+                    .HasConversion<int>();
+
+                entity.Property(o => o.CreatedAt)
+                    .IsRequired();
+
+                // Relationship: Order - User (Many-to-One)
+                entity.HasOne(o => o.User)
+                    .WithMany() // Hoặc .WithMany(u => u.Orders) nếu User có ICollection<Order>
+                    .HasForeignKey(o => o.UserId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không xóa Order khi xóa User
+            });
+
+            // Cấu hình OrderItem
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                entity.HasKey(oi => oi.Id);
+
+                entity.Property(oi => oi.Price)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(oi => oi.Subtotal)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(oi => oi.Quantity)
+                    .IsRequired()
+                    .HasDefaultValue(1);
+
+                // Relationship: OrderItem - Order (Many-to-One)
+                entity.HasOne(oi => oi.Order)
+                    .WithMany(o => o.OrderItems)
+                    .HasForeignKey(oi => oi.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade); // Xóa Order thì xóa hết OrderItems
+
+                // Relationship: OrderItem - PracticalCourse (Many-to-One)
+                entity.HasOne(oi => oi.PracticalCourse)
+                    .WithMany()
+                    .HasForeignKey(oi => oi.PracticalCourseId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không xóa Course khi có OrderItem
             });
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }

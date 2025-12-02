@@ -19,5 +19,8 @@ namespace FirstAidAPI.Models
         public int MaxStudents { get; set; }
 
         public int EnrolledStudents { get; set; }
+
+        public List<string> Highlights { get; set; } = new List<string>();
+        public List<string> Requirements { get; set; } = new List<string>();
     }
 }

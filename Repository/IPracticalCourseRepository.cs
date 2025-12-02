@@ -4,8 +4,14 @@ namespace FirstAidAPI.Repository
 {
     public interface IPracticalCourseRepository
     {
-        public Task<IEnumerable<PracticalCourse>> GetAllAsync();
+        Task<IEnumerable<PracticalCourse>> GetAllAsync();
 
-        public Task<PracticalCourse?> GetByIdAsync(int id);
+        Task<PracticalCourse?> GetByIdAsync(int id);
+
+        Task<PracticalCourse> UpdateAsync(PracticalCourse practicalCourse);
+
+        Task<List<PracticalCourse>> GetByIdsWithLockAsync(List<int> courseIds);
+
+        Task<List<PracticalCourse>> GetByIdsAsync(List<int> courseIds);
     }
 }
