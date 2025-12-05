@@ -36,6 +36,7 @@ namespace FirstAidAPI.Data
         public DbSet<PracticalCourse> PracticalCourses { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -396,6 +397,32 @@ namespace FirstAidAPI.Data
                     .WithMany()
                     .HasForeignKey(oi => oi.PracticalCourseId)
                     .OnDelete(DeleteBehavior.Restrict); // Không xóa Course khi có OrderItem
+            });
+
+            // Cấu hình CourseEnrollment
+            modelBuilder.Entity<CourseEnrollment>(entity =>
+            {
+                // Composite index để query nhanh
+                entity.HasIndex(e => new { e.UserId, e.PracticalCourseId });
+
+                // Unique constraint: 1 user chỉ đăng ký 1 lần cho 1 khóa
+                entity.HasIndex(e => new { e.UserId, e.PracticalCourseId })
+                      .IsUnique();
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.PracticalCourse)
+                      .WithMany()
+                      .HasForeignKey(e => e.PracticalCourseId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Order)
+                      .WithMany()
+                      .HasForeignKey(e => e.OrderId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Encodings.Web;
 
+namespace FirstAidAPI.Controllers;
+
 [Route("api/[controller]")]
 [ApiController]
 public class AccountController : ControllerBase

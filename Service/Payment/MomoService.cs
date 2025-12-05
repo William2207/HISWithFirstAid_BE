@@ -25,7 +25,7 @@ namespace FirstAidAPI.Service.Payment
             var requestType = _configuration["Momo:RequestType"];
 
             var orderId = request.OrderNumber;
-            var amount = request.Amount.ToString();
+            var amount = request.Amount;
             var orderInfo = request.OrderDescription;
             var redirectUrl = returnUrl;
             var ipnUrls = ipnUrl;
@@ -50,8 +50,8 @@ namespace FirstAidAPI.Service.Payment
             var requestBody = new
             {
                 partnerCode = partnerCode,
-                partnerName = "Test",
-                storeId = "MomoTestStore",
+                partnerName = "MoMo Payment",
+                storeId = "Test Store",
                 requestId = requestId,
                 amount = amount,
                 orderId = orderId,
@@ -71,9 +71,23 @@ namespace FirstAidAPI.Service.Payment
                 Encoding.UTF8,
                 "application/json"
             );
+            //var jsonRequest = JsonConvert.SerializeObject(requestBody, Formatting.Indented);
+            //Console.WriteLine("===== REQUEST GỬI LÊN MOMO =====");
+            //Console.WriteLine(jsonRequest);
+            //Console.WriteLine("================================");
 
             var response = await httpClient.PostAsync(endpoint, content);
             var responseString = await response.Content.ReadAsStringAsync();
+
+            //Console.WriteLine("===== RESPONSE TỪ MOMO =====");
+            //Console.WriteLine(responseString);
+            //Console.WriteLine("============================");
+            //Console.WriteLine("===== DEBUG SIGNATURE =====");
+            //Console.WriteLine($"AccessKey: {accessKey}");
+            //Console.WriteLine($"SecretKey: {secretKey?.Substring(0, 5)}...");  // Chỉ show 5 ký tự đầu
+            //Console.WriteLine($"RawHash: {rawHash}");
+            //Console.WriteLine($"Signature: {signature}");
+            //Console.WriteLine("===========================");
             var momoResponse = JsonConvert.DeserializeObject<MomoCreatePaymentResponseDto>(responseString)
                 ?? throw new InvalidOperationException("Cannot deserialize MoMo response.");
 

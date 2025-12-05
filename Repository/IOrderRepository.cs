@@ -17,5 +17,7 @@ namespace FirstAidAPI.Repository
         Task<Order?> GetByOrderNumberAsync(string orderNumber);
 
         Task<IEnumerable<Order>> GetByUserIdAsync(int userId);
+
+        Task<Order?> GetByIdWithItemsAsync(int id);
     }
 }

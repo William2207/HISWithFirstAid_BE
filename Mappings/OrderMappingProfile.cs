@@ -35,6 +35,16 @@ namespace FirstAidAPI.Mappings
                     opt => opt.MapFrom(src => src.OrderStatus.ToString()))
                 .ForMember(dest => dest.TotalItems,
                     opt => opt.MapFrom(src => src.OrderItems.Count));
+
+            CreateMap<CreateOrderDto, Order>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Tự set = DateTime.Now
+                .ForMember(dest => dest.User, opt => opt.Ignore()) // Navigation property
+                .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.Items));
+
+            CreateMap<CreateOrderItemDto, OrderItem>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore()) // ID tự tăng
+                .ForMember(dest => dest.Order, opt => opt.Ignore())
+                .ForMember(dest => dest.OrderId, opt => opt.Ignore());
         }
     }
 }

@@ -13,7 +13,7 @@
         public string Message { get; set; } = string.Empty;
         public string PayType { get; set; } = string.Empty;
         public long ResponseTime { get; set; }
-        public string ExtraData { get; set; } = string.Empty;
+        public string? ExtraData { get; set; }
         public string Signature { get; set; } = string.Empty;
     }
 }

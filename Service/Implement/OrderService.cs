@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FirstAidAPI.Controllers;
 using FirstAidAPI.DTO.Order;
 using FirstAidAPI.DTO.Payment;
 using FirstAidAPI.Enums;
@@ -16,13 +17,15 @@ namespace FirstAidAPI.Service.Implement
         private readonly IMapper _mapper;
         private readonly IPracticalCourseRepository _courseRepository;
         private readonly IMomoService _momoService;
+        private readonly IEnrollmentService _enrollmentService;
 
-        public OrderService(IOrderRepository orderRepository, IMapper mapper, IPracticalCourseRepository practicalCourseRepository, IMomoService momoService)
+        public OrderService(IOrderRepository orderRepository, IMapper mapper, IPracticalCourseRepository practicalCourseRepository, IMomoService momoService, IEnrollmentService enrollmentService)
         {
             _orderRepository = orderRepository;
             _mapper = mapper;
             _courseRepository = practicalCourseRepository;
             _momoService = momoService;
+            _enrollmentService = enrollmentService;
         }
 
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
@@ -150,19 +153,17 @@ namespace FirstAidAPI.Service.Implement
                 order.CompletedAt = DateTime.UtcNow;
                 order.TransactionId = transactionId;
                 await _orderRepository.UpdateAsync(order);
+                await _enrollmentService.CreateEnrollmentsFromOrderAsync(orderId);
 
                 // 2. Tăng EnrolledStudents
-                var courseIds = order.OrderItems.Select(i => i.PracticalCourseId).ToList();
-                var courses = await _courseRepository.GetByIdsAsync(courseIds);
+                //var courseIds = order.OrderItems.Select(i => i.PracticalCourseId).ToList();
+                //var courses = await _courseRepository.GetByIdsAsync(courseIds);
 
-                foreach (var course in courses)
-                {
-                    course.EnrolledStudents += 1;
-                    await _courseRepository.UpdateAsync(course);
-                }
-
-                // 3. Cấp quyền truy cập khóa học
-                //await GrantCourseAccessAsync(order);
+                //foreach (var course in courses)
+                //{
+                //    course.EnrolledStudents += 1;
+                //    await _courseRepository.UpdateAsync(course);
+                //}
 
                 scope.Complete();
             }

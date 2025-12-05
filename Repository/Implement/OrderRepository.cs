@@ -20,7 +20,9 @@ namespace FirstAidAPI.Repository.Implement
 
         public async Task<Order?> GetByIdAsync(int id)
         {
-            return await _context.Orders.FindAsync(id);
+            return await _context.Orders
+                .Include(o => o.OrderItems) // <--- Bắt buộc phải có dòng này để load OrderItems
+                .FirstOrDefaultAsync(o => o.Id == id);
         }
 
         public async Task<Order> CreateAsync(Order order)
@@ -50,6 +52,13 @@ namespace FirstAidAPI.Repository.Implement
         public async Task<IEnumerable<Order>> GetByUserIdAsync(int userId)
         {
             return await _context.Orders.Where(o => o.UserId == userId).ToListAsync();
+        }
+
+        public async Task<Order?> GetByIdWithItemsAsync(int id)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id);
         }
     }
 }

@@ -2,6 +2,7 @@
 using FirstAidAPI.DTO.Payment;
 using FirstAidAPI.Service;
 using FirstAidAPI.Service.Payment;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FirstAidAPI.Controllers
@@ -13,12 +14,14 @@ namespace FirstAidAPI.Controllers
         private readonly IOrderService _orderService;
         private readonly IMomoService _momoService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<OrderController> _logger;
 
-        public OrderController(IOrderService orderService, IMomoService momoService, IConfiguration configuration)
+        public OrderController(IOrderService orderService, IMomoService momoService, IConfiguration configuration, ILogger<OrderController> logger)
         {
             _orderService = orderService;
             _momoService = momoService;
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpGet("{id}")]
@@ -55,6 +58,7 @@ namespace FirstAidAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createOrderDto)
         {
             try
@@ -82,6 +86,10 @@ namespace FirstAidAPI.Controllers
         [HttpGet("momo-callback")]
         public async Task<IActionResult> MomoCallback([FromQuery] MomoCallbackDto callback)
         {
+            //_logger.LogInformation("===== MOMO CALLBACK =====");
+            //_logger.LogInformation($"OrderId: {callback.OrderId}");
+            //_logger.LogInformation($"ResultCode: {callback.ResultCode}");
+            //_logger.LogInformation($"Message: {callback.Message}");
             try
             {
                 if (!_momoService.ValidateSignature(callback))
@@ -119,7 +127,6 @@ namespace FirstAidAPI.Controllers
         {
             try
             {
-                // ✅ Dùng _momoService đã inject
                 if (!_momoService.ValidateSignature(callback))
                 {
                     return Ok(new { resultCode = 97, message = "Invalid signature" });

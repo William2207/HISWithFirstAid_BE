@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20251202152036_AddIconPropToPracticalCourses")]
+    partial class AddIconPropToPracticalCourses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,47 +104,6 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("CartId", "PracticalCourseId");
 
                     b.ToTable("CartItems");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.CourseEnrollment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("OrderId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PracticalCourseId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Review")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.HasIndex("PracticalCourseId");
-
-                    b.HasIndex("UserId", "PracticalCourseId")
-                        .IsUnique();
-
-                    b.ToTable("CourseEnrollments");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
@@ -1666,33 +1628,6 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Cart");
 
                     b.Navigation("PracticalCourse");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.CourseEnrollment", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.PracticalCourse", "PracticalCourse")
-                        .WithMany()
-                        .HasForeignKey("PracticalCourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-
-                    b.Navigation("PracticalCourse");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
