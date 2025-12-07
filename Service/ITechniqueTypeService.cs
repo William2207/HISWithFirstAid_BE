@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.DTO.Technique;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Technique;
 
 namespace FirstAidAPI.Service
 {
@@ -13,5 +14,7 @@ namespace FirstAidAPI.Service
         Task<TechniqueTypeDto> UpdateAsync(int id, UpdateTechniqueTypeDto dto);
 
         Task<bool> DeleteAsync(int id);
+
+        Task<PagedResult<TechniqueTypeDto>> GetAllTechniqueTypesAsync(int page, int pageSize);
     }
 }

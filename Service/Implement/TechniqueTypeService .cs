@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
@@ -77,6 +78,22 @@ namespace FirstAidAPI.Service.Implement
             }
 
             return await _repository.DeleteAsync(id);
+        }
+
+        public async Task<PagedResult<TechniqueTypeDto>> GetAllTechniqueTypesAsync(int page, int pageSize)
+        {
+            var pagedTechniqueTypes = await _repository.GetAllTechniqueTypesAsync(page, pageSize);
+
+            var techniqueTypeDtos = _mapper.Map<List<TechniqueTypeDto>>(pagedTechniqueTypes.Data);
+
+            return new PagedResult<TechniqueTypeDto>
+            {
+                Data = techniqueTypeDtos,
+                CurrentPage = pagedTechniqueTypes.CurrentPage,
+                PageSize = pagedTechniqueTypes.PageSize,
+                TotalItems = pagedTechniqueTypes.TotalItems,
+                TotalPages = pagedTechniqueTypes.TotalPages
+            };
         }
     }
 }

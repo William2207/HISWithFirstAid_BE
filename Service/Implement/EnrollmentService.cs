@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
+using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Enrollment;
 using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
 using System.ComponentModel.DataAnnotations;
-using FirstAidAPI.DTO.Enrollment;
 
 namespace FirstAidAPI.Service.Implement
 {
@@ -114,6 +115,44 @@ namespace FirstAidAPI.Service.Implement
             await _enrollmentRepository.UpdateAsync(enrollment);
 
             _logger.LogInformation($"Added review for enrollment {enrollmentId}: {rating} stars");
+        }
+
+        public async Task<bool> ExistsAsync(int userId, int courseId)
+        {
+            return await _enrollmentRepository.ExistsAsync(userId, courseId);
+        }
+
+        public async Task<PagedResult<EnrollmentDto>> GetUserEnrollmentsAsync(int userId, int page, int pageSize)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("Invalid user ID", nameof(userId));
+            }
+
+            // Lấy dữ liệu từ repository
+            var pagedEnrollments = await _enrollmentRepository.GetUserEnrollmentsAsync(userId, page, pageSize);
+
+            // Map từ CourseEnrollment sang EnrollmentDto
+            var enrollmentDtos = pagedEnrollments.Data.Select(e => new EnrollmentDto
+            {
+                Id = e.Id,
+                CourseId = e.PracticalCourseId,
+                CourseName = e.PracticalCourse.Title,
+                CourseStartDate = e.PracticalCourse.StartDate,
+                CourseEndDate = e.PracticalCourse.EndDate,
+                Location = e.PracticalCourse.Location,
+                EnrolledAt = e.EnrolledAt,
+                Rating = e.Rating
+            }).ToList();
+            // Tạo PagedResult mới với dữ liệu đã map
+            return new PagedResult<EnrollmentDto>
+            {
+                Data = enrollmentDtos,
+                CurrentPage = pagedEnrollments.CurrentPage,
+                PageSize = pagedEnrollments.PageSize,
+                TotalItems = pagedEnrollments.TotalItems,
+                TotalPages = pagedEnrollments.TotalPages
+            };
         }
     }
 }

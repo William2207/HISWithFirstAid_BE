@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
+using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Quiz;
+using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
-using FirstAidAPI.Extensions;
-using FirstAidAPI.DTO.Quiz;
 
 namespace FirstAidAPI.Service.Implement
 {
@@ -50,6 +51,12 @@ namespace FirstAidAPI.Service.Implement
 
             var questions = await _repository.GetByTechniqueIdAsync(techniqueId);
             return _mapper.Map<IEnumerable<QuizQuestionDto>>(questions);
+        }
+
+        public async Task<PagedResult<QuizQuestionDto>> GetAllQuizQuestionsAsync(int page, int pageSize)
+        {
+            var pagedQuestions = await _repository.GetAllQuizQuestionsAsync(page, pageSize);
+            return MapToPagedDto(pagedQuestions);
         }
 
         public async Task<QuizQuestionDto> CreateAsync(CreateQuizQuestionDto createDto)
@@ -230,6 +237,20 @@ namespace FirstAidAPI.Service.Implement
         public async Task<bool> ExistsAsync(int id)
         {
             return await _repository.ExistsAsync(id);
+        }
+
+        private PagedResult<QuizQuestionDto> MapToPagedDto(PagedResult<QuizQuestion> pagedQuestions)
+        {
+            var questionDtos = _mapper.Map<List<QuizQuestionDto>>(pagedQuestions.Data);
+
+            return new PagedResult<QuizQuestionDto>
+            {
+                Data = questionDtos,
+                CurrentPage = pagedQuestions.CurrentPage,
+                PageSize = pagedQuestions.PageSize,
+                TotalItems = pagedQuestions.TotalItems,
+                TotalPages = pagedQuestions.TotalPages
+            };
         }
     }
 }

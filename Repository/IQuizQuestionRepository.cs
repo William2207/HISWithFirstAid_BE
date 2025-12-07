@@ -22,5 +22,7 @@ namespace FirstAidAPI.Repository
         Task<bool> SaveChangesAsync();
 
         Task<bool> DeleteAnswerOptionAsync(int answerOptionId);
+
+        Task<PagedResult<QuizQuestion>> GetAllQuizQuestionsAsync(int page, int pageSize);
     }
 }

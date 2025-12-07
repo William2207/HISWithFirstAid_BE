@@ -1,4 +1,6 @@
 ﻿using FirstAidAPI.Data;
+using FirstAidAPI.DTO;
+using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -83,6 +85,16 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.CourseEnrollments
                 .CountAsync(e => e.PracticalCourseId == courseId);
+        }
+
+        public async Task<PagedResult<CourseEnrollment>> GetUserEnrollmentsAsync(int userId, int page, int pageSize)
+        {
+            var query = _context.CourseEnrollments
+                .Where(e => e.UserId == userId)
+                .Include(e => e.PracticalCourse)
+                .OrderByDescending(e => e.EnrolledAt);
+
+            return await query.ToPagedResultAsync(page, pageSize);
         }
     }
 }

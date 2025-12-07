@@ -46,6 +46,17 @@ namespace FirstAidAPI.Repository.Implement
                 .ToListAsync();
         }
 
+        public async Task<PagedResult<QuizQuestion>> GetAllQuizQuestionsAsync(int page, int pageSize)
+        {
+            var query = _context.QuizQuestions
+                .AsNoTracking()
+                .Include(q => q.Technique)
+                .Include(q => q.AnswerOptions)
+                .OrderBy(q => q.Id);
+
+            return await query.ToPagedResultAsync(page, pageSize);
+        }
+
         public async Task AddAsync(QuizQuestion quizQuestion)
         {
             await _context.QuizQuestions.AddAsync(quizQuestion);

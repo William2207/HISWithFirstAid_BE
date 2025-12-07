@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.Models;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.Models;
 using System.Threading.Tasks;
 
 namespace FirstAidAPI.Repository
@@ -20,5 +21,7 @@ namespace FirstAidAPI.Repository
         Task<bool> NameExistsAsync(string name, int? excludeId = null);
 
         Task<bool> HasRelatedTechniquesAsync(int techniqueTypeId);
+
+        Task<PagedResult<TechniqueType>> GetAllTechniqueTypesAsync(int page, int pageSize);
     }
 }

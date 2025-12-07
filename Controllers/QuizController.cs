@@ -1,4 +1,5 @@
 ﻿using FirstAidAPI.Data;
+using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Quiz;
 using FirstAidAPI.Models;
 using FirstAidAPI.Service;
@@ -58,7 +59,7 @@ namespace FirstAidAPI.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<QuizQuestionDto>>> GetAll()
         {
             try
@@ -70,6 +71,22 @@ namespace FirstAidAPI.Controllers
             {
                 _logger.LogError(ex, "Error getting all quiz questions");
                 return StatusCode(500, "Internal server error");
+            }
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<QuizQuestionDto>>> GetAllQuizQuestions(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _service.GetAllQuizQuestionsAsync(page, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
             }
         }
 

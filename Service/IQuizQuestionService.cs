@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.DTO.Quiz;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Quiz;
 
 namespace FirstAidAPI.Service
 {
@@ -19,5 +20,7 @@ namespace FirstAidAPI.Service
         Task<bool> ExistsAsync(int id);
 
         Task<bool> DeleteAnswerOptionAsync(int answerOptionId);
+
+        Task<PagedResult<QuizQuestionDto>> GetAllQuizQuestionsAsync(int page, int pageSize);
     }
 }

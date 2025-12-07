@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.DTO.Enrollment;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Enrollment;
 using FirstAidAPI.Extensions;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -21,27 +22,27 @@ namespace FirstAidAPI.Controllers
             _logger = logger;
         }
 
-        [HttpGet("me")]
-        [Authorize]
-        public async Task<IActionResult> GetUserEnrollmentsAsync()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            //Console.WriteLine("UserId from token: " + userIdClaim);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized(new { message = "Invalid token" });
-            }
-            try
-            {
-                var enrollments = await _enrollmentService.GetUserEnrollmentsAsync(userId);
-                return Ok(new { success = true, data = enrollments });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching enrollments for user {UserId}", userId);
-                return BadRequest(new { success = false, message = ex.Message });
-            }
-        }
+        //[HttpGet("me")]
+        //[Authorize]
+        //public async Task<IActionResult> GetUserEnrollmentsAsync()
+        //{
+        //    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //    //Console.WriteLine("UserId from token: " + userIdClaim);
+        //    if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        //    {
+        //        return Unauthorized(new { message = "Invalid token" });
+        //    }
+        //    try
+        //    {
+        //        var enrollments = await _enrollmentService.GetUserEnrollmentsAsync(userId);
+        //        return Ok(new { success = true, data = enrollments });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error fetching enrollments for user {UserId}", userId);
+        //        return BadRequest(new { success = false, message = ex.Message });
+        //    }
+        //}
 
         [HttpPost("review/add")]
         [Authorize]
@@ -68,6 +69,35 @@ namespace FirstAidAPI.Controllers
             {
                 _logger.LogError(ex, "Error adding review for enrollment {EnrollmentId}", request.EnrollmentId);
                 return StatusCode(500, new { success = false, message = "An error occurred" });
+            }
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<ActionResult<PagedResult<EnrollmentDto>>> GetMyEnrollments(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Lấy userId từ token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { message = "Invalid token" });
+                }
+
+                var result = await _enrollmentService.GetUserEnrollmentsAsync(userId, page, pageSize);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
             }
         }
     }

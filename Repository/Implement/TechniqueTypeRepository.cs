@@ -1,6 +1,8 @@
 ﻿using FirstAidAPI.Data;
+using FirstAidAPI.DTO;
 using FirstAidAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using FirstAidAPI.Extensions;
 
 namespace FirstAidAPI.Repository.Implement
 {
@@ -68,6 +70,15 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _firstAidContext.Techniques
                 .AnyAsync(t => t.TechniqueTypeId == techniqueTypeId);
+        }
+
+        public async Task<PagedResult<TechniqueType>> GetAllTechniqueTypesAsync(int page, int pageSize)
+        {
+            var query = _firstAidContext.TechniqueTypes
+                .Include(tt => tt.Techniques)
+                .OrderBy(tt => tt.Id);
+
+            return await query.ToPagedResultAsync(page, pageSize);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.DTO.Enrollment;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Enrollment;
 
 namespace FirstAidAPI.Service
 {
@@ -13,5 +14,9 @@ namespace FirstAidAPI.Service
         Task<List<StudentDto>> GetCourseStudentsAsync(int courseId);
 
         Task AddReviewAsync(int enrollmentId, int rating, string? review);
+
+        Task<bool> ExistsAsync(int userId, int courseId);
+
+        Task<PagedResult<EnrollmentDto>> GetUserEnrollmentsAsync(int userId, int page, int pageSize);
     }
 }

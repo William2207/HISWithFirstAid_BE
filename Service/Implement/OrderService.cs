@@ -5,9 +5,11 @@ using FirstAidAPI.DTO.Payment;
 using FirstAidAPI.Enums;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
+using FirstAidAPI.Repository.Implement;
 using FirstAidAPI.Service.Payment;
 using Microsoft.EntityFrameworkCore;
 using System.Transactions;
+using FirstAidAPI.Exceptions;
 
 namespace FirstAidAPI.Service.Implement
 {
@@ -18,14 +20,16 @@ namespace FirstAidAPI.Service.Implement
         private readonly IPracticalCourseRepository _courseRepository;
         private readonly IMomoService _momoService;
         private readonly IEnrollmentService _enrollmentService;
+        private readonly ILogger<OrderService> _logger;
 
-        public OrderService(IOrderRepository orderRepository, IMapper mapper, IPracticalCourseRepository practicalCourseRepository, IMomoService momoService, IEnrollmentService enrollmentService)
+        public OrderService(IOrderRepository orderRepository, IMapper mapper, IPracticalCourseRepository practicalCourseRepository, IMomoService momoService, IEnrollmentService enrollmentService, ILogger<OrderService> logger)
         {
             _orderRepository = orderRepository;
             _mapper = mapper;
             _courseRepository = practicalCourseRepository;
             _momoService = momoService;
             _enrollmentService = enrollmentService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
@@ -76,6 +80,64 @@ namespace FirstAidAPI.Service.Implement
                 if (courses.Count != createOrderDto.Items.Count)
                 {
                     throw new Exception("Một số khóa học không tồn tại.");
+                }
+
+                //Kiem tra trung lap cung khoa hoc + thoi gian
+                var userEnrollments = await _enrollmentService.GetUserEnrollmentsAsync(createOrderDto.UserId);
+                foreach (var newCourse in courses)
+                {
+                    var duplicateEnrollment = userEnrollments.FirstOrDefault(ec => ec.CourseId == newCourse.Id && ec.CourseStartDate == newCourse.StartDate && ec.CourseEndDate == newCourse.EndDate);
+                    if (duplicateEnrollment != null)
+                    {
+                        throw new BusinessException(
+                            $"Bạn đã đăng ký khóa học '{newCourse.Title}' " +
+                            $"(lớp từ {newCourse.StartDate:dd/MM/yyyy} đến {newCourse.EndDate:dd/MM/yyyy}) rồi.");
+                    }
+                }
+
+                // KIỂM TRA XUNG ĐỘT LỊCH HỌC (giữa tất cả các khóa)
+                // Kiểm tra khóa mới với các khóa đã đăng ký
+                foreach (var newCourse in courses)
+                {
+                    foreach (var enrolledCourse in userEnrollments)
+                    {
+                        if (enrolledCourse.CourseId == newCourse.Id)
+                            continue;
+
+                        // Kiểm tra xung đột thời gian với các khóa học KHÁC
+                        bool hasTimeConflict = IsDateRangeOverlap(
+                            newCourse.StartDate, newCourse.EndDate,
+                            enrolledCourse.CourseStartDate, enrolledCourse.CourseEndDate);
+                    }
+                }
+                //KIỂM TRA XUNG ĐỘT GIỮA CÁC KHÓA TRONG ĐƠN HÀNG
+                for (int i = 0; i < courses.Count; i++)
+                {
+                    for (int j = i + 1; j < courses.Count; j++)
+                    {
+                        if (courses[i].Id == courses[j].Id && courses[i].StartDate == courses[j].StartDate && courses[i].EndDate == courses[j].EndDate)
+                        {
+                            throw new BusinessException(
+                                 $"Khóa học '{courses[i].Title}' " +
+                                 $"(lớp từ {courses[i].StartDate:dd/MM/yyyy} đến {courses[i].EndDate:dd/MM/yyyy}) " +
+                                 $"xuất hiện nhiều lần trong đơn hàng.");
+                        }
+
+                        if (courses[i].Id != courses[j].Id)
+                        {
+                            bool hasTimeConflict = IsDateRangeOverlap(
+                                courses[i].StartDate, courses[i].EndDate,
+                                courses[j].StartDate, courses[j].EndDate);
+                            if (hasTimeConflict)
+                            {
+                                throw new BusinessException(
+                                    $"Khóa học '{courses[i].Title}' " +
+                                    $"(lớp từ {courses[i].StartDate:dd/MM/yyyy} đến {courses[i].EndDate:dd/MM/yyyy}) " +
+                                    $"xung đột lịch học với khóa học '{courses[j].Title}' " +
+                                    $"(lớp từ {courses[j].StartDate:dd/MM/yyyy} đến {courses[j].EndDate:dd/MM/yyyy}).");
+                            }
+                        }
+                    }
                 }
 
                 // 2. Kiểm tra slot còn trống
@@ -147,23 +209,37 @@ namespace FirstAidAPI.Service.Implement
                     throw new Exception("Order not found");
                 }
 
-                // 1. Cập nhật Order
+                foreach (var item in order.OrderItems)
+                {
+                    var alreadyEnrolled = await _enrollmentService.ExistsAsync(
+                        order.UserId,
+                        item.PracticalCourseId);
+
+                    if (alreadyEnrolled)
+                    {
+                        _logger.LogWarning(
+                            $"User {order.UserId} already enrolled in course {item.PracticalCourseId}. Marking order as failed.");
+
+                        // Đánh dấu order là Failed thay vì Completed
+                        order.PaymentStatus = PaymentStatus.Failed;
+                        order.OrderStatus = OrderStatus.Cancelled;
+                        order.TransactionId = transactionId;
+                        await _orderRepository.UpdateAsync(order);
+
+                        scope.Complete();
+
+                        throw new BusinessException(
+                            "Không thể hoàn tất đơn hàng: Bạn đã đăng ký một số khóa học trong đơn hàng này rồi. " +
+                            "Vui lòng liên hệ support để được hoàn tiền.");
+                    }
+                }
+
                 order.PaymentStatus = PaymentStatus.Completed;
                 order.OrderStatus = OrderStatus.Completed;
                 order.CompletedAt = DateTime.UtcNow;
                 order.TransactionId = transactionId;
                 await _orderRepository.UpdateAsync(order);
                 await _enrollmentService.CreateEnrollmentsFromOrderAsync(orderId);
-
-                // 2. Tăng EnrolledStudents
-                //var courseIds = order.OrderItems.Select(i => i.PracticalCourseId).ToList();
-                //var courses = await _courseRepository.GetByIdsAsync(courseIds);
-
-                //foreach (var course in courses)
-                //{
-                //    course.EnrolledStudents += 1;
-                //    await _courseRepository.UpdateAsync(course);
-                //}
 
                 scope.Complete();
             }
@@ -186,18 +262,9 @@ namespace FirstAidAPI.Service.Implement
             await _orderRepository.UpdateAsync(order);
         }
 
-        //private async Task GrantCourseAccessAsync(Order order)
-        //{
-        //    var enrollments = order.OrderItems.Select(item => new CourseEnrollment
-        //    {
-        //        UserId = order.UserId,
-        //        CourseId = item.PracticalCourseId,
-        //        OrderId = order.Id,
-        //        EnrolledAt = DateTime.UtcNow,
-        //        IsActive = true
-        //    }).ToList();
-
-        //    await _enrollmentRepository.AddRangeAsync(enrollments);
-        //}
+        private bool IsDateRangeOverlap(DateOnly start1, DateOnly end1, DateOnly start2, DateOnly end2)
+        {
+            return start1 <= end2 && start2 <= end1;
+        }
     }
 }

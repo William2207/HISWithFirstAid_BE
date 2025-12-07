@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.Models;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.Models;
 
 namespace FirstAidAPI.Repository
 {
@@ -21,5 +22,7 @@ namespace FirstAidAPI.Repository
         Task DeleteAsync(int id);
 
         Task<int> CountByCourseIdAsync(int courseId);
+
+        Task<PagedResult<CourseEnrollment>> GetUserEnrollmentsAsync(int userId, int page, int pageSize);
     }
 }

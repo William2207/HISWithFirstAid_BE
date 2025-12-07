@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.DTO.Technique;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,12 +22,28 @@ namespace FirstAidAPI.Controllers
         /// <summary>
         /// Get all technique types
         /// </summary>
-        [HttpGet]
+        [HttpGet("all")]
         [ProducesResponseType(typeof(IEnumerable<TechniqueTypeDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<TechniqueTypeDto>>> GetAll()
         {
             var techniqueTypes = await _service.GetAllAsync();
             return Ok(techniqueTypes);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<PagedResult<TechniqueTypeDto>>> GetAllTechniqueTypes(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var result = await _service.GetAllTechniqueTypesAsync(page, pageSize);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
+            }
         }
 
         /// <summary>

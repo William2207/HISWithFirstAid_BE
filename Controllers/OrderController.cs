@@ -61,25 +61,14 @@ namespace FirstAidAPI.Controllers
         [Authorize]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createOrderDto)
         {
-            try
-            {
-                var result = await _orderService.CreateOrderAsync(createOrderDto);
+            var result = await _orderService.CreateOrderAsync(createOrderDto);
 
-                return Ok(new
-                {
-                    success = true,
-                    message = "Tạo đơn hàng thành công",
-                    data = result
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return BadRequest(new
-                {
-                    success = false,
-                    message = ex.Message
-                });
-            }
+                success = true,
+                message = "Tạo đơn hàng thành công",
+                data = result
+            });
         }
 
         // Return URL - User được redirect về đây
@@ -106,7 +95,7 @@ namespace FirstAidAPI.Controllers
                 if (callback.ResultCode == 0)
                 {
                     await _orderService.CompleteOrderAsync(order.Id, callback.TransId.ToString());
-                    return Redirect($"{_configuration["Frontend:Url"]}/payment/success?orderNumber={callback.OrderId}");
+                    return Redirect($"{_configuration["Frontend:Url"]}/enrollments");
                 }
                 else
                 {
