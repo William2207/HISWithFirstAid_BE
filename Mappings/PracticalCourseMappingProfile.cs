@@ -9,8 +9,19 @@ namespace FirstAidAPI.Mappings
         public PracticalCourseMappingProfile()
         {
             CreateMap<PracticalCourse, PracticalCourseDto>();
-            CreateMap<CreatePracticalCourseDto, PracticalCourse>();
-            //CreateMap<UpdatePracticalCourseDto, PracticalCourse>();
+
+            // Map từ CreateDto sang Entity
+            CreateMap<CreatePracticalCourseDto, PracticalCourse>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore()) // Set trong Service
+                .ForMember(dest => dest.EnrolledStudents, opt => opt.Ignore()); // Mặc định = 0
+
+            // Map từ UpdateDto sang Entity (chỉ map các field có giá trị)
+            CreateMap<UpdatePracticalCourseDto, PracticalCourse>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.EnrolledStudents, opt => opt.Ignore())
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

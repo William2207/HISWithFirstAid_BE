@@ -1,4 +1,6 @@
 ﻿using FirstAidAPI.Data;
+using FirstAidAPI.DTO.Revenue;
+using FirstAidAPI.Enums;
 using FirstAidAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,6 +61,44 @@ namespace FirstAidAPI.Repository.Implement
             return await _context.Orders
                 .Include(o => o.OrderItems)
                 .FirstOrDefaultAsync(o => o.Id == id);
+        }
+
+        public async Task<List<MonthlyRevenueDto>> GetMonthlyRevenueAsync(int year)
+        {
+            var monthlyData = await _context.Orders
+                .Where(o => o.CompletedAt.HasValue
+                            && o.CompletedAt.Value.Year == year
+                            && o.PaymentStatus == PaymentStatus.Completed)
+                .GroupBy(o => o.CompletedAt!.Value.Month)
+                .Select(g => new MonthlyRevenueDto
+                {
+                    Month = g.Key,
+                    Revenue = g.Sum(o => o.TotalAmount)
+                })
+                .OrderBy(x => x.Month)
+                .ToListAsync();
+
+            // Tạo danh sách đầy đủ 12 tháng (tháng nào không có doanh thu = 0)
+            var allMonths = Enumerable.Range(1, 12).Select(month => new MonthlyRevenueDto
+            {
+                Month = month,
+                MonthName = new DateTime(year, month, 1).ToString("MMMM"),
+                Revenue = monthlyData.FirstOrDefault(m => m.Month == month)?.Revenue ?? 0
+            }).ToList();
+
+            return allMonths;
+        }
+
+        public async Task<YearlyRevenueDto> GetYearlyRevenueAsync(int year)
+        {
+            var monthlyRevenues = await GetMonthlyRevenueAsync(year);
+
+            return new YearlyRevenueDto
+            {
+                Year = year,
+                TotalRevenue = monthlyRevenues.Sum(m => m.Revenue),
+                MonthlyRevenues = monthlyRevenues
+            };
         }
     }
 }

@@ -13,5 +13,7 @@
         public bool IsPublished { get; set; }
         public DateOnly CreatedAt { get; set; }
         public int MaxStudents { get; set; }
+        public List<string> Highlights { get; set; } = [];
+        public List<string> Requirements { get; set; } = [];
     }
 }

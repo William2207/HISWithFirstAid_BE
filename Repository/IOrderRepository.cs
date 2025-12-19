@@ -1,4 +1,5 @@
-﻿using FirstAidAPI.Models;
+﻿using FirstAidAPI.DTO.Revenue;
+using FirstAidAPI.Models;
 
 namespace FirstAidAPI.Repository
 {
@@ -19,5 +20,9 @@ namespace FirstAidAPI.Repository
         Task<IEnumerable<Order>> GetByUserIdAsync(int userId);
 
         Task<Order?> GetByIdWithItemsAsync(int id);
+
+        Task<List<MonthlyRevenueDto>> GetMonthlyRevenueAsync(int year);
+
+        Task<YearlyRevenueDto> GetYearlyRevenueAsync(int year);
     }
 }
