@@ -14,12 +14,18 @@ public class AccountController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly ITokenService _tokenService;
     private readonly IEmailService _emailService;
+    private readonly IPasswordResetService _passwordResetService;
 
-    public AccountController(UserManager<User> userManager, ITokenService tokenService, IEmailService emailService)
+    public AccountController(
+        UserManager<User> userManager,
+        ITokenService tokenService,
+        IEmailService emailService,
+        IPasswordResetService passwordResetService)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _emailService = emailService;
+        _passwordResetService = passwordResetService;
     }
 
     // POST: api/account/register
@@ -134,5 +140,64 @@ public class AccountController : ControllerBase
         }
 
         return BadRequest("Xác thực email thất bại.");
+    }
+
+    // POST: api/account/forgot-password
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var result = await _passwordResetService.SendPasswordResetOtpAsync(forgotPasswordDto.Email);
+            if (!result)
+            {
+                return BadRequest(new { Message = "Không thể gửi email. Vui lòng thử lại sau." });
+            }
+
+            return Ok(new { Message = "OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email." });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { Message = "Đã xảy ra lỗi khi gửi email." });
+        }
+    }
+
+    // POST: api/account/verify-otp
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto verifyOtpDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var newPassword = await _passwordResetService.VerifyOtpAndResetPasswordAsync(verifyOtpDto.Email, verifyOtpDto.Otp);
+
+            return Ok(new ResetPasswordResponseDto
+            {
+                Success = true,
+                Message = "Mật khẩu đã được đặt lại thành công. Mật khẩu mới đã được gửi đến email của bạn.",
+                NewPassword = newPassword
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { Message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { Message = "Đã xảy ra lỗi khi đặt lại mật khẩu." });
+        }
     }
 }

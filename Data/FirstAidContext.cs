@@ -37,6 +37,7 @@ namespace FirstAidAPI.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -424,6 +425,31 @@ namespace FirstAidAPI.Data
                       .HasForeignKey(e => e.OrderId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // Cấu hình PasswordResetToken
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(prt => prt.Id);
+
+                entity.Property(prt => prt.Otp)
+                    .IsRequired()
+                    .HasMaxLength(10);
+
+                entity.Property(prt => prt.IsUsed)
+                    .HasDefaultValue(false);
+
+                entity.Property(prt => prt.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(prt => prt.User)
+                    .WithMany()
+                    .HasForeignKey(prt => prt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Index để query nhanh
+                entity.HasIndex(prt => new { prt.UserId, prt.Otp });
+            });
+
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }
     }
