@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization; // Cần thêm để sử dụng [Authorize]
 using FirstAidAPI.Service;
-using FirstAidAPI.DTO;
 using System.Security.Claims; // Cần thêm để làm việc với Claims
 using System.Threading.Tasks;
+using FirstAidAPI.DTO.Technique;
 
 namespace FirstAidAPI.Controllers
 {

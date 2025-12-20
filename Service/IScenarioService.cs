@@ -1,4 +1,5 @@
 ﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Scenario;
 using FirstAidAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -7,15 +8,15 @@ namespace FirstAidAPI.Service
 {
     public interface IScenarioService
     {
-        Task<IEnumerable<Scenario>> GetAllScenariosAsync();
+        Task<IEnumerable<ScenarioDto>> GetAllScenariosAsync();
 
-        Task<PagedResult<Scenario>> GetScenariosAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
+        Task<PagedResult<ScenarioDto>> GetScenariosAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
 
-        Task<Scenario?> GetScenarioByIdAsync(int id);
+        Task<ScenarioDetailDto?> GetScenarioByIdAsync(int id);
 
-        Task<Scenario> CreateScenarioAsync(Scenario scenario);
+        Task<ScenarioDetailDto> CreateScenarioAsync(CreateScenarioDto createDto);
 
-        Task<bool> UpdateScenarioAsync(int id, Scenario scenario);
+        Task<ScenarioDetailDto> UpdateScenarioAsync(int id, UpdateScenarioDto updateDto);
 
         Task<bool> DeleteScenarioAsync(int id);
     }

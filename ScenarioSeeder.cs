@@ -42,7 +42,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 0,
                 MaxScore = 0,
-                TechniqueId = null
             },
 
             // Step 2: Question (Đánh giá tình huống)
@@ -59,7 +58,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 30,
                 MaxScore = 10,
-                TechniqueId = null
             },
 
             // Step 3: Question (Kiểm tra ý thức)
@@ -76,7 +74,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 30,
                 MaxScore = 10,
-                TechniqueId = null
             },
 
             // Step 4: Question (Xử lý vết thương)
@@ -93,7 +90,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 40,
                 MaxScore = 15,
-                TechniqueId = null
             },
 
             // Step 5: Question (Băng bó)
@@ -110,7 +106,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 30,
                 MaxScore = 15,
-                TechniqueId = null
             }
         };
 
@@ -386,7 +381,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 0,
                 MaxScore = 0,
-                TechniqueId = null
             },
 
             // Step 2: Question
@@ -403,7 +397,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 20,
                 MaxScore = 15,
-                TechniqueId = null
             },
 
             // Step 3: Question
@@ -420,7 +413,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 30,
                 MaxScore = 10,
-                TechniqueId = null
             },
 
             // Step 4: Question
@@ -437,7 +429,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 30,
                 MaxScore = 15,
-                TechniqueId = null
             },
 
             // Step 5: Question
@@ -454,7 +445,6 @@ namespace FirstAidAPI
                 VideoUrl = "",
                 TimeLimit = 40,
                 MaxScore = 10,
-                TechniqueId = null
             }
         };
 
@@ -681,21 +671,6 @@ namespace FirstAidAPI
         };
 
             // ============================================
-            // TECHNIQUE RELATIONSHIPS
-            // ============================================
-
-            var scenarioTechniques = new List<ScenarioTechnique>
-        {
-            // Scenario 1 liên quan đến các Techniques
-            new ScenarioTechnique { ScenarioId = 1, TechniqueId = 1, Order = 1 }, // Đánh giá hiện trường
-            new ScenarioTechnique { ScenarioId = 1, TechniqueId = 4, Order = 2 }, // Xử lý vết thương
-            new ScenarioTechnique { ScenarioId = 1, TechniqueId = 16, Order = 3 }, // Băng bó cơ bản
-
-            // Scenario 2 liên quan đến các Techniques
-            new ScenarioTechnique { ScenarioId = 2, TechniqueId = 2, Order = 1 }, // Xử lý bỏng
-        };
-
-            // ============================================
             // SEED DATA
             // ============================================
 
@@ -704,10 +679,6 @@ namespace FirstAidAPI
             modelBuilder.Entity<ScenarioStep>().HasData(scenario2Steps);
             modelBuilder.Entity<StepOption>().HasData(scenario1Options);
             modelBuilder.Entity<StepOption>().HasData(scenario2Options);
-
-            // Chỉ seed nếu bạn đã có Techniques với Id 1-5
-            // Nếu chưa có, comment dòng này lại
-            modelBuilder.Entity<ScenarioTechnique>().HasData(scenarioTechniques);
         }
     }
 }

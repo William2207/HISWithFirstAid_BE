@@ -6,25 +6,32 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using FirstAidAPI.DTO.Scenario;
 
 namespace FirstAidAPI.Repository.Implement
 {
     public class ScenarioRepository : IScenarioRepository
     {
         private readonly FirstAidContext _context;
+        private readonly IMapper _mapper;
 
-        public ScenarioRepository(FirstAidContext context)
+        public ScenarioRepository(FirstAidContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Scenario>> GetAllAsync()
         {
-            // Khi lấy danh sách, thường không cần tải các collection con để tránh dữ liệu quá lớn
-            return await _context.Scenarios.ToListAsync();
+            return await _context.Scenarios
+                .Include(s => s.ScenarioSteps)
+                    .ThenInclude(ss => ss.Options)
+                .OrderBy(s => s.Id)
+                .ToListAsync();
         }
 
-        public async Task<PagedResult<Scenario>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
+        public async Task<PagedResult<ScenarioDto>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search)
         {
             // Chuyển toàn bộ logic query từ Controller vào đây
             var query = _context.Scenarios.AsQueryable();
@@ -52,37 +59,63 @@ namespace FirstAidAPI.Repository.Implement
 
             query = query.OrderBy(s => s.Id);
 
-            return await query.ToPagedResultAsync(page, pageSize);
+            var dtoQuery = query.Select(s => new ScenarioDto
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Title = s.Title,
+                Description = s.Description,
+                Type = s.Type,
+                Difficulty = s.Difficulty,
+                Duration = s.Duration,
+                Icon = s.Icon!,
+                PassingScore = s.PassingScore,
+                IsPublished = s.IsPublished,
+                StepCount = s.ScenarioSteps.Count
+            });
+
+            return await dtoQuery.ToPagedResultAsync(page, pageSize);
         }
 
         public async Task<Scenario?> GetByIdAsync(int id)
         {
-            return await _context.Scenarios
-            .Include(s => s.ScenarioTechniques)
-                .ThenInclude(st => st.Technique)
-            .Include(s => s.ScenarioSteps.OrderBy(step => step.Order))
-                .ThenInclude(ss => ss.Options) // Thêm ThenInclude để tải Options
-            .FirstOrDefaultAsync(s => s.Id == id);
+            var scenario = await _context.Scenarios
+               .Include(s => s.ScenarioSteps)
+                   .ThenInclude(ss => ss.Options)
+               .FirstOrDefaultAsync(s => s.Id == id);
+
+            return scenario;
         }
 
-        public async Task AddAsync(Scenario scenario)
+        public async Task<Scenario> CreateAsync(Scenario scenario)
         {
-            await _context.Scenarios.AddAsync(scenario);
+            _context.Scenarios.Add(scenario);
+            await _context.SaveChangesAsync();
+            return scenario;
         }
 
-        public void Update(Scenario scenario)
+        public async Task<Scenario> UpdateAsync(Scenario scenario)
         {
-            _context.Scenarios.Update(scenario);
+            await _context.SaveChangesAsync();
+            return scenario;
         }
 
-        public void Delete(Scenario scenario)
+        public async Task<bool> DeleteAsync(int id)
         {
+            var scenario = await _context.Scenarios.FindAsync(id);
+            if (scenario == null)
+            {
+                return false;
+            }
+
             _context.Scenarios.Remove(scenario);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
-        public async Task<bool> SaveChangesAsync()
+        public async Task<bool> ExistsAsync(int id)
         {
-            return (await _context.SaveChangesAsync() > 0);
+            return await _context.Scenarios.AnyAsync(s => s.Id == id);
         }
     }
 }

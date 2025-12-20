@@ -9,7 +9,7 @@
         public Technique Technique { get; set; } = null!;
 
         public string? Notes { get; set; } // Ghi chú cá nhân
-        public DateTime SavedAt { get; set; } = DateTime.UtcNow;
+        public DateTime SavedAt { get; set; }
         public int Priority { get; set; } = 0; // 0: Normal, 1: Important, 2: Urgent
     }
 }

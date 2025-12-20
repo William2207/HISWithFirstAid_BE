@@ -1,7 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
+using MailKit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace FirstAidAPI.Data
 
@@ -20,14 +24,20 @@ namespace FirstAidAPI.Data
         public DbSet<AnswerOption> AnswerOptions { get; set; }
         public DbSet<ScenarioStep> ScenarioSteps { get; set; }
         public DbSet<StepOption> StepOptions { get; set; }
-        public DbSet<ScenarioTechnique> ScenarioTechniques { get; set; }
-
         public DbSet<UserScenarioProgress> UserScenarioProgresses { get; set; }
         public DbSet<UserTechniqueProgress> UserTechniqueProgresses { get; set; }
         public DbSet<SavedTechnique> SavedTechniques { get; set; }
         public DbSet<ScenarioAttempt> ScenarioAttempts { get; set; }
         public DbSet<StepAnswer> StepAnswers { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
+        public DbSet<TechniqueType> TechniqueTypes { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<PracticalCourse> PracticalCourses { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -81,24 +91,15 @@ namespace FirstAidAPI.Data
                 .HasForeignKey(s => s.TechniqueId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<ScenarioTechnique>()
-                .HasKey(st => new { st.ScenarioId, st.TechniqueId });
-
-            modelBuilder.Entity<ScenarioTechnique>()
-                .HasOne(st => st.Scenario)
-                .WithMany(s => s.ScenarioTechniques)
-                .HasForeignKey(st => st.ScenarioId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ScenarioTechnique>()
-                .HasOne(st => st.Technique)
-                .WithMany(t => t.ScenarioTechniques)
-                .HasForeignKey(st => st.TechniqueId)
-                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Technique>()
+                .HasOne(t => t.Type)
+                .WithMany(tt => tt.Techniques)
+                .HasForeignKey(t => t.TechniqueTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<QuizQuestion>()
                 .HasMany(q => q.AnswerOptions)
-                .WithOne()
+                .WithOne(a => a.QuizQuestion)
                 .HasForeignKey(a => a.QuizQuestionId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -120,10 +121,6 @@ namespace FirstAidAPI.Data
                 entity.Property(u => u.FullName)
                     .IsRequired()
                     .HasMaxLength(200);
-
-                entity.Property(u => u.Role)
-                    .HasMaxLength(50)
-                    .HasDefaultValue("User");
 
                 entity.Property(u => u.CreatedAt)
                     .HasDefaultValueSql("NOW()");
@@ -286,6 +283,171 @@ namespace FirstAidAPI.Data
 
                 entity.Property(ua => ua.EarnedAt)
                     .HasDefaultValueSql("NOW()");
+            });
+
+            modelBuilder.Entity<Cart>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Cart có nhiều CartItems (One-to-Many)
+                entity.HasMany(c => c.CartItems)
+                    .WithOne(ci => ci.Cart)
+                    .HasForeignKey(ci => ci.CartId)
+                    .OnDelete(DeleteBehavior.Cascade); // Xóa Cart thì xóa hết CartItems
+
+                // Index để tìm Cart theo UserId nhanh hơn
+                entity.HasIndex(e => e.UserId);
+            });
+
+            // Cấu hình CartItem
+            modelBuilder.Entity<CartItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // CartItem thuộc về 1 Cart (đã cấu hình ở trên)
+
+                // CartItem tham chiếu đến 1 PracticalCourse
+                entity.HasOne(ci => ci.PracticalCourse)
+                    .WithMany() // PracticalCourse có thể có nhiều CartItem
+                    .HasForeignKey(ci => ci.PracticalCourseId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không cho xóa Course nếu đang có trong giỏ
+
+                // Đặt precision cho decimal
+                entity.Property(e => e.Price)
+                    .HasColumnType("decimal(18,2)");
+
+                // Index để tìm CartItem theo CartId và CourseId
+                entity.HasIndex(e => new { e.CartId, e.PracticalCourseId });
+            });
+
+            // Cấu hình PracticalCourse
+            modelBuilder.Entity<PracticalCourse>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                // Đặt precision cho decimal
+                entity.Property(e => e.Price)
+                    .HasColumnType("decimal(18,2)");
+
+                // Index cho tìm kiếm khóa học đã publish
+                entity.HasIndex(e => e.IsPublished);
+
+                // Index cho tìm kiếm theo ngày
+                entity.HasIndex(e => e.StartDate);
+                entity.Property(e => e.Highlights).HasJsonConversion();
+                entity.Property(e => e.Requirements).HasJsonConversion();
+            });
+
+            //Cấu hình Order
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.Id);
+
+                entity.Property(o => o.OrderNumber)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.HasIndex(o => o.OrderNumber)
+                    .IsUnique(); // Đảm bảo OrderNumber là duy nhất
+
+                entity.Property(o => o.TotalAmount)
+                    .HasColumnType("decimal(18,2)"); // Chính xác cho tiền
+
+                entity.Property(o => o.PaymentMethod)
+                    .HasConversion<int>(); // Lưu enum dưới dạng int
+
+                entity.Property(o => o.PaymentStatus)
+                    .HasConversion<int>();
+
+                entity.Property(o => o.OrderStatus)
+                    .HasConversion<int>();
+
+                entity.Property(o => o.CreatedAt)
+                    .IsRequired();
+
+                // Relationship: Order - User (Many-to-One)
+                entity.HasOne(o => o.User)
+                    .WithMany() // Hoặc .WithMany(u => u.Orders) nếu User có ICollection<Order>
+                    .HasForeignKey(o => o.UserId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không xóa Order khi xóa User
+            });
+
+            // Cấu hình OrderItem
+            modelBuilder.Entity<OrderItem>(entity =>
+            {
+                entity.HasKey(oi => oi.Id);
+
+                entity.Property(oi => oi.Price)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(oi => oi.Subtotal)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(oi => oi.Quantity)
+                    .IsRequired()
+                    .HasDefaultValue(1);
+
+                // Relationship: OrderItem - Order (Many-to-One)
+                entity.HasOne(oi => oi.Order)
+                    .WithMany(o => o.OrderItems)
+                    .HasForeignKey(oi => oi.OrderId)
+                    .OnDelete(DeleteBehavior.Cascade); // Xóa Order thì xóa hết OrderItems
+
+                // Relationship: OrderItem - PracticalCourse (Many-to-One)
+                entity.HasOne(oi => oi.PracticalCourse)
+                    .WithMany()
+                    .HasForeignKey(oi => oi.PracticalCourseId)
+                    .OnDelete(DeleteBehavior.Restrict); // Không xóa Course khi có OrderItem
+            });
+
+            // Cấu hình CourseEnrollment
+            modelBuilder.Entity<CourseEnrollment>(entity =>
+            {
+                // Composite index để query nhanh
+                entity.HasIndex(e => new { e.UserId, e.PracticalCourseId });
+
+                // Unique constraint: 1 user chỉ đăng ký 1 lần cho 1 khóa
+                entity.HasIndex(e => new { e.UserId, e.PracticalCourseId })
+                      .IsUnique();
+
+                entity.HasOne(e => e.User)
+                      .WithMany()
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.PracticalCourse)
+                      .WithMany()
+                      .HasForeignKey(e => e.PracticalCourseId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Order)
+                      .WithMany()
+                      .HasForeignKey(e => e.OrderId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Cấu hình PasswordResetToken
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(prt => prt.Id);
+
+                entity.Property(prt => prt.Otp)
+                    .IsRequired()
+                    .HasMaxLength(10);
+
+                entity.Property(prt => prt.IsUsed)
+                    .HasDefaultValue(false);
+
+                entity.Property(prt => prt.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(prt => prt.User)
+                    .WithMany()
+                    .HasForeignKey(prt => prt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Index để query nhanh
+                entity.HasIndex(prt => new { prt.UserId, prt.Otp });
             });
 
             ScenarioSeeder.SeedScenarios(modelBuilder);

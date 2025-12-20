@@ -8,8 +8,9 @@ namespace FirstAidAPI.Models
         public string FullName { get; set; } = string.Empty;
         public string? Avatar { get; set; }
         public DateTime DateOfBirth { get; set; }
-        public string Role { get; set; } = "User";
+        public int Points { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; } = true;
 

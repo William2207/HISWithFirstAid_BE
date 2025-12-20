@@ -31,6 +31,7 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AnswerText")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsCorrect")
@@ -46,6 +47,285 @@ namespace FirstAidAPI.Migrations
                     b.ToTable("AnswerOptions");
                 });
 
+            modelBuilder.Entity("FirstAidAPI.Models.Cart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("CreatedAt")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("UpdatedAt")
+                        .HasColumnType("date");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("AddedAt")
+                        .HasColumnType("date");
+
+                    b.Property<int>("CartId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PracticalCourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PracticalCourseId");
+
+                    b.HasIndex("CartId", "PracticalCourseId");
+
+                    b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.CourseEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("EnrolledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PracticalCourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Rating")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Review")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PracticalCourseId");
+
+                    b.HasIndex("UserId", "PracticalCourseId")
+                        .IsUnique();
+
+                    b.ToTable("CourseEnrollments");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("OrderStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderNumber")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PracticalCourseId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PracticalCourseId");
+
+                    b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.PasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime>("ExpirationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Otp")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Otp");
+
+                    b.ToTable("PasswordResetTokens");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.PracticalCourse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("CreatedAt")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("EnrolledStudents")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Highlights")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("MaxStudents")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Requirements")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsPublished");
+
+                    b.HasIndex("StartDate");
+
+                    b.ToTable("PracticalCourses");
+                });
+
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
                 {
                     b.Property<int>("Id")
@@ -55,9 +335,11 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("QuestionText")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("TechniqueId")
@@ -116,9 +398,11 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Duration")
@@ -131,15 +415,18 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("PassingScore")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -230,9 +517,11 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("MaxScore")
@@ -242,31 +531,30 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Question")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("ScenarioId")
                         .HasColumnType("integer");
 
                     b.Property<string>("StepType")
+                        .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int?>("TechniqueId")
-                        .HasColumnType("integer");
 
                     b.Property<int>("TimeLimit")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("VideoUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ScenarioId");
-
-                    b.HasIndex("TechniqueId");
 
                     b.ToTable("ScenarioSteps");
 
@@ -413,50 +701,6 @@ namespace FirstAidAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.ScenarioTechnique", b =>
-                {
-                    b.Property<int>("ScenarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TechniqueId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.HasKey("ScenarioId", "TechniqueId");
-
-                    b.HasIndex("TechniqueId");
-
-                    b.ToTable("ScenarioTechniques");
-
-                    b.HasData(
-                        new
-                        {
-                            ScenarioId = 1,
-                            TechniqueId = 1,
-                            Order = 1
-                        },
-                        new
-                        {
-                            ScenarioId = 1,
-                            TechniqueId = 4,
-                            Order = 2
-                        },
-                        new
-                        {
-                            ScenarioId = 1,
-                            TechniqueId = 16,
-                            Order = 3
-                        },
-                        new
-                        {
-                            ScenarioId = 2,
-                            TechniqueId = 2,
-                            Order = 1
-                        });
-                });
-
             modelBuilder.Entity("FirstAidAPI.Models.StepAnswer", b =>
                 {
                     b.Property<int>("Id")
@@ -486,6 +730,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("UserAnswer")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -527,6 +772,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("OptionKey")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("ScoreValue")
@@ -536,6 +782,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Text")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -968,33 +1215,40 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Difficulty")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("Duration")
                         .HasColumnType("integer");
 
                     b.Property<string>("Icon")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("TechniqueTypeId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("VideoUrl")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TechniqueTypeId");
 
                     b.ToTable("Techniques");
                 });
@@ -1011,12 +1265,14 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("ExpectedAction")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Instruction")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("StepNumber")
@@ -1030,6 +1286,33 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("TechniqueId");
 
                     b.ToTable("TechniqueSteps");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.TechniqueType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TechniqueTypes");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.User", b =>
@@ -1102,11 +1385,8 @@ namespace FirstAidAPI.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Role")
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasDefaultValue("User");
+                    b.Property<int>("Points")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -1144,6 +1424,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("EarnedAt")
@@ -1152,6 +1433,7 @@ namespace FirstAidAPI.Migrations
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<string>("Icon")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
@@ -1394,11 +1676,100 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.AnswerOption", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.QuizQuestion", null)
+                    b.HasOne("FirstAidAPI.Models.QuizQuestion", "QuizQuestion")
                         .WithMany("AnswerOptions")
                         .HasForeignKey("QuizQuestionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("QuizQuestion");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.CartItem", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Cart", "Cart")
+                        .WithMany("CartItems")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.PracticalCourse", "PracticalCourse")
+                        .WithMany()
+                        .HasForeignKey("PracticalCourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cart");
+
+                    b.Navigation("PracticalCourse");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.CourseEnrollment", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.PracticalCourse", "PracticalCourse")
+                        .WithMany()
+                        .HasForeignKey("PracticalCourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("PracticalCourse");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.OrderItem", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.PracticalCourse", "PracticalCourse")
+                        .WithMany()
+                        .HasForeignKey("PracticalCourseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("PracticalCourse");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.PasswordResetToken", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
@@ -1458,32 +1829,7 @@ namespace FirstAidAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("FirstAidAPI.Models.Technique", "Technique")
-                        .WithMany()
-                        .HasForeignKey("TechniqueId");
-
                     b.Navigation("Scenario");
-
-                    b.Navigation("Technique");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.ScenarioTechnique", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Scenario", "Scenario")
-                        .WithMany("ScenarioTechniques")
-                        .HasForeignKey("ScenarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.Technique", "Technique")
-                        .WithMany("ScenarioTechniques")
-                        .HasForeignKey("TechniqueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Scenario");
-
-                    b.Navigation("Technique");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.StepAnswer", b =>
@@ -1514,6 +1860,17 @@ namespace FirstAidAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Step");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.TechniqueType", "Type")
+                        .WithMany("Techniques")
+                        .HasForeignKey("TechniqueTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.TechniqueStep", b =>
@@ -1626,6 +1983,16 @@ namespace FirstAidAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("FirstAidAPI.Models.Cart", b =>
+                {
+                    b.Navigation("CartItems");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
+                {
+                    b.Navigation("OrderItems");
+                });
+
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
                 {
                     b.Navigation("AnswerOptions");
@@ -1634,8 +2001,6 @@ namespace FirstAidAPI.Migrations
             modelBuilder.Entity("FirstAidAPI.Models.Scenario", b =>
                 {
                     b.Navigation("ScenarioSteps");
-
-                    b.Navigation("ScenarioTechniques");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.ScenarioAttempt", b =>
@@ -1652,9 +2017,12 @@ namespace FirstAidAPI.Migrations
                 {
                     b.Navigation("QuizQuestions");
 
-                    b.Navigation("ScenarioTechniques");
-
                     b.Navigation("TechniqueSteps");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.TechniqueType", b =>
+                {
+                    b.Navigation("Techniques");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.User", b =>

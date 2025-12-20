@@ -1,6 +1,11 @@
 ﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO.Scenario;
+using FirstAidAPI.DTO.Technique;
+using FirstAidAPI.DTO.User;
+using FirstAidAPI.Models;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -12,11 +17,13 @@ public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IPhotoService _photoService;
+    private readonly UserManager<User> _userManager;
 
-    public UsersController(IUserService userService, IPhotoService photoService)
+    public UsersController(IUserService userService, IPhotoService photoService, UserManager<User> userManager)
     {
         _userService = userService;
         _photoService = photoService;
+        _userManager = userManager;
     }
 
     [HttpGet("{id}")]
@@ -31,6 +38,8 @@ public class UsersController : ControllerBase
         {
             return BadRequest("User email is required");
         }
+        var roles = await _userManager.GetRolesAsync(user);
+
         var userDto = new UserDto
         {
             Id = user.Id,
@@ -39,7 +48,7 @@ public class UsersController : ControllerBase
             PhoneNumber = user.PhoneNumber,
             Avatar = user.Avatar,
             DateOfBirth = user.DateOfBirth,
-            Role = user.Role,
+            Role = roles,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt
         };
@@ -67,6 +76,7 @@ public class UsersController : ControllerBase
         {
             return BadRequest("User email is required");
         }
+        var roles = await _userManager.GetRolesAsync(user);
 
         var userDto = new UserDto
         {
@@ -76,12 +86,38 @@ public class UsersController : ControllerBase
             PhoneNumber = user.PhoneNumber,
             Avatar = user.Avatar,
             DateOfBirth = user.DateOfBirth,
-            Role = user.Role,
+            Role = roles,
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt
         };
 
         return Ok(userDto);
+    }
+
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<IActionResult> UpdateCurrentUser([FromBody] UpdateUserDto updateUserDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+        var user = await _userService.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+        // Cập nhật thông tin người dùng
+        user.FullName = updateUserDto.FullName ?? user.FullName;
+        user.PhoneNumber = updateUserDto.PhoneNumber ?? user.PhoneNumber;
+        user.Email = updateUserDto.Email ?? user.Email;
+        var updateResult = await _userService.UpdateUserAsync(userId, user);
+        if (updateResult)
+        {
+            return Ok(new { message = "User updated successfully." });
+        }
+        return BadRequest(new { message = "Failed to update user." });
     }
 
     [HttpPost("me/avatar")]
@@ -141,7 +177,8 @@ public class UsersController : ControllerBase
         {
             Id = st.Id,
             Name = st.Technique.Name,
-            Type = st.Technique.Type, // Giả sử Model Technique có thuộc tính Type
+            TypeId = st.Technique.TechniqueTypeId,
+            TypeName = st.Technique.Type.Name,
             Difficulty = st.Technique.Difficulty // Giả sử Model Technique có thuộc tính Difficulty
         });
 
@@ -212,6 +249,4 @@ public class UsersController : ControllerBase
 
         return Ok(techniqueProgressesDto);
     }
-
-    // Các endpoints khác cho Get All, Create, Update, Delete...
 }

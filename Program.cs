@@ -1,4 +1,7 @@
-﻿using FirstAidAPI.Data;
+﻿using FirstAidAPI.Configurations;
+using FirstAidAPI.Data;
+using FirstAidAPI.Exceptions;
+using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -32,13 +35,15 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // URL frontend
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // URL frontend
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
-
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
 {
     options.Password.RequireDigit = false; // Không yêu cầu số
@@ -72,6 +77,9 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+//await app.SeedRolesAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

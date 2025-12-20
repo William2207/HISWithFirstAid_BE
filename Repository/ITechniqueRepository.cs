@@ -1,7 +1,8 @@
-﻿using FirstAidAPI.Models;
+﻿using FirstAidAPI.DTO;
+using FirstAidAPI.Models;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FirstAidAPI.DTO;
 
 namespace FirstAidAPI.Repository
 {
@@ -11,14 +12,24 @@ namespace FirstAidAPI.Repository
 
         Task<Technique?> GetByIdAsync(int id);
 
-        Task AddAsync(Technique technique);
+        Task<Technique?> GetByIdWithDetailsAsync(int id);
 
-        void Update(Technique technique);
+        Task<Technique> AddAsync(Technique technique);
 
-        void Delete(Technique technique);
+        Task<Technique> UpdateAsync(Technique technique);
 
-        Task<bool> SaveChangesAsync();
+        Task<bool> DeleteAsync(int id);
 
-        Task<PagedResult<Technique>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<string>? types, string? search);
+        Task<bool> ExistsAsync(int id);
+
+        Task<bool> TechniqueTypeExistsAsync(int techniqueTypeId);
+
+        Task<IDbContextTransaction> BeginTransactionAsync();
+
+        Task CommitTransactionAsync();
+
+        Task RollbackTransactionAsync();
+
+        Task<PagedResult<Technique>> GetAllFilteredAndPagedAsync(int page, int pageSize, List<string>? difficulties, List<int>? typeIds, string? search);
     }
 }
