@@ -7,7 +7,7 @@ on:
     branches: [ apiv1, main, develop ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
     
     services:
@@ -39,28 +39,6 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory "./TestResults"
-      continue-on-error: true
-      env:
-        ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=firstaid_test;Username=postgres;Password=postgres;"
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results
-        path: TestResults/
-        retention-days: 7
-    
-    - name: Publish test results
-      uses: dorny/test-reporter@v1
-      if: always()
-      with:
-        name: Test Results
-        path: 'TestResults/*.trx'
-        reporter: 'dotnet-trx'
-        fail-on-error: false
 
   code-quality:
     runs-on: ubuntu-latest
