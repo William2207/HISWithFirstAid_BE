@@ -26,10 +26,10 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     
@@ -46,7 +46,7 @@ jobs:
         ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=firstaid_test;Username=postgres;Password=postgres;"
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
@@ -65,12 +65,12 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     
@@ -94,39 +94,32 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     
     - name: Restore dependencies
       run: dotnet restore
     
-    - name: Install security analyzer
-      run: dotnet tool install --global Security.Scanner
-    
-    - name: Run security scan
+    - name: Check for vulnerable packages
       run: dotnet list package --vulnerable
-      continue-on-error: true
-    
-    - name: Analyze code for vulnerabilities
-      run: dotnet build --configuration Release
       continue-on-error: true
 
   lint:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     
-    - name: Install StyleCop Analyzers
+    - name: Install dotnet-format
       run: dotnet tool install --global dotnet-format
     
     - name: Check code formatting
