@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FirstAidAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a002b912ef337258793f21ccbf5ecb1f8329795c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e728e9e9438688647be628544dc97de51de52f2")]
 [assembly: System.Reflection.AssemblyProductAttribute("FirstAidAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FirstAidAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
