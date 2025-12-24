@@ -27,4 +27,13 @@
 		<Folder Include="Migrations\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Include=".githooks\pre-commit" />
+	  <None Include=".github\BRANCH_PROTECTION.md" />
+	  <None Include=".github\ISSUE_TEMPLATE\bug_report.md" />
+	  <None Include=".github\ISSUE_TEMPLATE\feature_request.md" />
+	  <None Include=".github\pull_request_template.md" />
+	  <None Include=".github\workflows\ci.yml" />
+	</ItemGroup>
+
 </Project>
