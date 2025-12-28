@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO.User;
+using FirstAidAPI.DTO.User;
 using FirstAidAPI.Models;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Identity;

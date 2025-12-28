@@ -1,5 +1,6 @@
-﻿using FirstAidAPI.Models;
+using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,10 +10,12 @@ namespace FirstAidAPI.Service.Implement
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly UserManager<User> _userManager;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, UserManager<User> userManager)
         {
             _userRepository = userRepository;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -90,6 +93,13 @@ namespace FirstAidAPI.Service.Implement
 
             _userRepository.Update(existingUser);
             return await _userRepository.SaveChangesAsync();
+        }
+
+        public async Task<bool> ChangePasswordAsync(User user, string currentPassword, string newPassword)
+        {
+            // Sử dụng UserManager để thay đổi mật khẩu
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            return result.Succeeded;
         }
 
         public async Task<bool> DeleteUserAsync(int id)

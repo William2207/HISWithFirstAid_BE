@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FirstAidAPI.Controllers;
 using FirstAidAPI.DTO.Order;
 using FirstAidAPI.DTO.Payment;

@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Models;
+using FirstAidAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,7 +14,9 @@ namespace FirstAidAPI.Service
 
         Task<User> CreateUserAsync(User user);
 
-        Task<bool> UpdateUserAsync(int id, User user); //Thay bang DTO
+        Task<bool> UpdateUserAsync(int id, User user);
+
+        Task<bool> ChangePasswordAsync(User user, string currentPassword, string newPassword);
 
         Task<bool> DeleteUserAsync(int id);
 
