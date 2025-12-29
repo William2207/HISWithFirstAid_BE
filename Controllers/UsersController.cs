@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Scenario;
 using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.DTO.User;
@@ -120,38 +120,53 @@ public class UsersController : ControllerBase
         return BadRequest(new { message = "Failed to update user." });
     }
 
+    [HttpPut("me/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] UpdatePasswordDto changePasswordDto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "Invalid token" });
+        }
+        var user = await _userService.GetUserByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found" });
+        }
+        var result = await _userService.ChangePasswordAsync(user, changePasswordDto.CurrentPassword, changePasswordDto.NewPassword);
+        if (result)
+        {
+            return Ok(new { message = "Password changed successfully." });
+        }
+        return BadRequest(new { message = "Failed to change password." });
+    }
+
     [HttpPost("me/avatar")]
     [Authorize]
     public async Task<IActionResult> AddAvatar(IFormFile file)
     {
-        // 1. Lấy user ID từ token để đảm bảo đúng là người dùng đang đăng nhập
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
         {
             return Unauthorized(new { message = "Invalid token" });
         }
 
-        // 2. Lấy thông tin người dùng từ database
         var user = await _userService.GetUserByIdAsync(userId);
         if (user == null)
         {
             return NotFound(new { message = "User not found" });
         }
 
-        // 3. Sử dụng PhotoService để tải file lên Cloudinary
         var uploadResult = await _photoService.AddPhotoAsync(file);
 
-        // 4. Kiểm tra kết quả trả về từ Cloudinary
         if (uploadResult.Error != null)
         {
             return BadRequest(new { message = uploadResult.Error.Message });
         }
 
-        // 5. Cập nhật URL avatar mới cho người dùng
         user.Avatar = uploadResult.SecureUrl.AbsoluteUri;
 
-        // 6. Lưu thay đổi vào database
-        // Lưu ý: Bạn cần có một phương thức để cập nhật thông tin người dùng trong IUserService
         var updateResult = await _userService.UpdateUserAsync(userId, user);
 
         if (updateResult)
@@ -220,7 +235,7 @@ public class UsersController : ControllerBase
         var scenarioProgressesDto = scenarioProgresses.Select(sp => new UserScenarioProgressDto
         {
             ScenarioId = sp.ScenarioId,
-            ScenarioName = sp.Scenario.Name,
+            ScenarioName = sp.Scenario.Title,
             IsCompleted = sp.Status, // Map từ thuộc tính Status của Model
             HighestScore = sp.HighestScore,
             LastAccessedAt = sp.LastAccessedAt

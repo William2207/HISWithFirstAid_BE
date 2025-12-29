@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO.Revenue;
+using FirstAidAPI.DTO.Revenue;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,9 +15,6 @@ namespace FirstAidAPI.Controllers
             _revenueService = revenueService;
         }
 
-        /// <summary>
-        /// Lấy doanh thu năm hiện tại (tổng + chi tiết 12 tháng)
-        /// </summary>
         [HttpGet("current-year")]
         public async Task<ActionResult<YearlyRevenueDto>> GetCurrentYearRevenue()
         {
@@ -32,9 +29,6 @@ namespace FirstAidAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Lấy doanh thu theo năm cụ thể
-        /// </summary>
         [HttpGet("year/{year}")]
         public async Task<ActionResult<YearlyRevenueDto>> GetRevenueByYear(int year)
         {

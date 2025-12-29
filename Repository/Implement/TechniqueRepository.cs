@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Data;
+using FirstAidAPI.Data;
 using FirstAidAPI.DTO;
 using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
@@ -51,7 +51,7 @@ namespace FirstAidAPI.Repository.Implement
             // Filter theo search
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var searchLower = search.ToLower();
+                string searchLower = search.ToLower();
                 query = query.Where(t =>
                     t.Title.ToLower().Contains(searchLower) ||
                     t.Description.ToLower().Contains(searchLower)

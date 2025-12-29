@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Extensions;
+using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using MailKit;
 using Microsoft.AspNetCore.Identity;

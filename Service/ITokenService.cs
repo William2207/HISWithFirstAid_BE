@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Models;
+using FirstAidAPI.Models;
 using System.Security.Claims;
 
 namespace FirstAidAPI.Service

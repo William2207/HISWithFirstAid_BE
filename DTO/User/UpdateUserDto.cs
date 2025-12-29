@@ -1,4 +1,4 @@
-﻿namespace FirstAidAPI.DTO.User
+namespace FirstAidAPI.DTO.User
 {
     public class UpdateUserDto
     {

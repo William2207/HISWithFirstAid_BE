@@ -24,10 +24,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Migrations\" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include=".githooks\pre-commit" />
 	  <None Include=".github\BRANCH_PROTECTION.md" />
 	  <None Include=".github\ISSUE_TEMPLATE\bug_report.md" />

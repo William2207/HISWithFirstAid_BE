@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.SavedTechniques;
 using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Extensions;
@@ -17,7 +17,6 @@ namespace FirstAidAPI.Controllers
     [ApiController]
     public class TechniquesController : ControllerBase
     {
-        // Thay thế DbContext bằng ITechniqueService
         private readonly ITechniqueService _service;
 
         private readonly ISavedTechniqueService _savedTechniqueService;
