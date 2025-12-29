@@ -1,6 +1,7 @@
 using FirstAidAPI.DTO.User;
 using FirstAidAPI.Models;
 using FirstAidAPI.Service;
+using FirstAidAPI.Service.Implement;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Encodings.Web;
@@ -14,18 +15,21 @@ public class AccountController : ControllerBase
     private readonly UserManager<User> _userManager;
     private readonly ITokenService _tokenService;
     private readonly IEmailService _emailService;
+    private readonly IAccountService _accountService;
     private readonly IPasswordResetService _passwordResetService;
 
     public AccountController(
         UserManager<User> userManager,
         ITokenService tokenService,
         IEmailService emailService,
-        IPasswordResetService passwordResetService)
+        IPasswordResetService passwordResetService,
+        IAccountService accountService)
     {
         _userManager = userManager;
         _tokenService = tokenService;
         _emailService = emailService;
         _passwordResetService = passwordResetService;
+        _accountService = accountService;
     }
 
     // POST: api/account/register
@@ -37,42 +41,15 @@ public class AccountController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var user = new User
+        try
         {
-            UserName = registerDto.Email, // Identity yêu cầu UserName
-            Email = registerDto.Email,
-            FullName = registerDto.FullName,
-            DateOfBirth = DateTime.SpecifyKind(registerDto.DateOfBirth, DateTimeKind.Utc),
-        };
-
-        var result = await _userManager.CreateAsync(user, registerDto.Password);
-        await _userManager.AddToRoleAsync(user, "User");
-
-        if (!result.Succeeded)
-        {
-            return BadRequest(result.Errors);
+            var message = await _accountService.RegisterAsync(registerDto, Request.Scheme);
+            return Ok(new { Message = message });
         }
-
-        // Tạo token xác thực email
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
-        // Tạo link xác thực
-        var confirmationLink = Url.Action(
-            nameof(ConfirmEmail),
-            "Account",
-            new { userId = user.Id, token = token },
-            Request.Scheme);
-
-        if (confirmationLink == null)
+        catch (InvalidOperationException ex)
         {
-            return StatusCode(500, "Không thể tạo link xác thực.");
+            return BadRequest(new { Message = ex.Message });
         }
-
-        // Gửi email
-        var emailBody = $"Chào {user.FullName},<br><br>Cảm ơn bạn đã đăng ký. Vui lòng nhấp vào liên kết sau để xác thực tài khoản của bạn:<br><a href='{HtmlEncoder.Default.Encode(confirmationLink)}'>XÁC THỰC TÀI KHOẢN</a>";
-        await _emailService.SendEmailAsync(user.Email, "Xác thực tài khoản của bạn", emailBody);
-
-        return Ok(new { Message = "Đăng ký thành công. Vui lòng kiểm tra email của bạn để xác thực tài khoản." });
     }
 
     // POST: api/account/login
@@ -84,36 +61,24 @@ public class AccountController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var user = await _userManager.FindByEmailAsync(loginDto.Email);
-        if (user == null)
+        try
         {
-            return Unauthorized(new { Message = "Email chưa được xác thực hoặc tài khoản không tồn tại" });
-        }
-        if (!user.EmailConfirmed)
-        {
-            return Unauthorized(new { Message = "Email chưa được xác thực hoặc tài khoản không tồn tại" });
-        }
-
-        if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
-        {
-            return Unauthorized(new { Message = "Email hoặc mật khẩu không hợp lệ." });
-        }
-
-        user.LastLoginAt = DateTime.UtcNow;
-        await _userManager.UpdateAsync(user);
-
-        var roles = await _userManager.GetRolesAsync(user);
-
-        return Ok(new
-        {
-            Message = "Đăng nhập thành công!",
-            Token = _tokenService.CreateToken(user, roles),
-            User = new
+            var result = await _accountService.LoginAsync(loginDto);
+            return Ok(new
             {
-                Email = user.Email,
-                Roles = roles
-            }
-        });
+                Message = "Đăng nhập thành công!",
+                Token = result.Token,
+                User = new
+                {
+                    Email = result.Email,
+                    Roles = result.Roles
+                }
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { Message = ex.Message });
+        }
     }
 
     [HttpGet("confirm-email")]
@@ -124,22 +89,19 @@ public class AccountController : ControllerBase
             return BadRequest("Dữ liệu không hợp lệ.");
         }
 
-        var user = await _userManager.FindByIdAsync(userId.ToString());
-        if (user == null)
+        try
         {
-            return NotFound("Không tìm thấy người dùng.");
-        }
-
-        // Xác thực token
-        var result = await _userManager.ConfirmEmailAsync(user, token);
-
-        if (result.Succeeded)
-        {
-            // Khi thành công, bạn có thể trả về một trang HTML đơn giản hoặc redirect đến trang đăng nhập của frontend
+            await _accountService.ConfirmEmailAsync(userId, token);
             return Ok("Xác thực email thành công! Bây giờ bạn có thể đăng nhập.");
         }
-
-        return BadRequest("Xác thực email thất bại.");
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     // POST: api/account/forgot-password

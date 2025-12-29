@@ -1,10 +1,13 @@
-﻿using FirstAidAPI.Configurations;
+using FirstAidAPI.Configurations;
 using FirstAidAPI.Data;
 using FirstAidAPI.Exceptions;
 using FirstAidAPI.Extensions;
 using FirstAidAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -40,6 +43,20 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials();
     });
+});
+builder.Services.AddHttpContextAccessor(); // Thêm dòng này
+builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>(); // Thêm dòng này
+builder.Services.AddScoped<IUrlHelper>(x =>
+{
+    var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;
+
+    if (actionContext == null)
+    {
+        throw new InvalidOperationException("ActionContext is not available.");
+    }
+
+    var factory = x.GetRequiredService<IUrlHelperFactory>();
+    return factory.GetUrlHelper(actionContext);
 });
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.Configure<CloudinarySettings>(

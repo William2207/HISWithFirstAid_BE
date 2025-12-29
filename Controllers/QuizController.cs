@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Data;
+using FirstAidAPI.Data;
 using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Quiz;
 using FirstAidAPI.Models;
