@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.PracticalCourse;
 using FirstAidAPI.Mappings;

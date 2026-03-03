@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Scenario;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;

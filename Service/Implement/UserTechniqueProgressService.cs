@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Models;
+using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
 using System;
 using System.Threading.Tasks;

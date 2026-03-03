@@ -31,13 +31,24 @@ namespace FirstAidAPI.Data
         public DbSet<StepAnswer> StepAnswers { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
         public DbSet<TechniqueType> TechniqueTypes { get; set; }
-        public DbSet<Cart> Carts { get; set; }
-        public DbSet<CartItem> CartItems { get; set; }
         public DbSet<PracticalCourse> PracticalCourses { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
         public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<Patient> Patients { get; set; }
+        public DbSet<Nurse> Nurses { get; set; }
+        public DbSet<Doctor> Doctors { get; set; }
+        public DbSet<Receptionist> Receptionists { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<MedicalRecord> MedicalRecords { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<DoctorSpecialty> DoctorSpecialties { get; set; }
+        public DbSet<Queue> Queues { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<Specialty> Specialties { get; set; }
+        public DbSet<VitalSign> VitalSigns { get; set; }
+        public DbSet<Room> Rooms { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -133,7 +144,60 @@ namespace FirstAidAPI.Data
 
                 entity.Property(u => u.DateOfBirth);
             });
+            //Patient configuration
+            modelBuilder.Entity<Patient>()
+                .HasOne(p => p.User)
+                .WithOne(u => u.Patient)
+                .HasForeignKey<Patient>(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Nurse configuration
+            modelBuilder.Entity<Nurse>()
+                .HasOne(n => n.User)
+                .WithOne(u => u.Nurse)
+                .HasForeignKey<Nurse>(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Doctor configuration
+            modelBuilder.Entity<Doctor>()
+                .HasOne(d => d.User)
+                .WithOne(u => u.Doctor)
+                .HasForeignKey<Doctor>(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            // Receptionist configuration
+            modelBuilder.Entity<Receptionist>()
+                .HasOne(r => r.User)
+                .WithOne(u => u.Receptionist)
+                .HasForeignKey<Receptionist>(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
+            // Composite key
+            modelBuilder.Entity<DoctorSpecialty>()
+                .HasKey(ds => new { ds.DoctorId, ds.SpecialtyId });
+            // One -to-One relationships for Appointment
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.MedicalRecord)
+                .WithOne(mr => mr.Appointment)
+                .HasForeignKey<MedicalRecord>(mr => mr.AppointmentId);
+
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Invoice)
+                .WithOne(i => i.Appointment)
+                .HasForeignKey<Invoice>(i => i.AppointmentId);
+
+            //Prevent cascade delete
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Doctor)
+                .WithMany(d => d.Appointments)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Department>()
+                .HasOne(d => d.HeadDoctor)
+                .WithMany()
+                .HasForeignKey(d => d.HeadDoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            //Queue configuration
+            modelBuilder.Entity<Queue>()
+                .HasIndex(q => q.QueueDate);
             // UserScenarioProgress configuration
             modelBuilder.Entity<UserScenarioProgress>(entity =>
             {
@@ -283,41 +347,6 @@ namespace FirstAidAPI.Data
 
                 entity.Property(ua => ua.EarnedAt)
                     .HasDefaultValueSql("NOW()");
-            });
-
-            modelBuilder.Entity<Cart>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                // Cart có nhiều CartItems (One-to-Many)
-                entity.HasMany(c => c.CartItems)
-                    .WithOne(ci => ci.Cart)
-                    .HasForeignKey(ci => ci.CartId)
-                    .OnDelete(DeleteBehavior.Cascade); // Xóa Cart thì xóa hết CartItems
-
-                // Index để tìm Cart theo UserId nhanh hơn
-                entity.HasIndex(e => e.UserId);
-            });
-
-            // Cấu hình CartItem
-            modelBuilder.Entity<CartItem>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                // CartItem thuộc về 1 Cart (đã cấu hình ở trên)
-
-                // CartItem tham chiếu đến 1 PracticalCourse
-                entity.HasOne(ci => ci.PracticalCourse)
-                    .WithMany() // PracticalCourse có thể có nhiều CartItem
-                    .HasForeignKey(ci => ci.PracticalCourseId)
-                    .OnDelete(DeleteBehavior.Restrict); // Không cho xóa Course nếu đang có trong giỏ
-
-                // Đặt precision cho decimal
-                entity.Property(e => e.Price)
-                    .HasColumnType("decimal(18,2)");
-
-                // Index để tìm CartItem theo CartId và CourseId
-                entity.HasIndex(e => new { e.CartId, e.PracticalCourseId });
             });
 
             // Cấu hình PracticalCourse

@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO;
+using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.PracticalCourse;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Mvc;
