@@ -90,6 +90,63 @@ namespace FirstAidAPI.Data
                 entity.ToTable("UserTokens"); // Đổi AspNetUserTokens -> UserTokens
             });
 
+            modelBuilder.Entity<Queue>(entity =>
+            {
+                entity.ToTable("Queues");
+            });
+            modelBuilder.Entity<Appointment>(entity =>
+            {
+                entity.ToTable("Appointments");
+            });
+            modelBuilder.Entity<Room>(entity =>
+            {
+                entity.ToTable("Rooms");
+            });
+            modelBuilder.Entity<VitalSign>(entity =>
+            {
+                entity.ToTable("VitalSigns");
+            });
+            modelBuilder.Entity<Invoice>(entity =>
+            {
+                entity.ToTable("Invoices");
+            });
+            modelBuilder.Entity<MedicalRecord>(entity =>
+            {
+                entity.ToTable("MedicalRecords");
+            });
+            modelBuilder.Entity<Bed>(entity =>
+            {
+                entity.ToTable("Beds");
+            });
+            modelBuilder.Entity<Department>(entity =>
+            {
+                entity.ToTable("Departments");
+            });
+            modelBuilder.Entity<Specialty>(entity =>
+            {
+                entity.ToTable("Specialties");
+            });
+            modelBuilder.Entity<DoctorSpecialty>(entity =>
+            {
+                entity.ToTable("DoctorSpecialties");
+            });
+            modelBuilder.Entity<Doctor>(entity =>
+            {
+                entity.ToTable("Doctors");
+            });
+            modelBuilder.Entity<Receptionist>(entity =>
+            {
+                entity.ToTable("Receptionists");
+            });
+            modelBuilder.Entity<Nurse>(entity =>
+            {
+                entity.ToTable("Nurses");
+            });
+            modelBuilder.Entity<Patient>(entity =>
+            {
+                entity.ToTable("Patients");
+            });
+
             modelBuilder.Entity<QuizQuestion>()
                 .HasOne(q => q.Technique)
                 .WithMany(t => t.QuizQuestions)

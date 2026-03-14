@@ -44,18 +44,14 @@ namespace FirstAidAPI.Repository.Implement
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<Queue>> GetByStatusAsync(string status)
+        public async Task<Queue?> IssueQueueAsync(DateOnly queueDate)
         {
-            return await _context.Queues.Where(q => q.Status == status).ToListAsync();
-        }
-
-        public async Task<Queue> GetNextQueueNumberAsync(DateOnly queueDate)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+            using var transaction = await _context.Database
+            .BeginTransactionAsync(IsolationLevel.Serializable);
             try
             {
                 var lastQueue = await _context.Queues
-                    .Where(q => q.QueueDate == queueDate)  // chỉ lấy trong ngày hôm nay
+                    .Where(q => q.QueueDate == queueDate)
                     .OrderByDescending(q => q.QueueNumber)
                     .FirstOrDefaultAsync();
 
@@ -65,11 +61,13 @@ namespace FirstAidAPI.Repository.Implement
                 {
                     QueueNumber = nextNumber,
                     QueueDate = queueDate,
+                    Status = "WAITING",
+                    IssueTime = DateTime.UtcNow
                 };
+
                 _context.Queues.Add(newQueue);
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-
                 return newQueue;
             }
             catch
@@ -77,6 +75,21 @@ namespace FirstAidAPI.Repository.Implement
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<List<Queue>> GetByStatusAsync(string status)
+        {
+            return await _context.Queues.Where(q => q.Status == status).ToListAsync();
+        }
+
+        public async Task<int> GetNextQueueNumberAsync(DateOnly queueDate)
+        {
+            var lastQueue = await _context.Queues
+                .Where(q => q.QueueDate == queueDate)
+                .OrderByDescending(q => q.QueueNumber)
+                .FirstOrDefaultAsync();
+
+            return lastQueue != null ? lastQueue.QueueNumber + 1 : 1;
         }
 
         public async Task<Queue?> GetNextWaitingQueueAsync()
@@ -90,6 +103,14 @@ namespace FirstAidAPI.Repository.Implement
         public async Task<Queue?> GetByIdAsync(int id)
         {
             return await _context.Queues.FindAsync(id);
+        }
+
+        public async Task<Queue?> GetCurrentQueueAsync(DateOnly queueDate)
+        {
+            return await _context.Queues
+                .Where(q => q.Status == "WAITING" && q.QueueDate == queueDate)
+                .OrderBy(q => q.IssueTime)
+                .FirstOrDefaultAsync();
         }
     }
 }

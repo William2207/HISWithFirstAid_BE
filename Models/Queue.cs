@@ -14,10 +14,10 @@ namespace FirstAidAPI.Models
         public DateTime? CompletedTime { get; set; }  // Thời điểm hoàn tất
 
         // Trạng thái
-        public string Status { get; set; } = "WAITING";
+        public string Status { get; set; } = "Pending";
 
         public DateOnly QueueDate { get; set; }
-
+        //Pending
         // "WAITING"    - Đang chờ
         // "CALLED"     - Đã gọi
         // "COMPLETED"  - Hoàn tất (bệnh nhân đã nhận phiếu)

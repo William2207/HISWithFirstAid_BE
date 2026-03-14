@@ -28,6 +28,31 @@ namespace FirstAidAPI.Controllers
             return Ok(queue);
         }
 
+        [HttpGet("next-number")]
+        public async Task<ActionResult<int>> GetNextQueueNumber()
+        {
+            try
+            {
+                var nextNumber = await _queueService.GetNextQueueNumberAsync();
+                return Ok(new { nextQueueNumber = nextNumber });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("current-waiting-queue")]
+        public async Task<ActionResult<QueueDTO>> GetCurrentQueue()
+        {
+            var queue = await _queueService.GetCurrentWaitingQueue();
+            if (queue == null)
+            {
+                return NotFound(new { message = "Không có số nào đang chờ." });
+            }
+            return Ok(queue);
+        }
+
         [HttpPost("call-next")]
         [Authorize(Roles = "Receptionist")]
         public async Task<ActionResult<QueueDTO>> CallNext()

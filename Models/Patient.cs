@@ -46,7 +46,6 @@ namespace FirstAidAPI.Models
 
         public List<Appointment> Appointments { get; set; } = new();
         public List<MedicalRecord> MedicalRecords { get; set; } = new();
-        public List<Queue> Queues { get; set; } = new();
         public List<Invoice> Invoices { get; set; } = new();
 
         [NotMapped]  // Không lưu vào DB

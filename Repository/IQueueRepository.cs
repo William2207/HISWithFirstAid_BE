@@ -14,10 +14,14 @@ namespace FirstAidAPI.Repository
 
         Task<List<Queue>> GetByStatusAsync(string status);
 
-        Task<Queue> GetNextQueueNumberAsync(DateOnly queueDate);
+        Task<int> GetNextQueueNumberAsync(DateOnly queueDate);
 
         Task<Queue?> GetNextWaitingQueueAsync();
 
         Task<Queue?> GetByIdAsync(int id);
+
+        Task<Queue?> GetCurrentQueueAsync(DateOnly queueDate);
+
+        Task<Queue?> IssueQueueAsync(DateOnly queueDate);
     }
 }

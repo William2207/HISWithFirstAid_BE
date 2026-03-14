@@ -19,16 +19,36 @@ namespace FirstAidAPI.Service.Implement
             _context = context;
         }
 
+        public async Task<QueueDTO> GetCurrentWaitingQueue()
+        {
+            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var currentQueue = await _queueRepository.GetCurrentQueueAsync(today);
+            if (currentQueue == null)
+                throw new NotFoundException("Không có số nào đang chờ");
+            return new QueueDTO
+            {
+                Id = currentQueue.Id,
+                QueueNumber = currentQueue.QueueNumber,
+                IssueTime = currentQueue.IssueTime
+            };
+        }
+
         public async Task<QueueDTO> IssueQueueAsync()
         {
             DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var queue = await _queueRepository.GetNextQueueNumberAsync(today);
+            var queue = await _queueRepository.IssueQueueAsync(today);
 
             return new QueueDTO
             {
                 QueueNumber = queue.QueueNumber,
                 IssueTime = queue.IssueTime
             };
+        }
+
+        public async Task<int> GetNextQueueNumberAsync()
+        {
+            DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
+            return await _queueRepository.GetNextQueueNumberAsync(today);
         }
 
         public async Task<QueueDTO> CallNextQueueAsync(int receptionistId)

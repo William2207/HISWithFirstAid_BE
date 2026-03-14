@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260313035829_SyncTableNamesWithDb")]
+    partial class SyncTableNamesWithDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -849,6 +852,9 @@ namespace FirstAidAPI.Migrations
                     b.Property<DateTime>("IssueTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("PatientId")
+                        .HasColumnType("integer");
+
                     b.Property<DateOnly>("QueueDate")
                         .HasColumnType("date");
 
@@ -863,6 +869,8 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PatientId");
 
                     b.HasIndex("QueueDate");
 
@@ -2685,6 +2693,10 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Queue", b =>
                 {
+                    b.HasOne("FirstAidAPI.Models.Patient", null)
+                        .WithMany("Queues")
+                        .HasForeignKey("PatientId");
+
                     b.HasOne("FirstAidAPI.Models.Receptionist", null)
                         .WithMany("QueuesHandled")
                         .HasForeignKey("ReceptionistId");
@@ -3007,6 +3019,8 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Invoices");
 
                     b.Navigation("MedicalRecords");
+
+                    b.Navigation("Queues");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
