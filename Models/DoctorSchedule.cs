@@ -7,12 +7,12 @@ namespace FirstAidAPI.Models
         public DayOfWeek DayOfWeek { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
-        public int? RoomId { get; set; }
+        public int? ClinicId { get; set; }
         public bool IsAvailable { get; set; } = true;
 
         // Navigation
         public Doctor Doctor { get; set; } = null!;
 
-        public Room? Room { get; set; }
+        public Clinic? Clinic { get; set; }
     }
 }

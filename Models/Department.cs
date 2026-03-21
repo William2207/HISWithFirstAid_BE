@@ -17,6 +17,7 @@ namespace FirstAidAPI.Models
         public List<Doctor> Doctors { get; set; } = new();
         public List<Nurse> Nurses { get; set; } = new();
         public List<Specialty> Specialties { get; set; } = new();
-        public List<Room> Rooms { get; set; } = new();
+        public List<Clinic> Clinics { get; set; } = new();   // phòng khám ngoại trú
+        public List<Ward> Wards { get; set; } = new(); // phòng bệnh nội trú
     }
 }

@@ -48,7 +48,9 @@ namespace FirstAidAPI.Data
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Specialty> Specialties { get; set; }
         public DbSet<VitalSign> VitalSigns { get; set; }
-        public DbSet<Room> Rooms { get; set; }
+        public DbSet<Ward> Wards { get; set; }
+        public DbSet<Bed> Beds { get; set; }
+        public DbSet<Clinic> Clinics { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,10 +99,6 @@ namespace FirstAidAPI.Data
             modelBuilder.Entity<Appointment>(entity =>
             {
                 entity.ToTable("Appointments");
-            });
-            modelBuilder.Entity<Room>(entity =>
-            {
-                entity.ToTable("Rooms");
             });
             modelBuilder.Entity<VitalSign>(entity =>
             {

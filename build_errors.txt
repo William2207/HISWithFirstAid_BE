@@ -1,0 +1,8 @@
+D:\Study\workspace\FinalProject\FirstAidAPI\Service\Implement\AppointmentService.cs(104,51): error CS1061: 'Patient' does not contain a definition for 'Name' and no accessible extension method 'Name' accepting a first argument of type 'Patient' could be found (are you missing a using directive or an assembly reference?) [D:\Study\workspace\FinalProject\FirstAidAPI\FirstAidAPI.csproj]
+D:\Study\workspace\FinalProject\FirstAidAPI\Service\Implement\AppointmentService.cs(105,49): error CS1061: 'Doctor' does not contain a definition for 'Name' and no accessible extension method 'Name' accepting a first argument of type 'Doctor' could be found (are you missing a using directive or an assembly reference?) [D:\Study\workspace\FinalProject\FirstAidAPI\FirstAidAPI.csproj]
+
+Build FAILED.
+    1 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:05.45

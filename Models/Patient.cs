@@ -37,11 +37,8 @@ namespace FirstAidAPI.Models
         public string? EmergencyContactRelationship { get; set; }
 
         // METADATA
-        public int CreatedBy { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
-
         public User? User { get; set; }  // Nullable
 
         public List<Appointment> Appointments { get; set; } = new();
@@ -62,11 +59,5 @@ namespace FirstAidAPI.Models
 
         [NotMapped]
         public string EmailDisplay => User?.Email ?? Email ?? "N/A";
-
-        [NotMapped]
-        public bool IsWalkIn => UserId == null;
-
-        [NotMapped]
-        public bool HasAccount => UserId != null;
     }
 }

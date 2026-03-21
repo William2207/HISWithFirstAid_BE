@@ -11,15 +11,16 @@ namespace FirstAidAPI.Models
         // ═══════════════════════════════════════
         public string? ChiefComplaint { get; set; }  // Lý do khám
 
+        public string? MedicalHistory { get; set; }        // Tiền sử bệnh bản thân
+        public string? FamilyHistory { get; set; }// Tiền sử gia đình
         public string? Symptoms { get; set; }  // Triệu chứng
         public string? PhysicalExamination { get; set; }  // Khám lâm sàng
 
         // ═══════════════════════════════════════
         // 2. CHẨN ĐOÁN (GỘP LUÔN)
         // ═══════════════════════════════════════
-        public string? DiagnosisICD10 { get; set; }  // Mã bệnh ICD-10
-
         public string? DiagnosisName { get; set; }  // Tên chẩn đoán
+
         public string? DiagnosisNotes { get; set; }  // Ghi chú chẩn đoán
 
         // ═══════════════════════════════════════
@@ -45,10 +46,8 @@ namespace FirstAidAPI.Models
         // ═══════════════════════════════════════
         // 6. METADATA
         // ═══════════════════════════════════════
-        public string Status { get; set; } = "DRAFT";  // "DRAFT", "FINALIZED"
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? FinalizedAt { get; set; }
 
         // Navigation
         public Appointment Appointment { get; set; } = null!;
@@ -56,6 +55,5 @@ namespace FirstAidAPI.Models
         public Doctor Doctor { get; set; } = null!;
 
         public List<VitalSign> VitalSigns { get; set; } = new();
-        //public List<LabOrder> LabOrders { get; set; } = new();
     }
 }
