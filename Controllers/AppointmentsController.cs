@@ -30,7 +30,6 @@ namespace FirstAidAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Receptionist")]
         public async Task<ActionResult<AppointmentDTO>> CreateAppointment([FromBody] CreateAppointmentRequest request)
         {
             try

@@ -1,4 +1,4 @@
-﻿namespace FirstAidAPI.DTO.Order
+namespace FirstAidAPI.DTO.Order
 {
     public class OrderItemDto
     {

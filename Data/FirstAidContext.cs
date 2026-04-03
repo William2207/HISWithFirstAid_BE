@@ -46,11 +46,12 @@ namespace FirstAidAPI.Data
         public DbSet<DoctorSpecialty> DoctorSpecialties { get; set; }
         public DbSet<Queue> Queues { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
-        public DbSet<Specialty> Specialties { get; set; }
+        public DbSet<Speciality> Specialties { get; set; }
         public DbSet<VitalSign> VitalSigns { get; set; }
         public DbSet<Ward> Wards { get; set; }
         public DbSet<Bed> Beds { get; set; }
         public DbSet<Clinic> Clinics { get; set; }
+        public DbSet<MedicalService> MedicalServices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -120,7 +121,7 @@ namespace FirstAidAPI.Data
             {
                 entity.ToTable("Departments");
             });
-            modelBuilder.Entity<Specialty>(entity =>
+            modelBuilder.Entity<Speciality>(entity =>
             {
                 entity.ToTable("Specialties");
             });
@@ -533,6 +534,10 @@ namespace FirstAidAPI.Data
                 // Index để query nhanh
                 entity.HasIndex(prt => new { prt.UserId, prt.Otp });
             });
+            // Cấu hình vital sign và medical record
+            modelBuilder.Entity<VitalSign>()
+                .HasIndex(v => v.MedicalRecordId)
+                .IsUnique();
 
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }

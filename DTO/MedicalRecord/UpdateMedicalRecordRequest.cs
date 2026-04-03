@@ -4,6 +4,7 @@ namespace FirstAidAPI.DTO.MedicalRecord
     {
         // 1. Triệu chứng & Khám lâm sàng
         public string? ChiefComplaint { get; set; }
+
         public string? MedicalHistory { get; set; }
         public string? FamilyHistory { get; set; }
         public string? Symptoms { get; set; }
@@ -11,6 +12,7 @@ namespace FirstAidAPI.DTO.MedicalRecord
 
         // 2. Chẩn đoán
         public string? DiagnosisName { get; set; }
+
         public string? DiagnosisNotes { get; set; }
 
         // 3. Đơn thuốc
@@ -18,12 +20,13 @@ namespace FirstAidAPI.DTO.MedicalRecord
 
         // 4. Chỉ dẫn & Theo dõi
         public string? TreatmentPlan { get; set; }
+
         public string? FollowUpInstructions { get; set; }
         public DateTime? NextAppointmentDate { get; set; }
 
         // 5. Ghi chú chung
         public string? GeneralNotes { get; set; }
 
-        public List<CreateVitalSignRequest>? VitalSigns { get; set; }
+        public CreateVitalSignRequest? VitalSigns { get; set; }
     }
 }

@@ -97,7 +97,6 @@ namespace FirstAidAPI.Service.Implement
 
             await _userManager.AddToRoleAsync(user, "User");
 
-            // ✅ Tạo Patient record khi đăng ký thành công - sử dụng Repository
             var patient = new Patient
             {
                 UserId = user.Id,

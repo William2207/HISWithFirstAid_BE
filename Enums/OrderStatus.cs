@@ -1,4 +1,4 @@
-﻿namespace FirstAidAPI.Enums
+namespace FirstAidAPI.Enums
 {
     public enum OrderStatus
     {

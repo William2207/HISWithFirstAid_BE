@@ -1,8 +1,15 @@
+using FirstAidAPI.Data;
 using FirstAidAPI.DTO.Appointment;
+using FirstAidAPI.DTO.Invoice;
+using FirstAidAPI.DTO.Order;
+using FirstAidAPI.DTO.Payment;
 using FirstAidAPI.Enums;
 using FirstAidAPI.Exceptions;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
+using FirstAidAPI.Service.Payment;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace FirstAidAPI.Service.Implement
 {
@@ -11,53 +18,88 @@ namespace FirstAidAPI.Service.Implement
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IMedicalRecordRepository _medicalRecordRepository;
         private readonly IInvoiceRepository _invoiceRepository;
-        private readonly IUserRepository _userRepository; // For patient/doctor checks if needed
+        private readonly IPatientRepository _patientRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly ISpecialtyRepository _specilityRepository;
+        private readonly IMomoService _momoService;
+        private readonly FirstAidContext _context;
 
         public AppointmentService(
             IAppointmentRepository appointmentRepository,
             IMedicalRecordRepository medicalRecordRepository,
             IInvoiceRepository invoiceRepository,
-            IUserRepository userRepository)
+            IPatientRepository patientRepository, ISpecialtyRepository specialtyRepository, IMomoService momoService, UserManager<User> userManager, FirstAidContext context)
         {
             _appointmentRepository = appointmentRepository;
             _medicalRecordRepository = medicalRecordRepository;
             _invoiceRepository = invoiceRepository;
-            _userRepository = userRepository;
+            _patientRepository = patientRepository;
+            _specilityRepository = specialtyRepository;
+            _momoService = momoService;
+            _userManager = userManager;
+            _context = context;
         }
 
         public async Task<AppointmentDTO> CreateAppointmentAsync(int creatorId, CreateAppointmentRequest request)
         {
-            // 1. Create Appointment
-            var appointment = new Appointment
+            var creator = await _userRepository.GetByIdAsync(creatorId);
+            if (creator == null)
+                throw new NotFoundException($"Không tìm thấy người dùng có ID {creatorId}");
+
+            var roles = await _userManager.GetRolesAsync(creator);
+
+            if (request.AppointmentDateTime <= DateTime.UtcNow)
+                throw new BusinessException("Thời gian hẹn phải ở tương lai.");
+
+            int resolvedPatientId;
+            AppointmentType appointmentType;
+
+            if (roles.Contains("Receptionist"))
             {
-                PatientId = request.PatientId,
-                DoctorId = request.DoctorId,
-                SpecialtyId = request.SpecialtyId,
-                ClinicId = request.ClinicId,
-                AppointmentDateTime = request.AppointmentDateTime,
-                Type = AppointmentType.WalkIn, // For receptionist, it's usually WalkIn
-                Status = AppointmentStatus.Registered, // Started as Registered/Waiting
-            };
-
-            var savedAppointment = await _appointmentRepository.AddAsync(appointment);
-
-            // 2. Auto-create empty Medical Record
-            var emptyMedicalRecord = new MedicalRecord
+                resolvedPatientId = await ResolvePatientForReceptionistAsync(request);
+                appointmentType = AppointmentType.WalkIn;
+            }
+            else
             {
-                AppointmentId = savedAppointment.Id,
-                DoctorId = request.DoctorId,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _medicalRecordRepository.CreateAsync(emptyMedicalRecord);
+                var existing = await _patientRepository.GetByUserIdAsync(creatorId);
+                if (existing == null)
+                    throw new NotFoundException($"Không tìm thấy hồ sơ bệnh nhân cho người dùng ID {creatorId}");
 
-            return await GetAppointmentByIdAsync(savedAppointment.Id);
+                resolvedPatientId = existing.Id;
+                appointmentType = AppointmentType.Online;
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var appointment = new Appointment
+                {
+                    PatientId = resolvedPatientId,
+                    DoctorId = request.DoctorId,
+                    SpecialtyId = request.SpecialtyId,
+                    ClinicId = request.ClinicId,
+                    AppointmentDateTime = request.AppointmentDateTime,
+                    Type = appointmentType,
+                    Status = AppointmentStatus.Registered,
+                };
+
+                var savedAppointment = await _appointmentRepository.AddAsync(appointment);
+                await transaction.CommitAsync();
+
+                return await GetAppointmentByIdAsync(savedAppointment.Id);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<AppointmentDTO> GetAppointmentByIdAsync(int id)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(id);
             if (appointment == null) throw new NotFoundException($"Không tìm thấy lịch hẹn có id {id}");
-
             return MapToDTO(appointment);
         }
 
@@ -75,18 +117,53 @@ namespace FirstAidAPI.Service.Implement
             appointment.Status = AppointmentStatus.Completed;
             await _appointmentRepository.UpdateAsync(appointment);
 
-            // Invoice logic
+            // Tạo Invoice tự động
             var invoice = new Invoice
             {
                 AppointmentId = appointment.Id,
                 PatientId = appointment.PatientId,
                 InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{appointment.Id:D4}",
-                Status = "UNPAID",
+                Status = OrderStatus.Pending,
+                Total = appointment.Specialty?.Price ?? 0,
                 CreatedAt = DateTime.UtcNow
             };
             await _invoiceRepository.AddAsync(invoice);
-            
+
             return MapToDTO(appointment);
+        }
+
+        private async Task<int> ResolvePatientForReceptionistAsync(CreateAppointmentRequest request)
+        {
+            // Bệnh nhân đã có CCCD → tìm hoặc tạo mới
+            if (!string.IsNullOrWhiteSpace(request.IdCard))
+            {
+                var existing = await _patientRepository.GetByIdCardAsync(request.IdCard);
+                if (existing != null)
+                    return existing.Id;
+            }
+
+            // Không có CCCD hoặc chưa tồn tại → tạo bệnh nhân vãng lai
+            var walkIn = BuildWalkInPatient(request);
+            var saved = await _patientRepository.AddAsync(walkIn);
+            return saved.Id;
+        }
+
+        private Patient BuildWalkInPatient(CreateAppointmentRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.FullName))
+                throw new BusinessException("Vui lòng nhập họ tên bệnh nhân vãng lai.");
+
+            return new Patient
+            {
+                FullName = request.FullName,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
+                PhoneNumber = request.PhoneNumber,
+                Address = request.Address,
+                InsuranceNumber = request.InsuranceNumber,
+                IdCard = request.IdCard,
+                CreatedAt = DateTime.UtcNow
+            };
         }
 
         private static AppointmentDTO MapToDTO(Appointment appointment)

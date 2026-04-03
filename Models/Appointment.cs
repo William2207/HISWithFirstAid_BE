@@ -18,7 +18,7 @@ namespace FirstAidAPI.Models
         public Patient Patient { get; set; } = null!;
 
         public Doctor Doctor { get; set; } = null!;
-        public Specialty Specialty { get; set; } = null!;
+        public Speciality Specialty { get; set; } = null!;
         public Clinic? Clinic { get; set; }
         public User Creator { get; set; } = null!;
 

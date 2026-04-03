@@ -5,6 +5,7 @@ namespace FirstAidAPI.Models
         public int Id { get; set; }
         public int AppointmentId { get; set; }  // FK
         public int DoctorId { get; set; }
+        public int PatientId { get; set; }
 
         // ═══════════════════════════════════════
         // 1. TRIỆU CHỨNG & KHÁM LÂM SÀNG
@@ -52,8 +53,10 @@ namespace FirstAidAPI.Models
         // Navigation
         public Appointment Appointment { get; set; } = null!;
 
+        public Patient Patient { get; set; } = null!;
+
         public Doctor Doctor { get; set; } = null!;
 
-        public List<VitalSign> VitalSigns { get; set; } = new();
+        public VitalSign VitalSigns { get; set; } = new();
     }
 }

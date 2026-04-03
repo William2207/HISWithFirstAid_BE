@@ -54,7 +54,7 @@ namespace FirstAidAPI.Repository.Implement
                     .ThenInclude(d => d.User)
                 .Include(a => a.Specialty)
                 .Where(a => a.DoctorId == doctorId &&
-                            (a.Status == FirstAidAPI.Enums.AppointmentStatus.Registered || 
+                            (a.Status == FirstAidAPI.Enums.AppointmentStatus.Registered ||
                              a.Status == FirstAidAPI.Enums.AppointmentStatus.In_Progress))
                 .OrderBy(a => a.AppointmentDateTime)
                 .ToListAsync();

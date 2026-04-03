@@ -31,7 +31,7 @@ builder.Services.Scan(scan => scan
 
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
-    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
+    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service") && !type.Namespace!.Contains("Models")))
     .AsImplementedInterfaces()
     .WithScopedLifetime());
 builder.Services.AddCors(options =>

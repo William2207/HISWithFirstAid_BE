@@ -16,7 +16,7 @@ namespace FirstAidAPI.Models
         public Department Department { get; set; } = null!;
 
         public User User { get; set; } = null!;
-        public Specialty PrimarySpecialty { get; set; } = null!;
+        public Speciality PrimarySpecialty { get; set; } = null!;
         public List<DoctorSpecialty> DoctorSpecialties { get; set; } = new();  // Many-to-many
         public List<Appointment> Appointments { get; set; } = new();
         public List<MedicalRecord> MedicalRecords { get; set; } = new();

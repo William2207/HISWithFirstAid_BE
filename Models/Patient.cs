@@ -25,7 +25,7 @@ namespace FirstAidAPI.Models
         public string? IdCard { get; set; }  // Nullable
 
         // ═══════════════════════════════════════
-        // THÔNG TIN Y TẾ (LUÔN LƯU Ở ĐÂY)
+        // THÔNG TIN Y TẾ
         // ═══════════════════════════════════════
         public string? InsuranceNumber { get; set; }  // BHYT
 

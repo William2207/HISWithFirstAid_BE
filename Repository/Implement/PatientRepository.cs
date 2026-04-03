@@ -62,5 +62,12 @@ namespace FirstAidAPI.Repository.Implement
             return await _context.Patients
                 .AnyAsync(p => p.UserId == userId);
         }
+
+        public async Task<Patient?> GetByIdCardAsync(string idCard)
+        {
+            return await _context.Patients
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.IdCard == idCard);
+        }
     }
 }

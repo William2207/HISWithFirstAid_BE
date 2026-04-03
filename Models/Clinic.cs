@@ -11,7 +11,8 @@ namespace FirstAidAPI.Models
 
         // Navigation
         public Department Department { get; set; } = null!;
-        public Specialty Specialty { get; set; } = null!;
+
+        public Speciality Specialty { get; set; } = null!;
         public List<Appointment> Appointments { get; set; } = new();
     }
 }

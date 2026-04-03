@@ -30,7 +30,7 @@ namespace FirstAidAPI.Service.Implement
             // var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
             // if (appointment == null) throw new NotFoundException("Không tìm thấy lịch hẹn");
             // if (appointment.DoctorId != doctorId) throw new UnauthorizedException("Bác sĩ không có quyền tạo bệnh án cho lịch hẹn này");
-            
+
             var medicalRecord = new MedicalRecord
             {
                 AppointmentId = request.AppointmentId,
@@ -50,23 +50,20 @@ namespace FirstAidAPI.Service.Implement
                 CreatedAt = DateTime.UtcNow
             };
 
-            if (request.VitalSigns != null && request.VitalSigns.Any())
+            if (request.VitalSigns != null)
             {
-                foreach (var vital in request.VitalSigns)
+                medicalRecord.VitalSigns = new VitalSign
                 {
-                    medicalRecord.VitalSigns.Add(new VitalSign
-                    {
-                        NurseId = vital.NurseId,
-                        BloodPressure = vital.BloodPressure,
-                        HeartRate = vital.HeartRate,
-                        Temperature = vital.Temperature,
-                        RespiratoryRate = vital.RespiratoryRate,
-                        SpO2 = vital.SpO2,
-                        Weight = vital.Weight,
-                        Height = vital.Height,
-                        RecordedAt = DateTime.UtcNow
-                    });
-                }
+                    NurseId = request.VitalSigns.NurseId,
+                    BloodPressure = request.VitalSigns.BloodPressure,
+                    HeartRate = request.VitalSigns.HeartRate,
+                    Temperature = request.VitalSigns.Temperature,
+                    RespiratoryRate = request.VitalSigns.RespiratoryRate,
+                    SpO2 = request.VitalSigns.SpO2,
+                    Weight = request.VitalSigns.Weight,
+                    Height = request.VitalSigns.Height,
+                    RecordedAt = DateTime.UtcNow
+                };
             }
 
             var createdRecord = await _medicalRecordRepository.CreateAsync(medicalRecord);
@@ -119,23 +116,20 @@ namespace FirstAidAPI.Service.Implement
             record.NextAppointmentDate = request.NextAppointmentDate ?? record.NextAppointmentDate;
             record.GeneralNotes = request.GeneralNotes ?? record.GeneralNotes;
 
-            if (request.VitalSigns != null && request.VitalSigns.Any())
+            if (request.VitalSigns != null)
             {
-                foreach (var vital in request.VitalSigns)
+                record.VitalSigns = new VitalSign
                 {
-                    record.VitalSigns.Add(new VitalSign
-                    {
-                        NurseId = vital.NurseId,
-                        BloodPressure = vital.BloodPressure,
-                        HeartRate = vital.HeartRate,
-                        Temperature = vital.Temperature,
-                        RespiratoryRate = vital.RespiratoryRate,
-                        SpO2 = vital.SpO2,
-                        Weight = vital.Weight,
-                        Height = vital.Height,
-                        RecordedAt = DateTime.UtcNow
-                    });
-                }
+                    NurseId = record.VitalSigns.NurseId,
+                    BloodPressure = record.VitalSigns.BloodPressure,
+                    HeartRate = record.VitalSigns.HeartRate,
+                    Temperature = record.VitalSigns.Temperature,
+                    RespiratoryRate = record.VitalSigns.RespiratoryRate,
+                    SpO2 = record.VitalSigns.SpO2,
+                    Weight = record.VitalSigns.Weight,
+                    Height = record.VitalSigns.Height,
+                    RecordedAt = DateTime.UtcNow
+                };
             }
 
             var updatedRecord = await _medicalRecordRepository.UpdateAsync(record);
@@ -163,18 +157,18 @@ namespace FirstAidAPI.Service.Implement
                 NextAppointmentDate = record.NextAppointmentDate,
                 GeneralNotes = record.GeneralNotes,
                 CreatedAt = record.CreatedAt,
-                VitalSigns = record.VitalSigns.Select(v => new VitalSignDTO
+                VitalSigns = record.VitalSigns != null ? new VitalSignDTO
                 {
-                    Id = v.Id,
-                    BloodPressure = v.BloodPressure,
-                    HeartRate = v.HeartRate,
-                    Temperature = v.Temperature,
-                    RespiratoryRate = v.RespiratoryRate,
-                    SpO2 = v.SpO2,
-                    Weight = v.Weight,
-                    Height = v.Height,
-                    RecordedAt = v.RecordedAt
-                }).ToList()
+                    Id = record.VitalSigns.Id,
+                    BloodPressure = record.VitalSigns.BloodPressure,
+                    HeartRate = record.VitalSigns.HeartRate,
+                    Temperature = record.VitalSigns.Temperature,
+                    RespiratoryRate = record.VitalSigns.RespiratoryRate,
+                    SpO2 = record.VitalSigns.SpO2,
+                    Weight = record.VitalSigns.Weight,
+                    Height = record.VitalSigns.Height,
+                    RecordedAt = record.VitalSigns.RecordedAt
+                } : null
             };
         }
     }

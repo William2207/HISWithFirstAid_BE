@@ -17,5 +17,7 @@ namespace FirstAidAPI.Repository
         Task<List<Patient>> GetAllAsync();
 
         Task<bool> ExistsByUserIdAsync(int userId);
+
+        Task<Patient?> GetByIdCardAsync(string idCard);
     }
 }

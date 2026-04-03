@@ -1,4 +1,4 @@
-﻿namespace FirstAidAPI.DTO.Payment
+namespace FirstAidAPI.DTO.Payment
 {
     public class MomoCreatePaymentRequestDto
     {
