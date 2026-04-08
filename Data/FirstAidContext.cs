@@ -52,6 +52,7 @@ namespace FirstAidAPI.Data
         public DbSet<Bed> Beds { get; set; }
         public DbSet<Clinic> Clinics { get; set; }
         public DbSet<MedicalService> MedicalServices { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

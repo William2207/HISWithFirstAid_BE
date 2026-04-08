@@ -159,3 +159,4 @@ D:\Study\workspace\FinalProject\FirstAidAPI\bin\Debug\net8.0\Newtonsoft.Json.dll
 D:\Study\workspace\FinalProject\FirstAidAPI\bin\Debug\net8.0\AutoMapper.dll
 D:\Study\workspace\FinalProject\FirstAidAPI\bin\Debug\net8.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
 D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\swae.build.ex.cache
+D:\Study\workspace\FinalProject\FirstAidAPI\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

@@ -3,7 +3,7 @@ namespace FirstAidAPI.Models
     public class Department
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;  // "Khoa Nội", "Khoa Ngoại"
+        public string Name { get; set; } = string.Empty;  // "Khoa Nội", "Khoa Ngoại,.."
         public string? Description { get; set; }
         public string? Location { get; set; }  // "Tầng 2, Khu A"
         public int? HeadDoctorId { get; set; }  // FK to Doctor (nullable)

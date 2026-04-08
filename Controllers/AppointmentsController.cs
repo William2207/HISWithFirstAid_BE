@@ -1,5 +1,6 @@
 using FirstAidAPI.DTO.Appointment;
 using FirstAidAPI.Exceptions;
+using FirstAidAPI.Repository;
 using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +14,12 @@ namespace FirstAidAPI.Controllers
     public class AppointmentsController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
+        private readonly IPatientRepository _patientRepository;
 
-        public AppointmentsController(IAppointmentService appointmentService)
+        public AppointmentsController(IAppointmentService appointmentService, IPatientRepository patientRepository)
         {
             _appointmentService = appointmentService;
+            _patientRepository = patientRepository;
         }
 
         private int GetCurrentUserId()
@@ -73,9 +76,52 @@ namespace FirstAidAPI.Controllers
         {
             try
             {
-                // In a real scenario you'd verify if this appointment belongs to the calling Doctor.
                 var appointment = await _appointmentService.CompleteAppointmentAsync(id);
                 return Ok(appointment);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>Lấy danh sách lịch hẹn của bệnh nhân đang đăng nhập</summary>
+        [HttpGet("patient/me")]
+        public async Task<IActionResult> GetMyAppointments()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var patient = await _patientRepository.GetByUserIdAsync(userId);
+                if (patient == null)
+                    return NotFound(new { message = "Không tìm thấy hồ sơ bệnh nhân." });
+
+                var appointments = await _appointmentService.GetAppointmentsByPatientAsync(patient.Id);
+                return Ok(appointments);
+            }
+            catch (UnauthorizedException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>Lấy danh sách lịch hẹn đã hoàn thành (chưa tạo hóa đơn)</summary>
+        [HttpGet("completed/no-invoice")]
+        public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetCompletedAppointmentsNoInvoice()
+        {
+            var appointments = await _appointmentService.GetCompletedAppointmentsAsync();
+            return Ok(appointments);
+        }
+
+        /// <summary>Hủy lịch hẹn</summary>
+        [HttpDelete("{id}/cancel")]
+        [Authorize(Roles = "Patient,Receptionist")]
+        public async Task<IActionResult> CancelAppointment(int id)
+        {
+            try
+            {
+                await _appointmentService.CancelAppointmentAsync(id);
+                return NoContent();
             }
             catch (NotFoundException ex)
             {

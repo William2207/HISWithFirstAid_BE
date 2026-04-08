@@ -1,4 +1,3 @@
-using FirstAidAPI.DTO.Order;
 using FirstAidAPI.Enums;
 
 namespace FirstAidAPI.DTO.Invoice
@@ -11,5 +10,6 @@ namespace FirstAidAPI.DTO.Invoice
         public decimal Discount { get; set; } = 0;
         public decimal Total { get; set; }
         public OrderStatus Status { get; set; }
+        public string? PaymentUrl { get; set; }
     }
 }

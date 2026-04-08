@@ -9,6 +9,7 @@ namespace FirstAidAPI.Models
         public int DoctorId { get; set; }
         public int SpecialtyId { get; set; }
         public int? ClinicId { get; set; }
+        public int CreatorId { get; set; }
 
         public DateTime AppointmentDateTime { get; set; }
         public AppointmentType Type { get; set; }

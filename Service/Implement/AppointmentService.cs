@@ -21,24 +21,33 @@ namespace FirstAidAPI.Service.Implement
         private readonly IPatientRepository _patientRepository;
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
-        private readonly ISpecialtyRepository _specilityRepository;
+        private readonly ISpecialtyRepository _specialtyRepository;
         private readonly IMomoService _momoService;
         private readonly FirstAidContext _context;
+        private readonly ILogger<AppointmentService> _logger;
 
         public AppointmentService(
             IAppointmentRepository appointmentRepository,
             IMedicalRecordRepository medicalRecordRepository,
             IInvoiceRepository invoiceRepository,
-            IPatientRepository patientRepository, ISpecialtyRepository specialtyRepository, IMomoService momoService, UserManager<User> userManager, FirstAidContext context)
+            IPatientRepository patientRepository,
+            ISpecialtyRepository specialtyRepository,
+            IMomoService momoService,
+            UserManager<User> userManager,
+            FirstAidContext context,
+            IUserRepository userRepository,
+            ILogger<AppointmentService> logger)
         {
             _appointmentRepository = appointmentRepository;
             _medicalRecordRepository = medicalRecordRepository;
             _invoiceRepository = invoiceRepository;
             _patientRepository = patientRepository;
-            _specilityRepository = specialtyRepository;
+            _specialtyRepository = specialtyRepository;
             _momoService = momoService;
             _userManager = userManager;
             _context = context;
+            _userRepository = userRepository;
+            _logger = logger;
         }
 
         public async Task<AppointmentDTO> CreateAppointmentAsync(int creatorId, CreateAppointmentRequest request)
@@ -79,6 +88,7 @@ namespace FirstAidAPI.Service.Implement
                     DoctorId = request.DoctorId,
                     SpecialtyId = request.SpecialtyId,
                     ClinicId = request.ClinicId,
+                    CreatorId = creatorId,
                     AppointmentDateTime = request.AppointmentDateTime,
                     Type = appointmentType,
                     Status = AppointmentStatus.Registered,
@@ -130,6 +140,28 @@ namespace FirstAidAPI.Service.Implement
             await _invoiceRepository.AddAsync(invoice);
 
             return MapToDTO(appointment);
+        }
+
+        public async Task<IEnumerable<AppointmentDTO>> GetAppointmentsByPatientAsync(int patientId)
+        {
+            var appointments = await _appointmentRepository.GetByPatientIdAsync(patientId);
+            return appointments.Select(MapToDTO);
+        }
+
+        public async Task<IEnumerable<AppointmentDTO>> GetCompletedAppointmentsAsync()
+        {
+            var appointments = await _appointmentRepository.GetCompletedAppointmentsAsync();
+            return appointments.Select(MapToDTO);
+        }
+
+        public async Task CancelAppointmentAsync(int appointmentId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+            if (appointment == null)
+                throw new NotFoundException($"Không tìm thấy lịch hẹn có id {appointmentId}");
+
+            _logger.LogInformation("Cancelling appointment {AppointmentId}", appointmentId);
+            await _appointmentRepository.DeleteAsync(appointment);
         }
 
         private async Task<int> ResolvePatientForReceptionistAsync(CreateAppointmentRequest request)

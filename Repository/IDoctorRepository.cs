@@ -17,5 +17,9 @@ namespace FirstAidAPI.Repository
         Task<List<Doctor>> GetAllAsync();
 
         Task<bool> ExistsByUserIdAsync(int userId);
+
+        Task<List<Doctor>> GetDoctorsBySpecialtyForBookingAsync(int specialtyId);
+
+        Task<Clinic?> GetDefaultClinicBySpecialtyAsync(int specialtyId);
     }
 }

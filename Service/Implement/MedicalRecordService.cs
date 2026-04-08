@@ -26,7 +26,7 @@ namespace FirstAidAPI.Service.Implement
                 throw new BusinessException("Lịch hẹn này đã có hồ sơ bệnh án.");
             }
 
-            // (Tuỳ chọn) - Có thể kiểm tra Appointment có thuộc về Doctor này không ở đây
+            //  kiểm tra Appointment có thuộc về Doctor này không ở đây
             // var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
             // if (appointment == null) throw new NotFoundException("Không tìm thấy lịch hẹn");
             // if (appointment.DoctorId != doctorId) throw new UnauthorizedException("Bác sĩ không có quyền tạo bệnh án cho lịch hẹn này");

@@ -68,5 +68,21 @@ namespace FirstAidAPI.Repository.Implement
             return await _context.Doctors
                 .AnyAsync(d => d.UserId == userId);
         }
+
+        public async Task<List<Doctor>> GetDoctorsBySpecialtyForBookingAsync(int specialtyId)
+        {
+            return await _context.Doctors
+                .Include(d => d.User)
+                .Include(d => d.PrimarySpecialty)
+                .Include(d => d.Schedules)
+                    .ThenInclude(s => s.Clinic)
+                .Where(d => d.IsAvailable && d.PrimarySpecialtyId == specialtyId)
+                .ToListAsync();
+        }
+
+        public async Task<Clinic?> GetDefaultClinicBySpecialtyAsync(int specialtyId)
+        {
+            return await _context.Clinics.FirstOrDefaultAsync(c => c.SpecialtyId == specialtyId);
+        }
     }
 }

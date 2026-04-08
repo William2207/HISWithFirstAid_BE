@@ -3,6 +3,6 @@
 appsettings.Development.json
 appsettings.Production.json
 appsettings.*.json
-
+cleancodeSKILL.md
 ## Ngoại trừ template
 !appsettings.json

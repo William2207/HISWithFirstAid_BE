@@ -44,8 +44,8 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
-builder.Services.AddHttpContextAccessor(); // Thêm dòng này
-builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>(); // Thêm dòng này
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 builder.Services.AddScoped<IUrlHelper>(x =>
 {
     var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;

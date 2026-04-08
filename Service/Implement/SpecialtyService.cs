@@ -19,7 +19,8 @@ namespace FirstAidAPI.Service.Implement
             {
                 Id = s.Id,
                 Name = s.Name,
-                Description = s.Description
+                Description = s.Description,
+                Price = s.Price
             }).ToList();
         }
     }

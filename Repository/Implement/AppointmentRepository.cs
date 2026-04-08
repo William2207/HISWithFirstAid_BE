@@ -59,5 +59,33 @@ namespace FirstAidAPI.Repository.Implement
                 .OrderBy(a => a.AppointmentDateTime)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId)
+        {
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.User)
+                .Include(a => a.Specialty)
+                .Where(a => a.PatientId == patientId)
+                .OrderByDescending(a => a.AppointmentDateTime)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetCompletedAppointmentsAsync()
+        {
+            // Only get completed appointments that do not have an Invoice generated yet
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.User)
+                .Include(a => a.Specialty)
+                .Where(a => a.Status == FirstAidAPI.Enums.AppointmentStatus.Completed &&
+                            !_context.Invoices.Any(i => i.AppointmentId == a.Id))
+                .OrderByDescending(a => a.AppointmentDateTime)
+                .ToListAsync();
+        }
     }
 }
