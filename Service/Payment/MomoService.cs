@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
 using FirstAidAPI.DTO.Payment;
@@ -27,7 +27,7 @@ namespace FirstAidAPI.Service.Payment
             var orderId = request.OrderNumber;
             var amount = request.Amount;
             var orderInfo = request.OrderDescription;
-            var redirectUrl = returnUrl;
+            var redirectUrl = !string.IsNullOrEmpty(request.ReturnUrl) ? request.ReturnUrl : returnUrl;
             var ipnUrls = ipnUrl;
             var requestId = Guid.NewGuid().ToString();
             var extraData = "";
@@ -118,6 +118,11 @@ namespace FirstAidAPI.Service.Payment
             var signature = ComputeHmacSha256(rawHash, secretKey);
 
             return signature.Equals(callback.Signature, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public string GetBaseUrl()
+        {
+            return _configuration["Momo:BaseUrl"] ?? "http://localhost:5024";
         }
 
         private string ComputeHmacSha256(string message, string secretKey)

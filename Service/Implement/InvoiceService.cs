@@ -73,11 +73,13 @@ namespace FirstAidAPI.Service.Implement
             await _invoiceRepository.AddAsync(invoice);
 
             // Gọi Momo để tạo payment URL
+            var baseUrl = _momoService.GetBaseUrl();
             var momoResponse = await _momoService.CreatePaymentAsync(new MomoCreatePaymentRequestDto
             {
                 OrderNumber = invoiceNumber,
                 Amount = (long)total,
-                OrderDescription = $"Thanh toán hóa đơn khám bệnh {invoiceNumber}"
+                OrderDescription = $"Thanh toán hóa đơn khám bệnh {invoiceNumber}",
+                ReturnUrl = $"{baseUrl}/api/invoices/momo-callback"
             });
 
             string? paymentUrl = null;
@@ -154,6 +156,18 @@ namespace FirstAidAPI.Service.Implement
 
             invoice.Status = OrderStatus.Cancelled;
             await _invoiceRepository.UpdateAsync(invoice);
+
+            // Hủy appointment khi payment fail
+            if (invoice.AppointmentId.HasValue)
+            {
+                var appointment = await _appointmentRepository.GetByIdAsync(invoice.AppointmentId.Value);
+                if (appointment != null)
+                {
+                    await _appointmentRepository.DeleteAsync(appointment);
+                    _logger.LogInformation("Cancelled appointment {AppointmentId} due to failed invoice {InvoiceNumber}",
+                        invoice.AppointmentId.Value, invoice.InvoiceNumber);
+                }
+            }
 
             _logger.LogInformation("Invoice failed. InvoiceNumber: {InvoiceNumber}", invoice.InvoiceNumber);
         }

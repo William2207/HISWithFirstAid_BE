@@ -68,7 +68,7 @@ namespace FirstAidAPI.Controllers
         [HttpGet("momo-callback")]
         public async Task<IActionResult> MomoCallback([FromQuery] MomoCallbackDto callback)
         {
-            var frontendUrl = _configuration["Frontend:Url"];
+            var frontendUrl = _configuration["Frontend:HISUrl"] ?? _configuration["Frontend:Url"];
 
             try
             {

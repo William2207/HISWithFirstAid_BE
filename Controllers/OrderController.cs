@@ -75,37 +75,34 @@ namespace FirstAidAPI.Controllers
         [HttpGet("momo-callback")]
         public async Task<IActionResult> MomoCallback([FromQuery] MomoCallbackDto callback)
         {
-            //_logger.LogInformation("===== MOMO CALLBACK =====");
-            //_logger.LogInformation($"OrderId: {callback.OrderId}");
-            //_logger.LogInformation($"ResultCode: {callback.ResultCode}");
-            //_logger.LogInformation($"Message: {callback.Message}");
+            var frontendUrl = _configuration["Frontend:StoreUrl"] ?? _configuration["Frontend:Url"];
             try
             {
                 if (!_momoService.ValidateSignature(callback))
                 {
-                    return Redirect($"{_configuration["Frontend:Url"]}/payment/failed?message=Invalid+signature");
+                    return Redirect($"{frontendUrl}/payment/failed?message=Invalid+signature");
                 }
 
                 var order = await _orderService.GetByOrderNumberAsync(callback.OrderId);
                 if (order == null)
                 {
-                    return Redirect($"{_configuration["Frontend:Url"]}/payment/failed?message=Order+not+found");
+                    return Redirect($"{frontendUrl}/payment/failed?message=Order+not+found");
                 }
 
                 if (callback.ResultCode == 0)
                 {
                     await _orderService.CompleteOrderAsync(order.Id, callback.TransId.ToString());
-                    return Redirect($"{_configuration["Frontend:Url"]}/enrollments");
+                    return Redirect($"{frontendUrl}/enrollments");
                 }
                 else
                 {
                     await _orderService.FailOrderAsync(order.Id);
-                    return Redirect($"{_configuration["Frontend:Url"]}/payment/failed?orderNumber={callback.OrderId}&message={callback.Message}");
+                    return Redirect($"{frontendUrl}/payment/failed?orderNumber={callback.OrderId}&message={callback.Message}");
                 }
             }
             catch (Exception ex)
             {
-                return Redirect($"{_configuration["Frontend:Url"]}/payment/failed?message={ex.Message}");
+                return Redirect($"{frontendUrl}/payment/failed?message={ex.Message}");
             }
         }
 
