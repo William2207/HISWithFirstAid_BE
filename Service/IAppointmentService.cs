@@ -14,6 +14,8 @@ namespace FirstAidAPI.Service
 
         Task<IEnumerable<AppointmentDTO>> GetAppointmentsByPatientAsync(int patientId);
 
+        Task<IEnumerable<AppointmentDTO>> GetAppointmentsByUserIdAsync(int userId);
+
         Task<IEnumerable<AppointmentDTO>> GetCompletedAppointmentsAsync();
 
         Task CancelAppointmentAsync(int appointmentId);

@@ -87,5 +87,13 @@ namespace FirstAidAPI.Repository.Implement
                 .OrderByDescending(a => a.AppointmentDateTime)
                 .ToListAsync();
         }
+
+        public async Task<bool> ExistsOverlapAsync(int patientId, int specialtyId, DateTime dateTime)
+        {
+            return await _context.Appointments.AnyAsync(a =>
+                a.PatientId == patientId &&
+                a.SpecialtyId == specialtyId &&
+                a.AppointmentDateTime == dateTime);
+        }
     }
 }

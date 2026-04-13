@@ -4,6 +4,8 @@ using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using FirstAidAPI.Repository;
+using FirstAidAPI.Models;
 
 namespace FirstAidAPI.Controllers
 {
@@ -13,10 +15,14 @@ namespace FirstAidAPI.Controllers
     public class MedicalRecordsController : ControllerBase
     {
         private readonly IMedicalRecordService _medicalRecordService;
+        private readonly IPatientRepository _patientRepository;
 
-        public MedicalRecordsController(IMedicalRecordService medicalRecordService)
+        public MedicalRecordsController(
+            IMedicalRecordService medicalRecordService,
+            IPatientRepository patientRepository)
         {
             _medicalRecordService = medicalRecordService;
+            _patientRepository = patientRepository;
         }
 
         private int GetCurrentUserId()
@@ -88,6 +94,28 @@ namespace FirstAidAPI.Controllers
             catch (NotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy toàn bộ bệnh án của bệnh nhân đang đăng nhập
+        /// </summary>
+        [HttpGet("patient/me")]
+        public async Task<IActionResult> GetMyMedicalRecords()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var patient = await _patientRepository.GetByUserIdAsync(userId);
+                if (patient == null)
+                    return NotFound(new { message = "Không tìm thấy hồ sơ bệnh nhân." });
+
+                var records = await _medicalRecordService.GetMedicalRecordsByPatientAsync(patient.Id);
+                return Ok(records);
+            }
+            catch (UnauthorizedException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
         }
     }

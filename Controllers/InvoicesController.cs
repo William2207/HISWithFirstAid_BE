@@ -1,39 +1,46 @@
+using System;
 using FirstAidAPI.DTO.Invoice;
 using FirstAidAPI.DTO.Payment;
 using FirstAidAPI.Enums;
-using FirstAidAPI.Repository;
 using FirstAidAPI.Service;
 using FirstAidAPI.Service.Payment;
+using FirstAidAPI.Repository;
+using FirstAidAPI.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace FirstAidAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class InvoicesController : ControllerBase
+    public class InvoicesController : Controller
     {
         private readonly IInvoiceService _invoiceService;
         private readonly IMomoService _momoService;
-        private readonly IInvoiceRepository _invoiceRepository;
-        private readonly IAppointmentRepository _appointmentRepository;
         private readonly IConfiguration _configuration;
         private readonly ILogger<InvoicesController> _logger;
 
         public InvoicesController(
             IInvoiceService invoiceService,
             IMomoService momoService,
-            IInvoiceRepository invoiceRepository,
-            IAppointmentRepository appointmentRepository,
             IConfiguration configuration,
             ILogger<InvoicesController> logger)
         {
             _invoiceService = invoiceService;
             _momoService = momoService;
-            _invoiceRepository = invoiceRepository;
-            _appointmentRepository = appointmentRepository;
             _configuration = configuration;
             _logger = logger;
+        }
+
+        private int GetCurrentUserId()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
+            {
+                throw new UnauthorizedException("Không tìm thấy thông tin xác thực.");
+            }
+            return userId;
         }
 
         /// <summary>Tạo hóa đơn + trả về Momo payment URL</summary>
@@ -77,50 +84,26 @@ namespace FirstAidAPI.Controllers
                     return Redirect($"{frontendUrl}/payment/failed?message=Invalid+signature");
                 }
 
-                // OrderId của Momo chính là InvoiceNumber
-                var invoice = await _invoiceRepository.GetByInvoiceNumberAsync(callback.OrderId);
-                if (invoice == null)
-                {
-                    return Redirect($"{frontendUrl}/payment/failed?message=Invoice+not+found");
-                }
+                // Xử lý kết quả thanh toán qua Service (Clean Code)
+                await _invoiceService.ProcessMomoPaymentAsync(callback);
 
+                string redirectUrl;
                 if (callback.ResultCode == 0)
                 {
-                    invoice.Status = OrderStatus.Completed;
-                    invoice.PaidAmount = invoice.Total;
-                    invoice.RemainingAmount = 0;
-                    invoice.PaidAt = DateTime.UtcNow;
-                    await _invoiceRepository.UpdateAsync(invoice);
-
-                    _logger.LogInformation("Invoice {InvoiceNumber} paid successfully. TransId: {TransId}",
-                        invoice.InvoiceNumber, callback.TransId);
-
-                    return Redirect($"{frontendUrl}/patient?tab=payments&status=success&invoiceNumber={invoice.InvoiceNumber}");
+                    redirectUrl = $"{frontendUrl}/patient?tab=payments&status=success&invoiceNumber={callback.OrderId}";
                 }
                 else
                 {
-                    // Thanh toán thất bại → hủy appointment nếu có
-                    invoice.Status = OrderStatus.Cancelled;
-                    await _invoiceRepository.UpdateAsync(invoice);
-
-                    if (invoice.AppointmentId.HasValue)
-                    {
-                        var appointment = await _appointmentRepository.GetByIdAsync(invoice.AppointmentId.Value);
-                        if (appointment != null)
-                        {
-                            await _appointmentRepository.DeleteAsync(appointment);
-                            _logger.LogInformation("Cancelled appointment {AppointmentId} due to failed payment",
-                                invoice.AppointmentId.Value);
-                        }
-                    }
-
-                    return Redirect($"{frontendUrl}/payment/failed?invoiceNumber={callback.OrderId}&message={callback.Message}");
+                    redirectUrl = $"{frontendUrl}/payment/failed?invoiceNumber={callback.OrderId}&message={callback.Message}";
                 }
+
+                _logger.LogInformation("Redirecting browser to: {RedirectUrl}", redirectUrl);
+                return Redirect(redirectUrl);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing Momo callback for invoice");
-                return Redirect($"{frontendUrl}/payment/failed?message={ex.Message}");
+                _logger.LogError(ex, "Error processing Momo callback for invoice {InvoiceNumber}", callback.OrderId);
+                return Redirect($"{frontendUrl}/payment/failed?invoiceNumber={callback.OrderId}&message={Uri.EscapeDataString(ex.Message)}");
             }
         }
 
@@ -136,42 +119,35 @@ namespace FirstAidAPI.Controllers
                     return Ok(new { resultCode = 97, message = "Invalid signature" });
                 }
 
-                var invoice = await _invoiceRepository.GetByInvoiceNumberAsync(callback.OrderId);
-                if (invoice == null)
-                {
-                    return Ok(new { resultCode = 99, message = "Invoice not found" });
-                }
-
-                if (callback.ResultCode == 0)
-                {
-                    invoice.Status = OrderStatus.Completed;
-                    invoice.PaidAmount = invoice.Total;
-                    invoice.RemainingAmount = 0;
-                    invoice.PaidAt = DateTime.UtcNow;
-                    await _invoiceRepository.UpdateAsync(invoice);
-                }
-                else
-                {
-                    invoice.Status = OrderStatus.Cancelled;
-                    await _invoiceRepository.UpdateAsync(invoice);
-
-                    // Hủy appointment khi payment fail
-                    if (invoice.AppointmentId.HasValue)
-                    {
-                        var appointment = await _appointmentRepository.GetByIdAsync(invoice.AppointmentId.Value);
-                        if (appointment != null)
-                        {
-                            await _appointmentRepository.DeleteAsync(appointment);
-                        }
-                    }
-                }
+                // Xử lý IPN qua Service (Clean Code: không gọi trực tiếp db layer)
+                await _invoiceService.ProcessMomoPaymentAsync(callback);
 
                 return Ok(new { resultCode = 0, message = "Success" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing Momo IPN for invoice");
+                _logger.LogError(ex, "Error processing Momo IPN for invoice {InvoiceNumber}", callback.OrderId);
                 return Ok(new { resultCode = 99, message = ex.Message });
+            }
+        }
+
+        [HttpGet("patient/me")]
+        [Authorize]
+        public async Task<IActionResult> GetMyInvoices()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var invoices = await _invoiceService.GetInvoicesByUserIdAsync(userId);
+                return Ok(invoices);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (UnauthorizedException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
         }
     }

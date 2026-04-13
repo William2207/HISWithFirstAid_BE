@@ -22,6 +22,7 @@ namespace FirstAidAPI.Service.Implement
                     Id = d.Id,
                     Name = d.User?.FullName ?? string.Empty,
                     Specialty = d.PrimarySpecialty?.Name ?? string.Empty,
+                    SpecialtyId = d.PrimarySpecialtyId,
                     YearsOfExperience = d.YearsOfExperience
                 })
                 .ToList();
@@ -41,30 +42,19 @@ namespace FirstAidAPI.Service.Implement
                 // Tìm lịch theo ngày của bác sĩ
                 var schedule = doc.Schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
 
-                // Setup mốc thời gian. Nếu bác sĩ có lịch, chia slot mỗi 1 tiếng theo khoản T
+                if (schedule == null)
+                    continue;
+
                 var timeSlots = new List<string>();
-                if (schedule != null)
+                TimeSpan current = schedule.StartTime;
+                while (current.Add(TimeSpan.FromHours(1)) <= schedule.EndTime)
                 {
-                    TimeSpan current = schedule.StartTime;
-                    while (current.Add(TimeSpan.FromHours(1)) <= schedule.EndTime)
-                    {
-                        var end = current.Add(TimeSpan.FromHours(1));
-                        timeSlots.Add($"{current:hh\\:mm} - {end:hh\\:mm}");
-                        current = end;
-                    }
-                }
-                else
-                {
-                    
-                    timeSlots = new List<string> {
-                        "07:30 - 08:30",
-                        "08:30 - 09:30",
-                        "09:30 - 10:30",
-                        "10:30 - 11:30"
-                    };
+                    var end = current.Add(TimeSpan.FromHours(1));
+                    timeSlots.Add($"{current:hh\\:mm} - {end:hh\\:mm}");
+                    current = end;
                 }
 
-                var clinic = schedule?.Clinic ?? defaultClinic;
+                var clinic = schedule.Clinic ?? defaultClinic;
 
                 result.Add(new DoctorAvailabilityDTO
                 {

@@ -17,5 +17,7 @@ namespace FirstAidAPI.Repository
         Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId);
 
         Task<IEnumerable<Appointment>> GetCompletedAppointmentsAsync();
+        
+        Task<bool> ExistsOverlapAsync(int patientId, int specialtyId, DateTime dateTime);
     }
 }

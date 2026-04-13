@@ -14,12 +14,10 @@ namespace FirstAidAPI.Controllers
     public class AppointmentsController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
-        private readonly IPatientRepository _patientRepository;
 
-        public AppointmentsController(IAppointmentService appointmentService, IPatientRepository patientRepository)
+        public AppointmentsController(IAppointmentService appointmentService)
         {
             _appointmentService = appointmentService;
-            _patientRepository = patientRepository;
         }
 
         private int GetCurrentUserId()
@@ -92,12 +90,12 @@ namespace FirstAidAPI.Controllers
             try
             {
                 var userId = GetCurrentUserId();
-                var patient = await _patientRepository.GetByUserIdAsync(userId);
-                if (patient == null)
-                    return NotFound(new { message = "Không tìm thấy hồ sơ bệnh nhân." });
-
-                var appointments = await _appointmentService.GetAppointmentsByPatientAsync(patient.Id);
+                var appointments = await _appointmentService.GetAppointmentsByUserIdAsync(userId);
                 return Ok(appointments);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (UnauthorizedException ex)
             {

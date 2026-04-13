@@ -15,6 +15,7 @@ namespace FirstAidAPI.Service.Implement
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IMedicalServiceRepository _medicalServiceRepository;
         private readonly IMomoService _momoService;
+        private readonly IPatientRepository _patientRepository;
         private readonly ILogger<InvoiceService> _logger;
 
         public InvoiceService(
@@ -23,6 +24,7 @@ namespace FirstAidAPI.Service.Implement
             IMedicalServiceRepository medicalServiceRepository,
             IAppointmentRepository appointmentRepository,
             IMomoService momoService,
+            IPatientRepository patientRepository,
             ILogger<InvoiceService> logger)
         {
             _invoiceRepository = invoiceRepository;
@@ -30,6 +32,7 @@ namespace FirstAidAPI.Service.Implement
             _medicalServiceRepository = medicalServiceRepository;
             _appointmentRepository = appointmentRepository;
             _momoService = momoService;
+            _patientRepository = patientRepository;
             _logger = logger;
         }
 
@@ -108,12 +111,23 @@ namespace FirstAidAPI.Service.Implement
             var invoice = await _invoiceRepository.GetByIdAsync(invoiceId)
                 ?? throw new KeyNotFoundException($"Invoice {invoiceId} not found.");
 
+            // Kiểm tra invoice đã hoàn tất chưa (Idempotency)
+            if (invoice.Status == OrderStatus.Completed)
+            {
+                _logger.LogInformation("Invoice {InvoiceNumber} already completed.", invoice.InvoiceNumber);
+                return;
+            }
+
             // Kiểm tra payment đã tồn tại chưa
             var existingPayment = await _paymentRepository.GetByTransactionIdAsync(transactionId);
             if (existingPayment != null)
             {
-                _logger.LogWarning("Payment already exists for transaction {TransactionId}", transactionId);
-                throw new InvalidOperationException($"Payment already recorded for transaction {transactionId}");
+                _logger.LogWarning("Payment already exists for transaction {TransactionId}. Marking invoice as completed if not already.", transactionId);
+                
+                // Đảm bảo sync trạng thái invoice nếu cần
+                invoice.Status = OrderStatus.Completed;
+                await _invoiceRepository.UpdateAsync(invoice);
+                return;
             }
 
             // Tạo Payment record
@@ -189,6 +203,34 @@ namespace FirstAidAPI.Service.Implement
             };
         }
 
+        public async Task<IEnumerable<PatientInvoiceDto>> GetInvoicesByPatientAsync(int patientId)
+        {
+            var invoices = await _invoiceRepository.GetByPatientIdAsync(patientId);
+            
+            return invoices.Select(i => new PatientInvoiceDto
+            {
+                Id = i.Id,
+                InvoiceNumber = i.InvoiceNumber,
+                Description = i.Items.FirstOrDefault()?.Description ?? "Thanh toán dịch vụ y tế",
+                Total = i.Total,
+                Status = i.Status,
+                CreatedAt = i.CreatedAt,
+                PaidAt = i.PaidAt,
+                PaymentMethod = i.Payments.OrderByDescending(p => p.PaidAt).FirstOrDefault()?.PaymentMethod.ToString() ?? "Chưa có",
+            }).ToList();
+        }
+
+        public async Task<IEnumerable<PatientInvoiceDto>> GetInvoicesByUserIdAsync(int userId)
+        {
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+            if (patient == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy hồ sơ bệnh nhân.");
+            }
+
+            return await GetInvoicesByPatientAsync(patient.Id);
+        }
+
         /// <summary>
         /// Tạo danh sách InvoiceItems từ appointment và medical services
         /// </summary>
@@ -250,6 +292,43 @@ namespace FirstAidAPI.Service.Implement
             }
 
             return (subtotal, total);
+        }
+
+        public async Task ProcessMomoPaymentAsync(MomoCallbackDto callback)
+        {
+            var invoice = await _invoiceRepository.GetByInvoiceNumberAsync(callback.OrderId);
+            if (invoice == null)
+            {
+                _logger.LogError("Invoice {InvoiceNumber} not found during Momo callback processing.", callback.OrderId);
+                throw new KeyNotFoundException($"Invoice {callback.OrderId} not found.");
+            }
+
+            if (callback.ResultCode == 0)
+            {
+                // Thanh toán thành công -> Hoàn tất hóa đơn và tạo Payment record
+                await CompleteInvoiceAsync(invoice.Id, callback.TransId.ToString());
+            }
+            else
+            {
+                // Thanh toán thất bại -> Hủy hóa đơn
+                _logger.LogWarning("Payment failed for Invoice {InvoiceNumber}. ResultCode: {ResultCode}, Message: {Message}",
+                    invoice.InvoiceNumber, callback.ResultCode, callback.Message);
+
+                invoice.Status = OrderStatus.Cancelled;
+                await _invoiceRepository.UpdateAsync(invoice);
+
+                // Hủy appointment liên quan nếu có
+                if (invoice.AppointmentId.HasValue)
+                {
+                    var appointment = await _appointmentRepository.GetByIdAsync(invoice.AppointmentId.Value);
+                    if (appointment != null)
+                    {
+                        await _appointmentRepository.DeleteAsync(appointment);
+                        _logger.LogInformation("Deleted appointment {AppointmentId} due to failed payment for invoice {InvoiceNumber}",
+                            invoice.AppointmentId.Value, invoice.InvoiceNumber);
+                    }
+                }
+            }
         }
 
         public string GenerateInvoiceNumber()

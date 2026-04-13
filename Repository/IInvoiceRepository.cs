@@ -8,6 +8,7 @@ namespace FirstAidAPI.Repository
         Task<Invoice?> GetByIdAsync(int id);
         Task<Invoice?> GetByInvoiceNumberAsync(string invoiceNumber);
         Task<Invoice?> GetByAppointmentIdAsync(int appointmentId);
+        Task<List<Invoice>> GetByPatientIdAsync(int patientId);
         Task<Invoice> UpdateAsync(Invoice invoice);
     }
 }

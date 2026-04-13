@@ -53,6 +53,7 @@ namespace FirstAidAPI.Data
         public DbSet<Clinic> Clinics { get; set; }
         public DbSet<MedicalService> MedicalServices { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -145,6 +146,10 @@ namespace FirstAidAPI.Data
             modelBuilder.Entity<Patient>(entity =>
             {
                 entity.ToTable("Patients");
+            });
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.ToTable("Payments");
             });
 
             modelBuilder.Entity<QuizQuestion>()

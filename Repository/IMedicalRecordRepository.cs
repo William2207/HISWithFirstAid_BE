@@ -10,6 +10,8 @@ namespace FirstAidAPI.Repository
 
         Task<MedicalRecord?> GetByAppointmentIdAsync(int appointmentId);
 
+        Task<List<MedicalRecord>> GetByPatientIdAsync(int patientId);
+
         Task<MedicalRecord> UpdateAsync(MedicalRecord medicalRecord);
 
         Task<bool> ExistsByAppointmentIdAsync(int appointmentId);

@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260409040539_ModifyPaymentEntityName")]
+    partial class ModifyPaymentEntityName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -298,12 +301,6 @@ namespace FirstAidAPI.Migrations
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
-
-                    b.Property<int>("MaxOnlineSlots")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MaxWalkInSlots")
-                        .HasColumnType("integer");
 
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("interval");

@@ -84,5 +84,20 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Clinics.FirstOrDefaultAsync(c => c.SpecialtyId == specialtyId);
         }
+
+        public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DayOfWeek dayOfWeek, TimeSpan timeOfDay)
+        {
+            return await _context.DoctorSchedules
+                .FirstOrDefaultAsync(s => s.DoctorId == doctorId
+                                       && s.DayOfWeek == dayOfWeek
+                                       && s.StartTime <= timeOfDay
+                                       && s.EndTime >= timeOfDay);
+        }
+
+        public async Task UpdateScheduleAsync(DoctorSchedule schedule)
+        {
+            _context.DoctorSchedules.Update(schedule);
+            await _context.SaveChangesAsync();
+        }
     }
 }

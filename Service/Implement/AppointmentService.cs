@@ -22,6 +22,7 @@ namespace FirstAidAPI.Service.Implement
         private readonly IUserRepository _userRepository;
         private readonly UserManager<User> _userManager;
         private readonly ISpecialtyRepository _specialtyRepository;
+        private readonly IDoctorRepository _doctorRepository;
         private readonly IMomoService _momoService;
         private readonly FirstAidContext _context;
         private readonly ILogger<AppointmentService> _logger;
@@ -32,6 +33,7 @@ namespace FirstAidAPI.Service.Implement
             IInvoiceRepository invoiceRepository,
             IPatientRepository patientRepository,
             ISpecialtyRepository specialtyRepository,
+            IDoctorRepository doctorRepository,
             IMomoService momoService,
             UserManager<User> userManager,
             FirstAidContext context,
@@ -43,6 +45,7 @@ namespace FirstAidAPI.Service.Implement
             _invoiceRepository = invoiceRepository;
             _patientRepository = patientRepository;
             _specialtyRepository = specialtyRepository;
+            _doctorRepository = doctorRepository;
             _momoService = momoService;
             _userManager = userManager;
             _context = context;
@@ -79,9 +82,38 @@ namespace FirstAidAPI.Service.Implement
                 appointmentType = AppointmentType.Online;
             }
 
+            // Kiểm tra trùng lịch hẹn (Same Patient, Same Specialty, Same Time)
+            var isDuplicate = await _appointmentRepository.ExistsOverlapAsync(resolvedPatientId, request.SpecialtyId, request.AppointmentDateTime);
+            if (isDuplicate)
+            {
+                throw new BusinessException("Bạn đã có lịch hẹn cho chuyên khoa này vào khung giờ đã chọn. Vui lòng kiểm tra lại trong lịch sử đặt lịch.");
+            }
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                var dayOfWeek = request.AppointmentDateTime.DayOfWeek;
+                var timeOfDay = request.AppointmentDateTime.TimeOfDay;
+
+                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, dayOfWeek, timeOfDay);
+
+                if (schedule != null)
+                {
+                    if (appointmentType == AppointmentType.Online)
+                    {
+                        if (schedule.MaxOnlineSlots <= 0)
+                            throw new BusinessException("Đã hết slot đặt hẹn đăng ký online cho khung giờ này.");
+                        schedule.MaxOnlineSlots--;
+                    }
+                    else
+                    {
+                        if (schedule.MaxWalkInSlots <= 0)
+                            throw new BusinessException("Đã hết slot đặt hẹn đăng ký trực tiếp cho khung giờ này.");
+                        schedule.MaxWalkInSlots--;
+                    }
+                    await _doctorRepository.UpdateScheduleAsync(schedule);
+                }
+
                 var appointment = new Appointment
                 {
                     PatientId = resolvedPatientId,
@@ -148,6 +180,17 @@ namespace FirstAidAPI.Service.Implement
             return appointments.Select(MapToDTO);
         }
 
+        public async Task<IEnumerable<AppointmentDTO>> GetAppointmentsByUserIdAsync(int userId)
+        {
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+            if (patient == null)
+            {
+                throw new NotFoundException("Không tìm thấy hồ sơ bệnh nhân.");
+            }
+
+            return await GetAppointmentsByPatientAsync(patient.Id);
+        }
+
         public async Task<IEnumerable<AppointmentDTO>> GetCompletedAppointmentsAsync()
         {
             var appointments = await _appointmentRepository.GetCompletedAppointmentsAsync();
@@ -185,10 +228,14 @@ namespace FirstAidAPI.Service.Implement
             if (string.IsNullOrWhiteSpace(request.FullName))
                 throw new BusinessException("Vui lòng nhập họ tên bệnh nhân vãng lai.");
 
+            DateTime? utcDateOfBirth = request.DateOfBirth.HasValue
+                ? DateTime.SpecifyKind(request.DateOfBirth.Value, DateTimeKind.Utc)
+                : null;
+
             return new Patient
             {
                 FullName = request.FullName,
-                DateOfBirth = request.DateOfBirth,
+                DateOfBirth = utcDateOfBirth,
                 Gender = request.Gender,
                 PhoneNumber = request.PhoneNumber,
                 Address = request.Address,

@@ -38,6 +38,17 @@ namespace FirstAidAPI.Repository.Implement
                 .FirstOrDefaultAsync(m => m.AppointmentId == appointmentId);
         }
 
+        public async Task<List<MedicalRecord>> GetByPatientIdAsync(int patientId)
+        {
+            return await _context.MedicalRecords
+                .Include(m => m.VitalSigns)
+                .Include(m => m.Doctor)
+                .ThenInclude(d => d.User)
+                .Where(m => m.PatientId == patientId)
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<MedicalRecord> UpdateAsync(MedicalRecord medicalRecord)
         {
             _context.MedicalRecords.Update(medicalRecord);

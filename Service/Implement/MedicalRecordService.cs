@@ -9,13 +9,16 @@ namespace FirstAidAPI.Service.Implement
     {
         private readonly IMedicalRecordRepository _medicalRecordRepository;
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IPatientRepository _patientRepository;
 
         public MedicalRecordService(
             IMedicalRecordRepository medicalRecordRepository,
-            IAppointmentRepository appointmentRepository)
+            IAppointmentRepository appointmentRepository,
+            IPatientRepository patientRepository)
         {
             _medicalRecordRepository = medicalRecordRepository;
             _appointmentRepository = appointmentRepository;
+            _patientRepository = patientRepository;
         }
 
         public async Task<MedicalRecordDTO> CreateMedicalRecordAsync(int doctorId, CreateMedicalRecordRequest request)
@@ -88,6 +91,23 @@ namespace FirstAidAPI.Service.Implement
                 throw new NotFoundException($"Không tìm thấy bệnh án cho lịch hẹn {appointmentId}");
             }
             return MapToDTO(record);
+        }
+
+        public async Task<IEnumerable<MedicalRecordDTO>> GetMedicalRecordsByPatientAsync(int patientId)
+        {
+            var records = await _medicalRecordRepository.GetByPatientIdAsync(patientId);
+            return records.Select(MapToDTO);
+        }
+
+        public async Task<IEnumerable<MedicalRecordDTO>> GetMedicalRecordsByUserIdAsync(int userId)
+        {
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+            if (patient == null)
+            {
+                throw new NotFoundException("Không tìm thấy hồ sơ bệnh nhân.");
+            }
+
+            return await GetMedicalRecordsByPatientAsync(patient.Id);
         }
 
         public async Task<MedicalRecordDTO> UpdateMedicalRecordAsync(int id, int doctorId, UpdateMedicalRecordRequest request)

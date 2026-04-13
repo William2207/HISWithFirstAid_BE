@@ -46,6 +46,17 @@ namespace FirstAidAPI.Repository.Implement
                 .FirstOrDefaultAsync(i => i.AppointmentId == appointmentId);
         }
 
+        public async Task<List<Invoice>> GetByPatientIdAsync(int patientId)
+        {
+            return await _context.Invoices
+                .Include(i => i.Items)
+                .Include(i => i.Appointment)
+                .Include(i => i.Payments)
+                .Where(i => i.PatientId == patientId)
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<Invoice> UpdateAsync(Invoice invoice)
         {
             _context.Invoices.Update(invoice);
