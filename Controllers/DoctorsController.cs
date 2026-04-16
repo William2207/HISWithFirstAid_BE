@@ -17,7 +17,7 @@ namespace FirstAidAPI.Controllers
         }
 
         [HttpGet("lookup")]
-        [AllowAnonymous] // Assuming lookups might be needed generally, or keep if required
+        [AllowAnonymous]
         public async Task<IActionResult> GetDoctorsForLookup()
         {
             var doctors = await _doctorService.GetDoctorsForLookupAsync();

@@ -1,11 +1,12 @@
 using FirstAidAPI.DTO.MedicalRecord;
 using FirstAidAPI.Exceptions;
+using FirstAidAPI.Models;
+using FirstAidAPI.Repository;
 using FirstAidAPI.Service;
+using FirstAidAPI.Service.Implement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using FirstAidAPI.Repository;
-using FirstAidAPI.Models;
 
 namespace FirstAidAPI.Controllers
 {
@@ -15,14 +16,14 @@ namespace FirstAidAPI.Controllers
     public class MedicalRecordsController : ControllerBase
     {
         private readonly IMedicalRecordService _medicalRecordService;
-        private readonly IPatientRepository _patientRepository;
+        private readonly IDoctorService _doctorService;
 
         public MedicalRecordsController(
             IMedicalRecordService medicalRecordService,
-            IPatientRepository patientRepository)
+            IDoctorService doctorService)
         {
             _medicalRecordService = medicalRecordService;
-            _patientRepository = patientRepository;
+            _doctorService = doctorService;
         }
 
         private int GetCurrentUserId()
@@ -64,7 +65,8 @@ namespace FirstAidAPI.Controllers
         {
             try
             {
-                var doctorId = GetCurrentUserId();
+                var userId = GetCurrentUserId();
+                var doctorId = await _doctorService.GetDoctorIdByUserId(userId);
                 var record = await _medicalRecordService.CreateMedicalRecordAsync(doctorId, request);
                 return CreatedAtAction(nameof(GetById), new { id = record.Id }, record);
             }
@@ -83,7 +85,8 @@ namespace FirstAidAPI.Controllers
         {
             try
             {
-                var doctorId = GetCurrentUserId();
+                var userId = GetCurrentUserId();
+                var doctorId = await _doctorService.GetDoctorIdByUserId(userId);
                 var record = await _medicalRecordService.UpdateMedicalRecordAsync(id, doctorId, request);
                 return Ok(record);
             }
@@ -106,12 +109,12 @@ namespace FirstAidAPI.Controllers
             try
             {
                 var userId = GetCurrentUserId();
-                var patient = await _patientRepository.GetByUserIdAsync(userId);
-                if (patient == null)
-                    return NotFound(new { message = "Không tìm thấy hồ sơ bệnh nhân." });
-
-                var records = await _medicalRecordService.GetMedicalRecordsByPatientAsync(patient.Id);
+                var records = await _medicalRecordService.GetMedicalRecordsByUserIdAsync(userId);
                 return Ok(records);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (UnauthorizedException ex)
             {

@@ -151,6 +151,12 @@ namespace FirstAidAPI.Service.Implement
             return appointments.Select(MapToDTO);
         }
 
+        public async Task<IEnumerable<AppointmentDTO>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date)
+        {
+            var appointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doctorId, date);
+            return appointments.Select(MapToDTO);
+        }
+
         public async Task<AppointmentDTO> CompleteAppointmentAsync(int appointmentId)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
@@ -159,18 +165,7 @@ namespace FirstAidAPI.Service.Implement
             appointment.Status = AppointmentStatus.Completed;
             await _appointmentRepository.UpdateAsync(appointment);
 
-            // Tạo Invoice tự động
-            var invoice = new Invoice
-            {
-                AppointmentId = appointment.Id,
-                PatientId = appointment.PatientId,
-                InvoiceNumber = $"INV-{DateTime.UtcNow:yyyyMMdd}-{appointment.Id:D4}",
-                Status = OrderStatus.Pending,
-                Total = appointment.Specialty?.Price ?? 0,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _invoiceRepository.AddAsync(invoice);
-
+            // Bác sĩ hoàn tất khám (không tự động tạo Invoice, bộ phận tiếp đón/thu ngân sẽ lo việc này cho walk-in, hoặc online đã thanh toán)
             return MapToDTO(appointment);
         }
 
@@ -205,6 +200,40 @@ namespace FirstAidAPI.Service.Implement
 
             _logger.LogInformation("Cancelling appointment {AppointmentId}", appointmentId);
             await _appointmentRepository.DeleteAsync(appointment);
+        }
+
+        public async Task<AppointmentDTO> StartAppointmentAsync(int appointmentId, int doctorId)
+        {
+            var appointment = await _appointmentRepository.GetByIdAsync(appointmentId);
+            if (appointment == null)
+                throw new NotFoundException($"Không tìm thấy lịch hẹn có id {appointmentId}");
+
+            if (appointment.DoctorId != doctorId)
+                throw new BusinessException("Bác sĩ không có quyền tiếp nhận lịch hẹn này.");
+
+            if (appointment.Status != AppointmentStatus.Registered)
+                throw new BusinessException($"Lịch hẹn đang ở trạng thái '{appointment.Status}', không thể bắt đầu.");
+
+            appointment.Status = AppointmentStatus.In_Progress;
+            await _appointmentRepository.UpdateAsync(appointment);
+
+            // Auto-tạo MedicalRecord trống nếu chưa có
+            var alreadyHasRecord = await _medicalRecordRepository.ExistsByAppointmentIdAsync(appointmentId);
+            if (!alreadyHasRecord)
+            {
+                var emptyRecord = new MedicalRecord
+                {
+                    AppointmentId = appointment.Id,
+                    DoctorId = doctorId,
+                    PatientId = appointment.PatientId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _medicalRecordRepository.CreateAsync(emptyRecord);
+                _logger.LogInformation(
+                    "Auto-created empty MedicalRecord for Appointment {AppointmentId}", appointmentId);
+            }
+
+            return await GetAppointmentByIdAsync(appointmentId);
         }
 
         private async Task<int> ResolvePatientForReceptionistAsync(CreateAppointmentRequest request)
@@ -259,7 +288,8 @@ namespace FirstAidAPI.Service.Implement
                 Status = appointment.Status,
                 PatientName = appointment.Patient?.FullNameDisplay ?? string.Empty,
                 DoctorName = appointment.Doctor?.User?.FullName ?? string.Empty,
-                SpecialtyName = appointment.Specialty?.Name ?? string.Empty
+                SpecialtyName = appointment.Specialty?.Name ?? string.Empty,
+                MedicalRecordId = appointment.MedicalRecord?.Id
             };
         }
     }

@@ -42,6 +42,7 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(a => a.Doctor)
                     .ThenInclude(d => d.User)
                 .Include(a => a.Specialty)
+                .Include(a => a.MedicalRecord)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
@@ -53,9 +54,27 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(a => a.Doctor)
                     .ThenInclude(d => d.User)
                 .Include(a => a.Specialty)
+                .Include(a => a.MedicalRecord)
                 .Where(a => a.DoctorId == doctorId &&
                             (a.Status == FirstAidAPI.Enums.AppointmentStatus.Registered ||
                              a.Status == FirstAidAPI.Enums.AppointmentStatus.In_Progress))
+                .OrderBy(a => a.AppointmentDateTime)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date)
+        {
+            var startUtc = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+            var endUtc = startUtc.AddDays(1);
+
+            return await _context.Appointments
+                .Include(a => a.Patient).ThenInclude(p => p.User)
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .Include(a => a.Specialty)
+                .Include(a => a.MedicalRecord)
+                .Where(a => a.DoctorId == doctorId
+                    && a.AppointmentDateTime >= startUtc
+                    && a.AppointmentDateTime < endUtc)
                 .OrderBy(a => a.AppointmentDateTime)
                 .ToListAsync();
         }

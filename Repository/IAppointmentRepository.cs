@@ -14,6 +14,8 @@ namespace FirstAidAPI.Repository
 
         Task<IEnumerable<Appointment>> GetWaitingAppointmentsByDoctorAsync(int doctorId);
 
+        Task<IEnumerable<Appointment>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date);
+
         Task<IEnumerable<Appointment>> GetByPatientIdAsync(int patientId);
 
         Task<IEnumerable<Appointment>> GetCompletedAppointmentsAsync();

@@ -28,6 +28,14 @@ namespace FirstAidAPI.Service.Implement
                 .ToList();
         }
 
+        public async Task<int> GetDoctorIdByUserId(int userId)
+        {
+            var doctor = await _doctorRepository.GetByUserIdAsync(userId);
+            if (doctor == null)
+                throw new Exception("Không tìm thấy bác sĩ tương ứng với người dùng.");
+            return doctor.Id;
+        }
+
         public async Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date)
         {
             var doctors = await _doctorRepository.GetDoctorsBySpecialtyForBookingAsync(specialtyId);

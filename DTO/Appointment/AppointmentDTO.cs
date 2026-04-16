@@ -17,5 +17,8 @@ namespace FirstAidAPI.DTO.Appointment
         public string PatientName { get; set; } = string.Empty;
         public string DoctorName { get; set; } = string.Empty;
         public string SpecialtyName { get; set; } = string.Empty;
+
+        // ID của MedicalRecord nếu đã được tạo (khi Status = In_Progress hoặc Completed)
+        public int? MedicalRecordId { get; set; }
     }
 }

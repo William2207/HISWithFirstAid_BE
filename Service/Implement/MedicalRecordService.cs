@@ -23,21 +23,23 @@ namespace FirstAidAPI.Service.Implement
 
         public async Task<MedicalRecordDTO> CreateMedicalRecordAsync(int doctorId, CreateMedicalRecordRequest request)
         {
+            // Kiểm tra appointment tồn tại và thuộc về doctor này
+            var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
+            if (appointment == null)
+                throw new NotFoundException($"Không tìm thấy lịch hẹn với ID {request.AppointmentId}");
+
+            if (appointment.DoctorId != doctorId)
+                throw new BusinessException("Bác sĩ không có quyền tạo bệnh án cho lịch hẹn này.");
+
             // Kiểm tra xem bệnh án đã tồn tại cho lịch hẹn này chưa
             if (await _medicalRecordRepository.ExistsByAppointmentIdAsync(request.AppointmentId))
-            {
                 throw new BusinessException("Lịch hẹn này đã có hồ sơ bệnh án.");
-            }
-
-            //  kiểm tra Appointment có thuộc về Doctor này không ở đây
-            // var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
-            // if (appointment == null) throw new NotFoundException("Không tìm thấy lịch hẹn");
-            // if (appointment.DoctorId != doctorId) throw new UnauthorizedException("Bác sĩ không có quyền tạo bệnh án cho lịch hẹn này");
 
             var medicalRecord = new MedicalRecord
             {
                 AppointmentId = request.AppointmentId,
                 DoctorId = doctorId,
+                PatientId = appointment.PatientId,   // ← fix: set PatientId từ appointment
                 ChiefComplaint = request.ChiefComplaint,
                 MedicalHistory = request.MedicalHistory,
                 FamilyHistory = request.FamilyHistory,
@@ -70,7 +72,7 @@ namespace FirstAidAPI.Service.Implement
             }
 
             var createdRecord = await _medicalRecordRepository.CreateAsync(medicalRecord);
-            return await GetMedicalRecordByIdAsync(createdRecord.Id); // Reload để có Doctor info
+            return await GetMedicalRecordByIdAsync(createdRecord.Id);
         }
 
         public async Task<MedicalRecordDTO> GetMedicalRecordByIdAsync(int id)

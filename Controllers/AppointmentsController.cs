@@ -14,10 +14,12 @@ namespace FirstAidAPI.Controllers
     public class AppointmentsController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
+        private readonly IDoctorService _doctorService;
 
-        public AppointmentsController(IAppointmentService appointmentService)
+        public AppointmentsController(IAppointmentService appointmentService, IDoctorService doctorService)
         {
             _appointmentService = appointmentService;
+            _doctorService = doctorService;
         }
 
         private int GetCurrentUserId()
@@ -61,11 +63,46 @@ namespace FirstAidAPI.Controllers
 
         [HttpGet("doctor/waiting")]
         [Authorize(Roles = "Doctor")]
-        public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetWaitingAppointments()
+        public async Task<ActionResult<IEnumerable<AppointmentDTO>>> GetWaitingAppointments([FromQuery] DateTime? date)
         {
-            var doctorId = GetCurrentUserId();
-            var appointments = await _appointmentService.GetWaitingAppointmentsByDoctorAsync(doctorId);
+            var userId = GetCurrentUserId();
+            var doctorId = await _doctorService.GetDoctorIdByUserId(userId);
+
+            IEnumerable<AppointmentDTO> appointments;
+            if (date.HasValue)
+            {
+                appointments = await _appointmentService.GetAppointmentsByDoctorAndDateAsync(doctorId, date.Value);
+            }
+            else
+            {
+                appointments = await _appointmentService.GetWaitingAppointmentsByDoctorAsync(doctorId);
+            }
+
             return Ok(appointments);
+        }
+
+        /// <summary>
+        /// Doctor gọi bệnh nhân vào khám: chuyển Status → In_Progress, auto-tạo MedicalRecord trống.
+        /// </summary>
+        [HttpPut("{id}/start")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<ActionResult<AppointmentDTO>> StartAppointment(int id)
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var doctorId = await _doctorService.GetDoctorIdByUserId(userId);
+                var appointment = await _appointmentService.StartAppointmentAsync(id, doctorId);
+                return Ok(appointment);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (BusinessException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("{id}/complete")]

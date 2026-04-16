@@ -8,7 +8,14 @@ namespace FirstAidAPI.Service
 
         Task<IEnumerable<AppointmentDTO>> GetWaitingAppointmentsByDoctorAsync(int doctorId);
 
+        Task<IEnumerable<AppointmentDTO>> GetAppointmentsByDoctorAndDateAsync(int doctorId, DateTime date);
+
         Task<AppointmentDTO> GetAppointmentByIdAsync(int id);
+
+        /// <summary>
+        /// Doctor gọi bệnh nhân vào khám: chuyển Status → In_Progress và auto-tạo MedicalRecord trống.
+        /// </summary>
+        Task<AppointmentDTO> StartAppointmentAsync(int appointmentId, int doctorId);
 
         Task<AppointmentDTO> CompleteAppointmentAsync(int appointmentId);
 
