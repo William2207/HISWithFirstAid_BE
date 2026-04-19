@@ -17,7 +17,7 @@ namespace FirstAidAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "8.0.26")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -385,47 +385,6 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("PatientId");
 
                     b.ToTable("Invoices", (string)null);
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.InvoiceItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("MedicalServiceId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpecilityId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.HasIndex("MedicalServiceId");
-
-                    b.HasIndex("SpecilityId");
-
-                    b.ToTable("InvoiceItem");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.MedicalRecord", b =>
@@ -2572,29 +2531,6 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.InvoiceItem", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Invoice", "Invoice")
-                        .WithMany("Items")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.MedicalService", "MedicalService")
-                        .WithMany("InvoiceItems")
-                        .HasForeignKey("MedicalServiceId");
-
-                    b.HasOne("FirstAidAPI.Models.Speciality", "Specility")
-                        .WithMany()
-                        .HasForeignKey("SpecilityId");
-
-                    b.Navigation("Invoice");
-
-                    b.Navigation("MedicalService");
-
-                    b.Navigation("Specility");
-                });
-
             modelBuilder.Entity("FirstAidAPI.Models.MedicalRecord", b =>
                 {
                     b.HasOne("FirstAidAPI.Models.Appointment", "Appointment")
@@ -3008,8 +2944,6 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Invoice", b =>
                 {
-                    b.Navigation("Items");
-
                     b.Navigation("Payments");
                 });
 
@@ -3017,11 +2951,6 @@ namespace FirstAidAPI.Migrations
                 {
                     b.Navigation("VitalSigns")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.MedicalService", b =>
-                {
-                    b.Navigation("InvoiceItems");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Nurse", b =>

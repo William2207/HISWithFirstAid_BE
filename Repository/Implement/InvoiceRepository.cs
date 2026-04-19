@@ -23,7 +23,6 @@ namespace FirstAidAPI.Repository.Implement
         public async Task<Invoice?> GetByIdAsync(int id)
         {
             return await _context.Invoices
-                .Include(i => i.Items)
                 .Include(i => i.Patient)
                 .Include(i => i.Appointment)
                 .Include(i => i.Payments)
@@ -33,7 +32,6 @@ namespace FirstAidAPI.Repository.Implement
         public async Task<Invoice?> GetByInvoiceNumberAsync(string invoiceNumber)
         {
             return await _context.Invoices
-                .Include(i => i.Items)
                 .Include(i => i.Patient)
                 .Include(i => i.Appointment)
                 .FirstOrDefaultAsync(i => i.InvoiceNumber == invoiceNumber);
@@ -42,15 +40,14 @@ namespace FirstAidAPI.Repository.Implement
         public async Task<Invoice?> GetByAppointmentIdAsync(int appointmentId)
         {
             return await _context.Invoices
-                .Include(i => i.Items)
                 .FirstOrDefaultAsync(i => i.AppointmentId == appointmentId);
         }
 
         public async Task<List<Invoice>> GetByPatientIdAsync(int patientId)
         {
             return await _context.Invoices
-                .Include(i => i.Items)
                 .Include(i => i.Appointment)
+                    .ThenInclude(a => a!.Specialty)
                 .Include(i => i.Payments)
                 .Where(i => i.PatientId == patientId)
                 .OrderByDescending(i => i.CreatedAt)

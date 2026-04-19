@@ -13,7 +13,6 @@ namespace FirstAidAPI.Service.Implement
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly IPaymentRepository _paymentRepository;
         private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IMedicalServiceRepository _medicalServiceRepository;
         private readonly IMomoService _momoService;
         private readonly IPatientRepository _patientRepository;
         private readonly ILogger<InvoiceService> _logger;
@@ -21,7 +20,6 @@ namespace FirstAidAPI.Service.Implement
         public InvoiceService(
             IInvoiceRepository invoiceRepository,
             IPaymentRepository paymentRepository,
-            IMedicalServiceRepository medicalServiceRepository,
             IAppointmentRepository appointmentRepository,
             IMomoService momoService,
             IPatientRepository patientRepository,
@@ -29,7 +27,6 @@ namespace FirstAidAPI.Service.Implement
         {
             _invoiceRepository = invoiceRepository;
             _paymentRepository = paymentRepository;
-            _medicalServiceRepository = medicalServiceRepository;
             _appointmentRepository = appointmentRepository;
             _momoService = momoService;
             _patientRepository = patientRepository;
@@ -52,11 +49,17 @@ namespace FirstAidAPI.Service.Implement
                 throw new InvalidOperationException(
                     $"Invoice đã tồn tại cho appointment này (Invoice số: {existingInvoice.InvoiceNumber}).");
 
-            // Build InvoiceItems
-            var items = await BuildInvoiceItemsAsync(appointment, createInvoiceDto.Items);
-
             // Tính tiền
-            var (subtotal, total) = CalculateAmounts(items, createInvoiceDto.Discount);
+            decimal subtotal = appointment.Specialty?.Price ?? 0;
+            decimal total = subtotal - createInvoiceDto.Discount;
+
+            if (total < 0)
+            {
+                _logger.LogWarning("Discount exceeds subtotal. Subtotal: {Subtotal}, Discount: {Discount}",
+                    subtotal, createInvoiceDto.Discount);
+                throw new ArgumentException("Discount cannot exceed subtotal.");
+            }
+
             var invoiceNumber = GenerateInvoiceNumber();
 
             // Tạo Invoice (Pending - chờ thanh toán)
@@ -69,30 +72,57 @@ namespace FirstAidAPI.Service.Implement
                 Discount = createInvoiceDto.Discount,
                 Total = total,
                 RemainingAmount = total,
-                Status = OrderStatus.Pending,
-                Items = items
+                Status = OrderStatus.Pending
             };
 
             await _invoiceRepository.AddAsync(invoice);
 
-            // Gọi Momo để tạo payment URL
-            var baseUrl = _momoService.GetBaseUrl();
-            var momoResponse = await _momoService.CreatePaymentAsync(new MomoCreatePaymentRequestDto
-            {
-                OrderNumber = invoiceNumber,
-                Amount = (long)total,
-                OrderDescription = $"Thanh toán hóa đơn khám bệnh {invoiceNumber}",
-                ReturnUrl = $"{baseUrl}/api/invoices/momo-callback"
-            });
-
             string? paymentUrl = null;
-            if (momoResponse.ResultCode == 0)
-            {
-                paymentUrl = momoResponse.PayUrl;
-            }
 
-            _logger.LogInformation("Invoice created successfully. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
-                invoiceNumber, appointment.PatientId, total);
+            if (createInvoiceDto.PaymentMethod == PaymentMethod.Cash)
+            {
+                invoice.Status = OrderStatus.Completed;
+                invoice.PaidAmount = total;
+                invoice.RemainingAmount = 0;
+                invoice.PaidAt = DateTime.UtcNow;
+
+                await _invoiceRepository.UpdateAsync(invoice);
+
+                var payment = new Models.Payment
+                {
+                    InvoiceId = invoice.Id,
+                    PatientId = invoice.PatientId,
+                    Amount = invoice.Total,
+                    PaymentMethod = PaymentMethod.Cash,
+                    Status = PaymentStatus.Completed,
+                    TransactionId = "CASH-" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                    PaidAt = DateTime.UtcNow
+                };
+                await _paymentRepository.AddAsync(payment);
+                
+                _logger.LogInformation("Cash Invoice created & completed. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
+                    invoiceNumber, appointment.PatientId, total);
+            }
+            else
+            {
+                // Gọi Momo để tạo payment URL
+                var baseUrl = _momoService.GetBaseUrl();
+                var momoResponse = await _momoService.CreatePaymentAsync(new MomoCreatePaymentRequestDto
+                {
+                    OrderNumber = invoiceNumber,
+                    Amount = (long)total,
+                    OrderDescription = $"Thanh toán hóa đơn khám bệnh {invoiceNumber}",
+                    ReturnUrl = $"{baseUrl}/api/invoices/momo-callback"
+                });
+
+                if (momoResponse.ResultCode == 0)
+                {
+                    paymentUrl = momoResponse.PayUrl;
+                }
+
+                _logger.LogInformation("Invoice created successfully. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
+                    invoiceNumber, appointment.PatientId, total);
+            }
 
             return new CreateInvoiceResponseDto
             {
@@ -211,7 +241,7 @@ namespace FirstAidAPI.Service.Implement
             {
                 Id = i.Id,
                 InvoiceNumber = i.InvoiceNumber,
-                Description = i.Items.FirstOrDefault()?.Description ?? "Thanh toán dịch vụ y tế",
+                Description = i.Appointment?.Specialty?.Name ?? "Thanh toán dịch vụ y tế",
                 Total = i.Total,
                 Status = i.Status,
                 CreatedAt = i.CreatedAt,
@@ -229,69 +259,6 @@ namespace FirstAidAPI.Service.Implement
             }
 
             return await GetInvoicesByPatientAsync(patient.Id);
-        }
-
-        /// <summary>
-        /// Tạo danh sách InvoiceItems từ appointment và medical services
-        /// </summary>
-        private async Task<List<InvoiceItem>> BuildInvoiceItemsAsync(
-            Appointment appointment,
-            List<CreateInvoiceItemDto> itemDtos)
-        {
-            var items = new List<InvoiceItem>();
-
-            // Thêm phí khám chuyên khoa từ Appointment (luôn có)
-            var speciality = appointment.Specialty;
-            items.Add(new InvoiceItem
-            {
-                SpecilityId = speciality.Id,
-                Description = speciality.Name,
-                Quantity = 1,
-                UnitPrice = speciality.Price,
-                Amount = speciality.Price
-            });
-
-            // Thêm các dịch vụ y tế nếu có (xét nghiệm, chẩn đoán...)
-            foreach (var itemDto in itemDtos)
-            {
-                if (itemDto.MedicalServiceId == null)
-                    continue;
-
-                var service = await _medicalServiceRepository.GetByIdAsync(itemDto.MedicalServiceId.Value);
-                if (service == null)
-                    throw new KeyNotFoundException($"MedicalService {itemDto.MedicalServiceId} not found.");
-
-                items.Add(new InvoiceItem
-                {
-                    MedicalServiceId = service.Id,
-                    Description = service.Name,      // snapshot tên lúc tạo
-                    Quantity = itemDto.Quantity,
-                    UnitPrice = service.Price,        // snapshot giá lúc tạo
-                    Amount = service.Price * itemDto.Quantity
-                });
-            }
-
-            return items;
-        }
-
-        /// <summary>
-        /// Tính toán tổng tiền và tổng cộng từ danh sách items
-        /// </summary>
-        private (decimal subtotal, decimal total) CalculateAmounts(
-            List<InvoiceItem> items,
-            decimal discount)
-        {
-            decimal subtotal = items.Sum(i => i.Amount);
-            decimal total = subtotal - discount;
-
-            if (total < 0)
-            {
-                _logger.LogWarning("Discount exceeds subtotal. Subtotal: {Subtotal}, Discount: {Discount}",
-                    subtotal, discount);
-                throw new ArgumentException("Discount cannot exceed subtotal.");
-            }
-
-            return (subtotal, total);
         }
 
         public async Task ProcessMomoPaymentAsync(MomoCallbackDto callback)

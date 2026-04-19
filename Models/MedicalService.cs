@@ -7,8 +7,5 @@ namespace FirstAidAPI.Models
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public bool IsActive { get; set; } = true;
-
-        // Navigation
-        public List<InvoiceItem> InvoiceItems { get; set; } = new();
     }
 }

@@ -5,6 +5,6 @@ namespace FirstAidAPI.DTO.Invoice
         public int? AppointmentId { get; set; }
         public int PatientId { get; set; }
         public decimal Discount { get; set; } = 0;
-        public List<CreateInvoiceItemDto> Items { get; set; } = new();
+        public FirstAidAPI.Enums.PaymentMethod? PaymentMethod { get; set; }
     }
 }

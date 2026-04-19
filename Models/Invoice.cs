@@ -24,7 +24,6 @@ namespace FirstAidAPI.Models
         public Appointment? Appointment { get; set; }
 
         public Patient Patient { get; set; } = null!;
-        public List<InvoiceItem> Items { get; set; } = new();
         public List<Payment> Payments { get; set; } = new();
     }
 }
