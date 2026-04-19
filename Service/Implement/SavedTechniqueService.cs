@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Repository;
+using FirstAidAPI.Repository;
 using FirstAidAPI.DTO.SavedTechniques;
 using AutoMapper;
 using FirstAidAPI.Models;

@@ -30,6 +30,7 @@
         },
         "frameworks": {
           "net8.0": {
+            "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {}
           }
@@ -44,10 +45,11 @@
           "auditLevel": "low",
           "auditMode": "direct"
         },
-        "SdkAnalysisLevel": "10.0.100"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net8.0": {
+          "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
             "AutoMapper.Extensions.Microsoft.DependencyInjection": {
@@ -56,11 +58,11 @@
             },
             "CloudinaryDotNet": {
               "target": "Package",
-              "version": "[1.27.8, )"
+              "version": "[1.28.0, )"
             },
             "MailKit": {
               "target": "Package",
-              "version": "[4.14.1, )"
+              "version": "[4.16.0, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
@@ -72,13 +74,13 @@
             },
             "Microsoft.EntityFrameworkCore": {
               "target": "Package",
-              "version": "[9.0.9, )"
+              "version": "[8.0.*, )"
             },
             "Microsoft.EntityFrameworkCore.Design": {
               "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[9.0.9, )"
+              "version": "[8.0.*, )"
             },
             "Newtonsoft.Json": {
               "target": "Package",
@@ -86,15 +88,15 @@
             },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
-              "version": "[9.0.4, )"
+              "version": "[8.0.*, )"
             },
             "Scrutor": {
               "target": "Package",
-              "version": "[6.1.0, )"
+              "version": "[7.0.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
-              "version": "[6.6.2, )"
+              "version": "[10.1.7, )"
             }
           },
           "imports": [
@@ -116,7 +118,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

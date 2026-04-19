@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO.User;
+using FirstAidAPI.DTO.User;
 using FirstAidAPI.Enums;
 using System.ComponentModel.DataAnnotations;
 

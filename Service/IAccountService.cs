@@ -9,5 +9,7 @@ namespace FirstAidAPI.Service
         Task<LoginResponseDto> LoginAsync(LoginDto loginDto);
 
         Task ConfirmEmailAsync(int userId, string token);
+
+        Task<string> CreateAccountAsAdminAsync(AdminCreateAccountDto adminCreateAccountDto);
     }
 }

@@ -31,21 +31,21 @@ builder.Services.Scan(scan => scan
 
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
-    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service")))
+    .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service") && !type.Namespace!.Contains("Models")))
     .AsImplementedInterfaces()
     .WithScopedLifetime());
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // URL frontend
+        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175") // URL frontend
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
 });
-builder.Services.AddHttpContextAccessor(); // Thêm dòng này
-builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>(); // Thêm dòng này
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 builder.Services.AddScoped<IUrlHelper>(x =>
 {
     var actionContext = x.GetRequiredService<IActionContextAccessor>().ActionContext;

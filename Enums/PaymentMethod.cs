@@ -1,4 +1,4 @@
-﻿namespace FirstAidAPI.Enums
+namespace FirstAidAPI.Enums
 {
     public enum PaymentMethod
     {
@@ -8,6 +8,7 @@
         Momo = 3,         // Ví Momo
         ZaloPay = 4,      // Ví ZaloPay
         VNPay = 5,        // VNPay
-        COD = 6           // Thanh toán khi nhận hàng (nếu có)
+        COD = 6,          // Thanh toán khi nhận hàng (nếu có)
+        Cash = 7          // Tiền mặt
     }
 }

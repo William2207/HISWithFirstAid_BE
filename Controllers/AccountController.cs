@@ -162,4 +162,28 @@ public class AccountController : ControllerBase
             return StatusCode(500, new { Message = "Đã xảy ra lỗi khi đặt lại mật khẩu." });
         }
     }
+
+    // POST: api/account/create-account-admin
+    [HttpPost("create-account-admin")]
+    public async Task<IActionResult> CreateAccountAsAdmin([FromBody] AdminCreateAccountDto adminCreateAccountDto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var message = await _accountService.CreateAccountAsAdminAsync(adminCreateAccountDto);
+            return Ok(new { Message = message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = $"Lỗi khi tạo tài khoản: {ex.Message}" });
+        }
+    }
 }

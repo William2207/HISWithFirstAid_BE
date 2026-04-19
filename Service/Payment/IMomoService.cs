@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.DTO.Payment;
+using FirstAidAPI.DTO.Payment;
 
 namespace FirstAidAPI.Service.Payment
 {
@@ -7,5 +7,7 @@ namespace FirstAidAPI.Service.Payment
         Task<MomoCreatePaymentResponseDto> CreatePaymentAsync(MomoCreatePaymentRequestDto request);
 
         bool ValidateSignature(MomoCallbackDto callback);
+
+        string GetBaseUrl();
     }
 }

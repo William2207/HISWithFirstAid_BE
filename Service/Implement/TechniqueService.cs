@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Technique;
 using FirstAidAPI.Extensions;
@@ -17,7 +17,6 @@ namespace FirstAidAPI.Service.Implement
         private readonly IMapper _mapper;
         private readonly ILogger<TechniqueService> _logger;
 
-        // Inject ITechniqueRepository vào constructor
         public TechniqueService(ITechniqueRepository techniqueRepository, IMapper mapper, ITechniqueStepRepository techniqueStepRepository,
         ILogger<TechniqueService> logger)
         {
@@ -34,7 +33,6 @@ namespace FirstAidAPI.Service.Implement
 
         public async Task<PagedResult<Technique>> GetTechniquesAsync(int page, int pageSize, List<string>? difficulties, List<int>? typeIds, string? search)
         {
-            // Business logic/validation được chuyển về đây
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 9;
             if (pageSize > 100) pageSize = 100; // Giới hạn page size là một business rule

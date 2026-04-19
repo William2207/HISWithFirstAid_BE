@@ -166,11 +166,13 @@ namespace FirstAidAPI.Service.Implement
                 scope.Complete();
 
                 // 7. Tạo payment URL Momo (ngoài transaction)
+                var baseUrl = _momoService.GetBaseUrl(); // We should add this method or just fetch from config
                 var momoResponse = await _momoService.CreatePaymentAsync(new MomoCreatePaymentRequestDto
                 {
                     OrderNumber = createdOrder.OrderNumber,
                     Amount = (long)totalAmount,
-                    OrderDescription = $"Thanh toán đơn hàng {createdOrder.OrderNumber}"
+                    OrderDescription = $"Thanh toán đơn hàng {createdOrder.OrderNumber}",
+                    ReturnUrl = $"{baseUrl}/api/order/momo-callback"
                 });
 
                 if (momoResponse.ResultCode != 0)

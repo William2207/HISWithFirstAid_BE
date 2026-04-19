@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FirstAidAPI.DTO;
 using FirstAidAPI.DTO.Enrollment;
 using FirstAidAPI.Extensions;
