@@ -6,6 +6,7 @@ namespace FirstAidAPI.Models
     {
         public int Id { get; set; }
         public int? AppointmentId { get; set; }
+        public int? LabOrderId { get; set; }
 
         public int PatientId { get; set; }
 
@@ -22,7 +23,7 @@ namespace FirstAidAPI.Models
 
         // Navigation
         public Appointment? Appointment { get; set; }
-
+        public LabOrder? LabOrder { get; set; }
         public Patient Patient { get; set; } = null!;
         public List<Payment> Payments { get; set; } = new();
     }

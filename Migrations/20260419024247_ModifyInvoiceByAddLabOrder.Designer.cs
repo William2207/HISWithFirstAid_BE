@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260419024247_ModifyInvoiceByAddLabOrder")]
+    partial class ModifyInvoiceByAddLabOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -385,8 +388,7 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("AppointmentId")
                         .IsUnique();
 
-                    b.HasIndex("LabOrderId")
-                        .IsUnique();
+                    b.HasIndex("LabOrderId");
 
                     b.HasIndex("PatientId");
 
@@ -405,9 +407,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("NOW()");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("DoctorId")
                         .HasColumnType("integer");
@@ -422,7 +422,7 @@ namespace FirstAidAPI.Migrations
 
                     b.HasIndex("AppointmentId");
 
-                    b.ToTable("LabOrders");
+                    b.ToTable("LabOrder");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.LabOrderItem", b =>
@@ -434,7 +434,7 @@ namespace FirstAidAPI.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric");
 
                     b.Property<int>("LabOrderId")
                         .HasColumnType("integer");
@@ -446,12 +446,10 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -459,7 +457,7 @@ namespace FirstAidAPI.Migrations
 
                     b.HasIndex("MedicalServiceId");
 
-                    b.ToTable("LabOrderItems");
+                    b.ToTable("LabOrderItem");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.MedicalRecord", b =>
@@ -549,7 +547,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -2596,9 +2594,8 @@ namespace FirstAidAPI.Migrations
                         .HasForeignKey("FirstAidAPI.Models.Invoice", "AppointmentId");
 
                     b.HasOne("FirstAidAPI.Models.LabOrder", "LabOrder")
-                        .WithOne()
-                        .HasForeignKey("FirstAidAPI.Models.Invoice", "LabOrderId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("LabOrderId");
 
                     b.HasOne("FirstAidAPI.Models.Patient", "Patient")
                         .WithMany("Invoices")
@@ -2618,7 +2615,7 @@ namespace FirstAidAPI.Migrations
                     b.HasOne("FirstAidAPI.Models.Appointment", "Appointment")
                         .WithMany()
                         .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Appointment");
@@ -2635,7 +2632,7 @@ namespace FirstAidAPI.Migrations
                     b.HasOne("FirstAidAPI.Models.MedicalService", "MedicalService")
                         .WithMany()
                         .HasForeignKey("MedicalServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("LabOrder");

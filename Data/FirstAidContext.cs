@@ -54,6 +54,8 @@ namespace FirstAidAPI.Data
         public DbSet<MedicalService> MedicalServices { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
+        public DbSet<LabOrder> LabOrders { get; set; }
+        public DbSet<LabOrderItem> LabOrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -544,6 +546,61 @@ namespace FirstAidAPI.Data
             modelBuilder.Entity<VitalSign>()
                 .HasIndex(v => v.MedicalRecordId)
                 .IsUnique();
+
+            // Cấu hình LabOrder
+            modelBuilder.Entity<LabOrder>(entity =>
+            {
+                entity.HasKey(lo => lo.Id);
+
+                entity.Property(lo => lo.Status)
+                    .HasConversion<int>();
+
+                entity.Property(lo => lo.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(lo => lo.Appointment)
+                    .WithMany()
+                    .HasForeignKey(lo => lo.AppointmentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(lo => lo.Items)
+                    .WithOne(li => li.LabOrder)
+                    .HasForeignKey(li => li.LabOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Liên kết Invoice ↔ LabOrder (1-1)
+                entity.HasOne<Invoice>()
+                    .WithOne(i => i.LabOrder)
+                    .HasForeignKey<Invoice>(i => i.LabOrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Cấu hình LabOrderItem
+            modelBuilder.Entity<LabOrderItem>(entity =>
+            {
+                entity.HasKey(li => li.Id);
+
+                entity.Property(li => li.UnitPrice)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(li => li.Amount)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(li => li.Quantity)
+                    .HasDefaultValue(1);
+
+                entity.HasOne(li => li.MedicalService)
+                    .WithMany()
+                    .HasForeignKey(li => li.MedicalServiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Cấu hình MedicalService decimal
+            modelBuilder.Entity<MedicalService>(entity =>
+            {
+                entity.Property(ms => ms.Price)
+                    .HasColumnType("decimal(18,2)");
+            });
 
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }
