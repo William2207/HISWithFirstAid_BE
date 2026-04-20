@@ -9,5 +9,8 @@ namespace FirstAidAPI.Service
         Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date);
 
         Task<int> GetDoctorIdByUserId(int userId);
+
+        Task<DoctorProfileDto?> GetDoctorProfileAsync(int userId);
+        Task<bool> UpdateDoctorProfileAsync(int userId, UpdateDoctorProfileDto updateDto);
     }
 }
