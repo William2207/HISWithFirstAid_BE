@@ -36,7 +36,7 @@ namespace FirstAidAPI.Service.Implement
                 Gender = user.Gender,
                 Address = user.Address,
                 IdCard = user.IdCard,
-                DepartmentName = nurse.Department?.Name ?? string.Empty,
+                SpecialtyName = nurse.Speciality?.Name ?? string.Empty,
                 LicenseNumber = nurse.LicenseNumber,
                 Qualifications = nurse.Qualifications,
                 YearsOfExperience = nurse.YearsOfExperience

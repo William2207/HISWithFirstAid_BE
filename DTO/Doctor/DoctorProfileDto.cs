@@ -18,8 +18,7 @@ namespace FirstAidAPI.DTO.Doctor
         public string? IdCard { get; set; }
 
         // Doctor specific data
-        public string? DepartmentName { get; set; }
-        public string? PrimarySpecialtyName { get; set; }
+        public string? SpecialtyName { get; set; }
         public string? LicenseNumber { get; set; }
         public string? Qualifications { get; set; }
         public int YearsOfExperience { get; set; }

@@ -19,6 +19,6 @@ namespace FirstAidAPI.DTO.User
         public string Password { get; set; } = string.Empty;
 
         [Required]
-        public string Department { get; set; } = string.Empty; //Nurse, Doctor
+        public int SpecialtyId { get; set; } // For Nurse, Doctor
     }
 }

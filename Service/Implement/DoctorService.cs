@@ -25,8 +25,8 @@ namespace FirstAidAPI.Service.Implement
                 {
                     Id = d.Id,
                     Name = d.User?.FullName ?? string.Empty,
-                    Specialty = d.PrimarySpecialty?.Name ?? string.Empty,
-                    SpecialtyId = d.PrimarySpecialtyId,
+                    Specialty = d.Specialty?.Name ?? string.Empty,
+                    SpecialtyId = d.SpecialtyId,
                     YearsOfExperience = d.YearsOfExperience
                 })
                 .ToList();
@@ -60,8 +60,7 @@ namespace FirstAidAPI.Service.Implement
                 Gender = user.Gender,
                 Address = user.Address,
                 IdCard = user.IdCard,
-                DepartmentName = doctor.Department?.Name ?? string.Empty,
-                PrimarySpecialtyName = doctor.PrimarySpecialty?.Name ?? string.Empty,
+                SpecialtyName = doctor.Specialty?.Name ?? string.Empty,
                 LicenseNumber = doctor.LicenseNumber,
                 Qualifications = doctor.Qualifications,
                 YearsOfExperience = doctor.YearsOfExperience
@@ -128,7 +127,7 @@ namespace FirstAidAPI.Service.Implement
                 {
                     Id = doc.Id,
                     Name = doc.User?.FullName ?? string.Empty,
-                    SpecialtyName = doc.PrimarySpecialty?.Name ?? string.Empty,
+                    SpecialtyName = doc.Specialty?.Name ?? string.Empty,
                     ClinicId = clinic?.Id,
                     ClinicRoom = clinic?.RoomNumber ?? "Chưa sắp phòng",
                     ClinicFloor = clinic?.Floor,

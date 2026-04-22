@@ -103,7 +103,7 @@ namespace FirstAidAPI.Service.Implement
                 QueueNumber = queue.QueueNumber,
                 PatientName = request.PatientName,
                 Reason = request.Reason,
-                Department = request.Department,
+                Specialty = request.Specialty,
                 PrintTime = DateTime.UtcNow
             };
         }

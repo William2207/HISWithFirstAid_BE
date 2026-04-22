@@ -40,10 +40,8 @@ namespace FirstAidAPI.Data
         public DbSet<Nurse> Nurses { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Receptionist> Receptionists { get; set; }
-        public DbSet<Department> Departments { get; set; }
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<DoctorSpecialty> DoctorSpecialties { get; set; }
         public DbSet<Queue> Queues { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Speciality> Specialties { get; set; }
@@ -121,17 +119,9 @@ namespace FirstAidAPI.Data
             {
                 entity.ToTable("Beds");
             });
-            modelBuilder.Entity<Department>(entity =>
-            {
-                entity.ToTable("Departments");
-            });
             modelBuilder.Entity<Speciality>(entity =>
             {
                 entity.ToTable("Specialties");
-            });
-            modelBuilder.Entity<DoctorSpecialty>(entity =>
-            {
-                entity.ToTable("DoctorSpecialties");
             });
             modelBuilder.Entity<Doctor>(entity =>
             {
@@ -233,9 +223,6 @@ namespace FirstAidAPI.Data
                 .HasForeignKey<Receptionist>(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Composite key
-            modelBuilder.Entity<DoctorSpecialty>()
-                .HasKey(ds => new { ds.DoctorId, ds.SpecialtyId });
             // One -to-One relationships for Appointment
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.MedicalRecord)
@@ -251,12 +238,6 @@ namespace FirstAidAPI.Data
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Doctor)
                 .WithMany(d => d.Appointments)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Department>()
-                .HasOne(d => d.HeadDoctor)
-                .WithMany()
-                .HasForeignKey(d => d.HeadDoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             //Queue configuration

@@ -40,7 +40,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Nurses
                 .Include(n => n.User)
-                .Include(n => n.Department)
+                .Include(n => n.Speciality)
                 .FirstOrDefaultAsync(n => n.Id == id);
         }
 
@@ -48,7 +48,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Nurses
                 .Include(n => n.User)
-                .Include(n => n.Department)
+                .Include(n => n.Speciality)
                 .FirstOrDefaultAsync(n => n.UserId == userId);
         }
 
@@ -56,7 +56,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Nurses
                 .Include(n => n.User)
-                .Include(n => n.Department)
+                .Include(n => n.Speciality)
                 .ToListAsync();
         }
 
