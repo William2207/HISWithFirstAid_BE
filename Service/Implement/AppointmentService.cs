@@ -92,10 +92,7 @@ namespace FirstAidAPI.Service.Implement
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var dayOfWeek = request.AppointmentDateTime.DayOfWeek;
-                var timeOfDay = request.AppointmentDateTime.TimeOfDay;
-
-                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, dayOfWeek, timeOfDay);
+                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, request.AppointmentDateTime);
 
                 if (schedule != null)
                 {

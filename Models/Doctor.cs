@@ -14,6 +14,7 @@ namespace FirstAidAPI.Models
         // Navigation
         public User User { get; set; } = null!;
 
+        public Speciality? HeadOfSpeciality { get; set; }
         public Speciality Specialty { get; set; } = null!;
         public List<Appointment> Appointments { get; set; } = new();
         public List<MedicalRecord> MedicalRecords { get; set; } = new();

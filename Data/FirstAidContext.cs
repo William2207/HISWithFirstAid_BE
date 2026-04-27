@@ -42,7 +42,6 @@ namespace FirstAidAPI.Data
         public DbSet<Receptionist> Receptionists { get; set; }
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<Queue> Queues { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Speciality> Specialties { get; set; }
         public DbSet<VitalSign> VitalSigns { get; set; }
@@ -54,6 +53,7 @@ namespace FirstAidAPI.Data
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<LabOrder> LabOrders { get; set; }
         public DbSet<LabOrderItem> LabOrderItems { get; set; }
+        public DbSet<ShiftType> ShiftTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -95,10 +95,6 @@ namespace FirstAidAPI.Data
                 entity.ToTable("UserTokens"); // Đổi AspNetUserTokens -> UserTokens
             });
 
-            modelBuilder.Entity<Queue>(entity =>
-            {
-                entity.ToTable("Queues");
-            });
             modelBuilder.Entity<Appointment>(entity =>
             {
                 entity.ToTable("Appointments");
@@ -180,6 +176,12 @@ namespace FirstAidAPI.Data
                 .HasForeignKey(so => so.StepId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Speciality>()
+                .HasOne(s => s.HeadDoctor)
+                .WithOne(d => d.HeadOfSpeciality)
+                .HasForeignKey<Speciality>(s => s.HeadDoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // User configuration
             modelBuilder.Entity<User>(entity =>
             {
@@ -240,9 +242,6 @@ namespace FirstAidAPI.Data
                 .WithMany(d => d.Appointments)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            //Queue configuration
-            modelBuilder.Entity<Queue>()
-                .HasIndex(q => q.QueueDate);
             // UserScenarioProgress configuration
             modelBuilder.Entity<UserScenarioProgress>(entity =>
             {

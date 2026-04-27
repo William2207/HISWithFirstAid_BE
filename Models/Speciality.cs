@@ -7,8 +7,11 @@ namespace FirstAidAPI.Models
         public string? Description { get; set; }
         public bool IsActive { get; set; } = true;
         public decimal Price { get; set; }
+        public int? HeadDoctorId { get; set; }
 
         // Navigation
+        public Doctor? HeadDoctor { get; set; }
+
         public List<Doctor> Doctors { get; set; } = new();
 
         public List<Appointment> Appointments { get; set; } = new();

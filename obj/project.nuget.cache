@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "zwQn2AGohwc=",
+  "dgSpecHash": "tyCak1BJUWc=",
   "success": true,
   "projectFilePath": "D:\\Study\\workspace\\FinalProject\\FirstAidAPI\\FirstAidAPI.csproj",
   "expectedPackageFiles": [
@@ -8,6 +8,13 @@
     "C:\\Users\\ADMIN\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
     "C:\\Users\\ADMIN\\.nuget\\packages\\bouncycastle.cryptography\\2.6.2\\bouncycastle.cryptography.2.6.2.nupkg.sha512",
     "C:\\Users\\ADMIN\\.nuget\\packages\\cloudinarydotnet\\1.28.0\\cloudinarydotnet.1.28.0.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.ortools\\9.15.6755\\google.ortools.9.15.6755.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.ortools.runtime.linux-arm64\\9.15.6755\\google.ortools.runtime.linux-arm64.9.15.6755.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.ortools.runtime.linux-x64\\9.15.6755\\google.ortools.runtime.linux-x64.9.15.6755.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.ortools.runtime.osx-arm64\\9.15.6755\\google.ortools.runtime.osx-arm64.9.15.6755.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.ortools.runtime.osx-x64\\9.15.6755\\google.ortools.runtime.osx-x64.9.15.6755.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.ortools.runtime.win-x64\\9.15.6755\\google.ortools.runtime.win-x64.9.15.6755.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\google.protobuf\\3.33.1\\google.protobuf.3.33.1.nupkg.sha512",
     "C:\\Users\\ADMIN\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\ADMIN\\.nuget\\packages\\mailkit\\4.16.0\\mailkit.4.16.0.nupkg.sha512",
     "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.26\\microsoft.aspnetcore.authentication.jwtbearer.8.0.26.nupkg.sha512",

@@ -54,5 +54,13 @@ namespace FirstAidAPI.Controllers
 
             return Ok(new { message = "Profile updated successfully" });
         }
+
+        [HttpGet("specialty/{specialtyId}")]
+        [Authorize(Roles = "Doctor, Admin")]
+        public async Task<IActionResult> GetBySpecialty(int specialtyId)
+        {
+            var patients = await _patientService.GetPatientsBySpecialtyAsync(specialtyId);
+            return Ok(patients);
+        }
     }
 }

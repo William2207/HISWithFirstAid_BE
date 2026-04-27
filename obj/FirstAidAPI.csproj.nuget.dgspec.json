@@ -60,6 +60,10 @@
               "target": "Package",
               "version": "[1.28.0, )"
             },
+            "Google.OrTools": {
+              "target": "Package",
+              "version": "[9.15.6755, )"
+            },
             "MailKit": {
               "target": "Package",
               "version": "[4.16.0, )"

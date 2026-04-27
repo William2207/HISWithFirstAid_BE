@@ -57,6 +57,14 @@ namespace FirstAidAPI.Repository.Implement
                 .ToListAsync();
         }
 
+        public async Task<List<Patient>> GetPatientsBySpecialtyAsync(int specialtyId)
+        {
+            return await _context.Patients
+                .Include(p => p.User)
+                .Where(p => _context.Appointments.Any(a => a.PatientId == p.Id && a.SpecialtyId == specialtyId))
+                .ToListAsync();
+        }
+
         public async Task<bool> ExistsByUserIdAsync(int userId)
         {
             return await _context.Patients

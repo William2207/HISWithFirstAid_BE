@@ -73,6 +73,8 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(d => d.Specialty)
                 .Include(d => d.Schedules)
                     .ThenInclude(s => s.Clinic)
+                .Include(d => d.Schedules)
+                    .ThenInclude(s => s.ShiftType)
                 .Where(d => d.IsAvailable && d.SpecialtyId == specialtyId)
                 .ToListAsync();
         }
@@ -82,13 +84,17 @@ namespace FirstAidAPI.Repository.Implement
             return await _context.Clinics.FirstOrDefaultAsync(c => c.SpecialtyId == specialtyId);
         }
 
-        public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DayOfWeek dayOfWeek, TimeSpan timeOfDay)
+        public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DateTime dateTime)
         {
+            var date = DateOnly.FromDateTime(dateTime);
+            var timeOfDay = dateTime.TimeOfDay;
             return await _context.DoctorSchedules
+                .Include(s => s.ShiftType)
                 .FirstOrDefaultAsync(s => s.DoctorId == doctorId
-                                       && s.DayOfWeek == dayOfWeek
-                                       && s.StartTime <= timeOfDay
-                                       && s.EndTime >= timeOfDay);
+                                       && s.Date == date
+                                       && s.ShiftType.StartTime <= timeOfDay
+                                       && s.ShiftType.EndTime >= timeOfDay
+                                       && !s.IsOff);
         }
 
         public async Task UpdateScheduleAsync(DoctorSchedule schedule)

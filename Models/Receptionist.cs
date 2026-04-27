@@ -1,4 +1,3 @@
-using FirstAidAPI.DTO.Queue;
 using FirstAidAPI.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using System.Collections;

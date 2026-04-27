@@ -60,6 +60,7 @@ namespace FirstAidAPI.Service.Implement
                 Gender = user.Gender,
                 Address = user.Address,
                 IdCard = user.IdCard,
+                SpecialtyId = doctor.SpecialtyId,
                 SpecialtyName = doctor.Specialty?.Name ?? string.Empty,
                 LicenseNumber = doctor.LicenseNumber,
                 Qualifications = doctor.Qualifications,
@@ -99,7 +100,7 @@ namespace FirstAidAPI.Service.Implement
         {
             var doctors = await _doctorRepository.GetDoctorsBySpecialtyForBookingAsync(specialtyId);
             var result = new List<DoctorAvailabilityDTO>();
-            var dayOfWeek = date.DayOfWeek;
+            var targetDate = DateOnly.FromDateTime(date);
 
             // Lấy default clinic
             var defaultClinic = await _doctorRepository.GetDefaultClinicBySpecialtyAsync(specialtyId);
@@ -107,21 +108,29 @@ namespace FirstAidAPI.Service.Implement
             foreach (var doc in doctors)
             {
                 // Tìm lịch theo ngày của bác sĩ
-                var schedule = doc.Schedules.FirstOrDefault(s => s.DayOfWeek == dayOfWeek && s.IsAvailable);
+                var schedules = doc.Schedules.Where(s => s.Date == targetDate && !s.IsOff).ToList();
 
-                if (schedule == null)
+                if (!schedules.Any())
                     continue;
 
                 var timeSlots = new List<string>();
-                TimeSpan current = schedule.StartTime;
-                while (current.Add(TimeSpan.FromHours(1)) <= schedule.EndTime)
+                foreach (var schedule in schedules)
                 {
-                    var end = current.Add(TimeSpan.FromHours(1));
-                    timeSlots.Add($"{current:hh\\:mm} - {end:hh\\:mm}");
-                    current = end;
+                    if (schedule.ShiftType == null) continue;
+                    TimeSpan current = schedule.ShiftType.StartTime;
+                    while (current.Add(TimeSpan.FromHours(1)) <= schedule.ShiftType.EndTime)
+                    {
+                        var end = current.Add(TimeSpan.FromHours(1));
+                        timeSlots.Add($"{current:hh\\:mm} - {end:hh\\:mm}");
+                        current = end;
+                    }
                 }
 
-                var clinic = schedule.Clinic ?? defaultClinic;
+                if (!timeSlots.Any())
+                    continue;
+
+                var firstSchedule = schedules.First();
+                var clinic = firstSchedule.Clinic ?? defaultClinic;
 
                 result.Add(new DoctorAvailabilityDTO
                 {

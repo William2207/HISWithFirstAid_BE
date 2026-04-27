@@ -10,6 +10,7 @@ namespace FirstAidAPI.Models
 
         // Navigation
         public Speciality Specialty { get; set; } = null!;
+
         public List<Appointment> Appointments { get; set; } = new();
     }
 }

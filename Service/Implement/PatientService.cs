@@ -46,6 +46,34 @@ namespace FirstAidAPI.Service.Implement
             };
         }
 
+        public async Task<List<PatientProfileDto>> GetPatientsBySpecialtyAsync(int specialtyId)
+        {
+            var patients = await _patientRepository.GetPatientsBySpecialtyAsync(specialtyId);
+            return patients.Select(patient => {
+                var user = patient.User;
+                return new PatientProfileDto
+                {
+                    Id = patient.Id,
+                    UserId = user?.Id ?? 0,
+                    FullName = user?.FullName ?? patient.FullName,
+                    Email = user?.Email ?? patient.Email,
+                    PhoneNumber = user?.PhoneNumber ?? patient.PhoneNumber,
+                    Avatar = user?.Avatar,
+                    DateOfBirth = user?.DateOfBirth ?? patient.DateOfBirth,
+                    Gender = user?.Gender ?? patient.Gender,
+                    Address = user?.Address ?? patient.Address,
+                    IdCard = user?.IdCard ?? patient.IdCard,
+                    InsuranceNumber = patient.InsuranceNumber,
+                    BloodType = patient.BloodType,
+                    Allergies = patient.Allergies,
+                    MedicalHistory = patient.MedicalHistory,
+                    EmergencyContactName = patient.EmergencyContactName,
+                    EmergencyContact = patient.EmergencyContact,
+                    EmergencyContactRelationship = patient.EmergencyContactRelationship
+                };
+            }).ToList();
+        }
+
         public async Task<bool> UpdatePatientProfileAsync(int userId, UpdatePatientProfileDto updateDto)
         {
             // Update User
