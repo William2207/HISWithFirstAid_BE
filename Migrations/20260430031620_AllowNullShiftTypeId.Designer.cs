@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260430031620_AllowNullShiftTypeId")]
+    partial class AllowNullShiftTypeId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -249,9 +252,6 @@ namespace FirstAidAPI.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsNightShift")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsOff")
                         .HasColumnType("boolean");
 
@@ -259,6 +259,9 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("MaxWalkInSlots")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ShiftTypeId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("SpecialtyId")
@@ -269,6 +272,8 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("ClinicId");
 
                     b.HasIndex("DoctorId");
+
+                    b.HasIndex("ShiftTypeId");
 
                     b.HasIndex("SpecialtyId");
 
@@ -1215,6 +1220,35 @@ namespace FirstAidAPI.Migrations
                             Title = "Đánh giá mức độ nghiêm trọng",
                             VideoUrl = ""
                         });
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.ShiftType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsNightShift")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShiftTypes");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Speciality", b =>
@@ -2446,6 +2480,10 @@ namespace FirstAidAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FirstAidAPI.Models.ShiftType", "ShiftType")
+                        .WithMany("DoctorSchedules")
+                        .HasForeignKey("ShiftTypeId");
+
                     b.HasOne("FirstAidAPI.Models.Speciality", "Specialty")
                         .WithMany()
                         .HasForeignKey("SpecialtyId");
@@ -2453,6 +2491,8 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Clinic");
 
                     b.Navigation("Doctor");
+
+                    b.Navigation("ShiftType");
 
                     b.Navigation("Specialty");
                 });
@@ -2963,6 +3003,11 @@ namespace FirstAidAPI.Migrations
             modelBuilder.Entity("FirstAidAPI.Models.ScenarioStep", b =>
                 {
                     b.Navigation("Options");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.ShiftType", b =>
+                {
+                    b.Navigation("DoctorSchedules");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Speciality", b =>

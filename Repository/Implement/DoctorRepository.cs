@@ -73,8 +73,6 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(d => d.Specialty)
                 .Include(d => d.Schedules)
                     .ThenInclude(s => s.Clinic)
-                .Include(d => d.Schedules)
-                    .ThenInclude(s => s.ShiftType)
                 .Where(d => d.IsAvailable && d.SpecialtyId == specialtyId)
                 .ToListAsync();
         }
@@ -88,12 +86,12 @@ namespace FirstAidAPI.Repository.Implement
         {
             var date = DateOnly.FromDateTime(dateTime);
             var timeOfDay = dateTime.TimeOfDay;
+            bool isNight = timeOfDay >= new TimeSpan(17, 0, 0) || timeOfDay < new TimeSpan(7, 30, 0);
+
             return await _context.DoctorSchedules
-                .Include(s => s.ShiftType)
                 .FirstOrDefaultAsync(s => s.DoctorId == doctorId
                                        && s.Date == date
-                                       && s.ShiftType.StartTime <= timeOfDay
-                                       && s.ShiftType.EndTime >= timeOfDay
+                                       && s.IsNightShift == isNight
                                        && !s.IsOff);
         }
 

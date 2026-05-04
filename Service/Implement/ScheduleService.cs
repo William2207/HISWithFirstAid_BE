@@ -1,229 +1,81 @@
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
-using Google.OrTools.Sat;
 using FirstAidAPI.DTO.Doctor;
 
 namespace FirstAidAPI.Service.Implement
 {
+    /// <summary>
+    /// Xếp lịch làm việc theo thuật toán Round-Robin công bằng.
+    ///
+    /// Quy tắc:
+    ///   • Thứ 2 – Thứ 7 (ngày làm việc):
+    ///       - Mỗi phòng khám (Clinic) trong khoa được giao đúng 1 bác sĩ (ca ngày).
+    ///       - Thứ 2 – Thứ 6: thêm 1 bác sĩ trực đêm cho cả khoa.
+    ///       - Thứ 7: chỉ có ca ngày, không có ca đêm.
+    ///   • Chủ nhật: không xếp ca.
+    ///   • Sau ca đêm, bác sĩ được nghỉ bù ngày hôm sau.
+    ///   • Phân công xoay vòng theo số ca đã nhận – bác sĩ có ít ca nhất được ưu tiên.
+    /// </summary>
     public class ScheduleService : IScheduleService
     {
         private readonly IDoctorRepository _doctorRepository;
-        private readonly IShiftTypeRepository _shiftTypeRepository;
         private readonly IDoctorScheduleRepository _scheduleRepository;
         private readonly IClinicRepository _clinicRepository;
 
         public ScheduleService(
             IDoctorRepository doctorRepository,
-            IShiftTypeRepository shiftTypeRepository,
             IDoctorScheduleRepository scheduleRepository,
             IClinicRepository clinicRepository)
         {
             _doctorRepository = doctorRepository;
-            _shiftTypeRepository = shiftTypeRepository;
             _scheduleRepository = scheduleRepository;
             _clinicRepository = clinicRepository;
         }
 
+        // ─────────────────────────────────────────────────────────────────
+        //  Public API
+        // ─────────────────────────────────────────────────────────────────
+
         public async Task GenerateMonthlyScheduleAsync(int month, int year)
         {
-            // 1. Kiểm tra đã có lịch tháng này chưa
+            // Xóa lịch cũ toàn hệ thống
             var exists = await _scheduleRepository.ExistsForMonthAsync(month, year);
             if (exists)
                 await _scheduleRepository.DeleteByMonthAsync(month, year);
 
-            // 2. Lấy data
-            var doctors = await _doctorRepository.GetAllAsync();
-            var shiftTypes = await _shiftTypeRepository.GetAllAsync();
-            var nightShift = shiftTypes.First(s => s.IsNightShift);
-            var dayShifts = shiftTypes.Where(s => !s.IsNightShift).ToList();
+            var allDoctors = await _doctorRepository.GetAllAsync();
+            var specialtyIds = allDoctors.Select(d => d.SpecialtyId).Distinct().ToList();
 
-            var startDate = new DateOnly(year, month, 1);
-            int daysInMonth = DateTime.DaysInMonth(year, month);
+            var all = new List<DoctorSchedule>();
+            foreach (var specialtyId in specialtyIds)
+            {
+                var doctors = allDoctors.Where(d => d.SpecialtyId == specialtyId).ToList();
+                var clinics = await _clinicRepository.GetBySpecialtyAsync(specialtyId);
+                var generated = GenerateForSpecialty(specialtyId, doctors, clinics, month, year);
+                all.AddRange(generated);
+            }
 
-            // 3. Khởi tạo OR-Tools
-            var model = new CpModel();
-
-            // 4. Tạo biến shifts[doctorId, day, shiftTypeId] = true/false
-            var shifts = new Dictionary<(int doctorId, int day, int shiftTypeId), BoolVar>();
-            foreach (var doctor in doctors)
-                for (int day = 0; day < daysInMonth; day++)
-                    foreach (var shift in shiftTypes)
-                        shifts[(doctor.Id, day, shift.Id)] = model.NewBoolVar(
-                            $"shift_d{doctor.Id}_day{day}_s{shift.Id}"
-                        );
-
-            // 5. Thêm constraints
-            AddConstraints(model, shifts, doctors, shiftTypes, nightShift, dayShifts, daysInMonth, startDate);
-
-            // 6. Chạy solver
-            var solver = new CpSolver();
-            var status = solver.Solve(model);
-
-            if (status != CpSolverStatus.Feasible && status != CpSolverStatus.Optimal)
-                throw new Exception("Không thể xếp lịch với các ràng buộc hiện tại!");
-
-            await SaveScheduleAsync(solver, shifts, doctors, shiftTypes, nightShift, startDate, daysInMonth);
+            await _scheduleRepository.AddRangeAsync(all);
         }
 
-        private void AddConstraints(
-            CpModel model,
-            Dictionary<(int, int, int), BoolVar> shifts,
-            List<Doctor> doctors,
-            List<ShiftType> shiftTypes,
-            ShiftType nightShift,
-            List<ShiftType> dayShifts,
-            int daysInMonth,
-            DateOnly startDate)
+        public async Task GenerateSpecialtyScheduleAsync(int specialtyId, int month, int year)
         {
-            // ✅ Rule 1: Mỗi ca mỗi ngày chỉ có 1 bác sĩ trực theo từng khoa
-            var specialtyGroups = doctors.GroupBy(d => d.SpecialtyId);
-            foreach (var group in specialtyGroups)
-            {
-                var specialtyDoctors = group.ToList();
-                for (int day = 0; day < daysInMonth; day++)
-                    foreach (var shift in shiftTypes)
-                    {
-                        var date = startDate.AddDays(day);
+            // Xóa lịch cũ của khoa này
+            var exists = await _scheduleRepository.ExistsForSpecialtyAndMonthAsync(specialtyId, month, year);
+            if (exists)
+                await _scheduleRepository.DeleteBySpecialtyAndMonthAsync(specialtyId, month, year);
 
-                        // Chủ nhật không có ca nào
-                        if (date.DayOfWeek == DayOfWeek.Sunday)
-                        {
-                            foreach (var doctor in specialtyDoctors)
-                                model.Add(shifts[(doctor.Id, day, shift.Id)] == 0);
-                            continue;
-                        }
+            var allDoctors = await _doctorRepository.GetAllAsync();
+            var doctors = allDoctors.Where(d => d.SpecialtyId == specialtyId).ToList();
 
-                        // Thứ 7 chỉ có ca sáng
-                        if (date.DayOfWeek == DayOfWeek.Saturday && shift.IsNightShift)
-                        {
-                            foreach (var doctor in specialtyDoctors)
-                                model.Add(shifts[(doctor.Id, day, shift.Id)] == 0);
-                            continue;
-                        }
+            if (!doctors.Any())
+                throw new Exception("Không có bác sĩ nào trong khoa để xếp lịch!");
 
-                        // Ca chiều thứ 7 cũng không có
-                        if (date.DayOfWeek == DayOfWeek.Saturday &&
-                            shift.StartTime >= new TimeSpan(15, 0, 0))
-                        {
-                            foreach (var doctor in specialtyDoctors)
-                                model.Add(shifts[(doctor.Id, day, shift.Id)] == 0);
-                            continue;
-                        }
+            var clinics = await _clinicRepository.GetBySpecialtyAsync(specialtyId);
+            if (!clinics.Any())
+                throw new Exception("Không có phòng khám nào trong khoa để xếp lịch!");
 
-                        var vars = specialtyDoctors
-                            .Select(d => shifts[(d.Id, day, shift.Id)])
-                            .ToList();
-                        model.AddExactlyOne(vars);
-                    }
-            }
-
-            // ✅ Rule 2: Mỗi bác sĩ tối đa 1 ca/ngày
-            foreach (var doctor in doctors)
-                for (int day = 0; day < daysInMonth; day++)
-                {
-                    var vars = shiftTypes
-                        .Select(s => shifts[(doctor.Id, day, s.Id)])
-                        .Cast<ILiteral>()
-                        .ToList();
-                    model.AddAtMostOne(vars);
-                }
-
-            // ✅ Rule 3: Trực đêm → hôm sau nghỉ bù
-            foreach (var doctor in doctors)
-                for (int day = 0; day < daysInMonth - 1; day++)
-                {
-                    var nextDayVars = shiftTypes
-                        .Select(s => (IntVar)shifts[(doctor.Id, day + 1, s.Id)])
-                        .ToList();
-
-                    model.Add(LinearExpr.Sum(nextDayVars) == 0)
-                         .OnlyEnforceIf(shifts[(doctor.Id, day, nightShift.Id)]);
-                }
-
-            // ✅ Rule 4: Xoay tua ca đêm đều giữa các bác sĩ trong cùng khoa
-            foreach (var group in specialtyGroups)
-            {
-                var specialtyDoctors = group.ToList();
-                var nightCounts = specialtyDoctors.Select(d =>
-                {
-                    var vars = Enumerable.Range(0, daysInMonth)
-                        .Select(day => (IntVar)shifts[(d.Id, day, nightShift.Id)])
-                        .ToList();
-                    return LinearExpr.Sum(vars);
-                }).ToList();
-
-                var maxNight = model.NewIntVar(0, daysInMonth, $"max_night_{group.Key}");
-                var minNight = model.NewIntVar(0, daysInMonth, $"min_night_{group.Key}");
-                model.AddMaxEquality(maxNight, nightCounts);
-                model.AddMinEquality(minNight, nightCounts);
-                model.Minimize(LinearExpr.WeightedSum(
-                    new[] { maxNight, minNight },
-                    new[] { 1L, -1L }
-                ));
-            }
-        }
-
-        private async Task SaveScheduleAsync(
-            CpSolver solver,
-            Dictionary<(int, int, int), BoolVar> shifts,
-            List<Doctor> doctors,
-            List<ShiftType> shiftTypes,
-            ShiftType nightShift,
-            DateOnly startDate,
-            int daysInMonth)
-        {
-            var schedules = new List<DoctorSchedule>();
-            var allClinics = await _clinicRepository.GetAllAsync();
-            foreach (var doctor in doctors)
-            {
-                bool isOffNextDay = false;
-
-                for (int day = 0; day < daysInMonth; day++)
-                {
-                    var date = startDate.AddDays(day);
-
-                    // Ngày nghỉ bù sau ca đêm
-                    if (isOffNextDay)
-                    {
-                        schedules.Add(new DoctorSchedule
-                        {
-                            DoctorId = doctor.Id,
-                            Date = date,
-                            IsOff = true
-                        });
-                        isOffNextDay = false;
-                        continue;
-                    }
-
-                    foreach (var shift in shiftTypes)
-                    {
-                        if (solver.Value(shifts[(doctor.Id, day, shift.Id)]) == 1)
-                        {
-                            int? clinicId = null;
-                            int? specialtyId = null;
-
-                            if (shift.IsNightShift)
-                                specialtyId = doctor.SpecialtyId;
-                            else
-                                clinicId = allClinics.FirstOrDefault(c => c.SpecialtyId == doctor.SpecialtyId)?.Id;
-
-                            schedules.Add(new DoctorSchedule
-                            {
-                                DoctorId = doctor.Id,
-                                ShiftTypeId = shift.Id,
-                                Date = date,
-                                ClinicId = clinicId,
-                                SpecialtyId = specialtyId,
-                                IsOff = false
-                            });
-
-                            if (shift.IsNightShift)
-                                isOffNextDay = true;
-                        }
-                    }
-                }
-            }
-
+            var schedules = GenerateForSpecialty(specialtyId, doctors, clinics, month, year);
             await _scheduleRepository.AddRangeAsync(schedules);
         }
 
@@ -239,12 +91,152 @@ namespace FirstAidAPI.Service.Implement
             return schedules.Select(MapToDto).ToList();
         }
 
-        private DoctorScheduleDto MapToDto(DoctorSchedule s) => new DoctorScheduleDto
+        public async Task<List<DoctorScheduleDto>> GetSpecialtyScheduleAsync(int specialtyId, int month, int year)
+        {
+            var schedules = await _scheduleRepository.GetBySpecialtyAndMonthAsync(specialtyId, month, year);
+            return schedules.Select(MapToDto).ToList();
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        //  Core generation algorithm (Round-Robin)
+        // ─────────────────────────────────────────────────────────────────
+
+        private List<DoctorSchedule> GenerateForSpecialty(
+            int specialtyId,
+            List<Doctor> doctors,
+            List<Clinic> clinics,
+            int month,
+            int year)
+        {
+            int daysInMonth = DateTime.DaysInMonth(year, month);
+            var startDate = new DateOnly(year, month, 1);
+
+            // Đếm số ca để phân công công bằng
+            var dayShiftCount = doctors.ToDictionary(d => d.Id, _ => 0);
+            var nightShiftCount = doctors.ToDictionary(d => d.Id, _ => 0);
+
+            // restingOnDate[date] = tập bác sĩ phải nghỉ bù ngày đó (sau ca đêm)
+            var restingOnDate = new Dictionary<DateOnly, HashSet<int>>();
+
+            var schedules = new List<DoctorSchedule>();
+
+            for (int dayIdx = 0; dayIdx < daysInMonth; dayIdx++)
+            {
+                var date = startDate.AddDays(dayIdx);
+
+                // Chủ nhật không làm việc
+                if (date.DayOfWeek == DayOfWeek.Sunday)
+                    continue;
+
+                // Thứ 7 không có ca đêm
+                bool hasNightShift = date.DayOfWeek != DayOfWeek.Saturday;
+
+                // Bác sĩ đang nghỉ bù hôm nay
+                var resting = restingOnDate.GetValueOrDefault(date, new HashSet<int>());
+
+                // Ghi nhận bản ghi nghỉ bù
+                foreach (var restingDoctorId in resting)
+                {
+                    schedules.Add(new DoctorSchedule
+                    {
+                        DoctorId = restingDoctorId,
+                        Date = date,
+                        IsOff = true,
+                        IsNightShift = false,
+                        SpecialtyId = specialtyId
+                    });
+                }
+
+                // Bác sĩ có thể làm việc hôm nay
+                var available = doctors
+                    .Where(d => !resting.Contains(d.Id))
+                    .ToList();
+
+                // Kiểm tra đủ bác sĩ cho các phòng khám
+                int needed = clinics.Count + (hasNightShift ? 1 : 0);
+                if (available.Count < clinics.Count)
+                {
+                    // Không đủ bác sĩ: gán luân phiên hết những gì có, bỏ qua ca đêm
+                    // (tránh crash — thực tế nên có đủ bác sĩ)
+                    needed = Math.Min(available.Count, clinics.Count);
+                }
+
+                // ── Ca ngày: mỗi phòng khám 1 bác sĩ ──
+                var assignedToday = new HashSet<int>();
+
+                foreach (var clinic in clinics)
+                {
+                    var doctor = available
+                        .Where(d => !assignedToday.Contains(d.Id))
+                        .OrderBy(d => dayShiftCount[d.Id])   // ưu tiên người ít ca nhất
+                        .ThenBy(d => d.Id)                   // tiebreak ổn định
+                        .FirstOrDefault();
+
+                    if (doctor == null) break; // không còn bác sĩ rảnh
+
+                    schedules.Add(new DoctorSchedule
+                    {
+                        DoctorId = doctor.Id,
+                        Date = date,
+                        IsNightShift = false,
+                        ClinicId = clinic.Id,
+                        SpecialtyId = null,
+                        IsOff = false
+                    });
+
+                    dayShiftCount[doctor.Id]++;
+                    assignedToday.Add(doctor.Id);
+                }
+
+                // ── Ca đêm: 1 bác sĩ cho toàn khoa ──
+                if (hasNightShift)
+                {
+                    var nightDoctor = available
+                        .Where(d => !assignedToday.Contains(d.Id))
+                        .OrderBy(d => nightShiftCount[d.Id])  // ưu tiên người ít trực đêm nhất
+                        .ThenBy(d => d.Id)
+                        .FirstOrDefault();
+
+                    if (nightDoctor != null)
+                    {
+                        schedules.Add(new DoctorSchedule
+                        {
+                            DoctorId = nightDoctor.Id,
+                            Date = date,
+                            IsNightShift = true,
+                            ClinicId = null,
+                            SpecialtyId = specialtyId,
+                            IsOff = false
+                        });
+
+                        nightShiftCount[nightDoctor.Id]++;
+
+                        // Bác sĩ trực đêm nghỉ bù ngày hôm sau
+                        var nextDate = date.AddDays(1);
+                        if (!restingOnDate.ContainsKey(nextDate))
+                            restingOnDate[nextDate] = new HashSet<int>();
+                        restingOnDate[nextDate].Add(nightDoctor.Id);
+                    }
+                }
+            }
+
+            return schedules;
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        //  DTO mapping
+        // ─────────────────────────────────────────────────────────────────
+
+        private static DoctorScheduleDto MapToDto(DoctorSchedule s) => new DoctorScheduleDto
         {
             DoctorId = s.DoctorId,
-            DoctorName = s.Doctor.User.FullName,
+            DoctorName = s.Doctor?.User?.FullName ?? string.Empty,
             Date = s.Date,
-            ShiftName = s.ShiftType?.Name,
+            ShiftName = s.IsOff
+                ? "Nghỉ bù"
+                : s.IsNightShift
+                    ? "Ca đêm"
+                    : "Ca ngày",
             ClinicRoom = s.Clinic?.RoomNumber,
             SpecialtyId = s.SpecialtyId,
             IsOff = s.IsOff

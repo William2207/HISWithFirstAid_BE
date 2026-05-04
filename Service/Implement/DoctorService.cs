@@ -64,7 +64,8 @@ namespace FirstAidAPI.Service.Implement
                 SpecialtyName = doctor.Specialty?.Name ?? string.Empty,
                 LicenseNumber = doctor.LicenseNumber,
                 Qualifications = doctor.Qualifications,
-                YearsOfExperience = doctor.YearsOfExperience
+                YearsOfExperience = doctor.YearsOfExperience,
+                IsHeadDoctor = doctor.Specialty?.HeadDoctorId == doctor.Id
             };
         }
 
@@ -116,14 +117,15 @@ namespace FirstAidAPI.Service.Implement
                 var timeSlots = new List<string>();
                 foreach (var schedule in schedules)
                 {
-                    if (schedule.ShiftType == null) continue;
-                    TimeSpan current = schedule.ShiftType.StartTime;
-                    while (current.Add(TimeSpan.FromHours(1)) <= schedule.ShiftType.EndTime)
-                    {
-                        var end = current.Add(TimeSpan.FromHours(1));
-                        timeSlots.Add($"{current:hh\\:mm} - {end:hh\\:mm}");
-                        current = end;
-                    }
+                    if (schedule.IsNightShift) continue; // Bỏ qua ca đêm khi tìm slot đặt khám thường
+                    
+                    // Ca sáng: 08:00 - 12:00
+                    // Ca chiều: 13:00 - 17:00
+                    // Tạm thời fix cứng slot cho ca ngày
+                    timeSlots.AddRange(new[] { 
+                        "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
+                        "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00"
+                    });
                 }
 
                 if (!timeSlots.Any())

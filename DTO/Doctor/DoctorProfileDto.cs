@@ -23,5 +23,6 @@ namespace FirstAidAPI.DTO.Doctor
         public string? LicenseNumber { get; set; }
         public string? Qualifications { get; set; }
         public int YearsOfExperience { get; set; }
+        public bool IsHeadDoctor { get; set; }
     }
 }

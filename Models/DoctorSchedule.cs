@@ -7,7 +7,7 @@ namespace FirstAidAPI.Models
     {
         public int Id { get; set; }
         public int DoctorId { get; set; }
-        public int ShiftTypeId { get; set; }
+        public bool IsNightShift { get; set; } = false;
         public DateOnly Date { get; set; }
         public bool IsOff { get; set; } = false;
 
@@ -23,7 +23,6 @@ namespace FirstAidAPI.Models
         // Navigation
         public Doctor Doctor { get; set; } = null!;
 
-        public ShiftType ShiftType { get; set; } = null!;
         public Clinic? Clinic { get; set; }
         public Speciality? Specialty { get; set; }
     }

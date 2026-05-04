@@ -53,7 +53,6 @@ namespace FirstAidAPI.Data
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<LabOrder> LabOrders { get; set; }
         public DbSet<LabOrderItem> LabOrderItems { get; set; }
-        public DbSet<ShiftType> ShiftTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
