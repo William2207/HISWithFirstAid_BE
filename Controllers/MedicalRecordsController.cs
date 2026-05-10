@@ -121,5 +121,23 @@ namespace FirstAidAPI.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Lấy toàn bộ bệnh án của một bệnh nhân theo Patient ID (Dành cho Bác sĩ)
+        /// </summary>
+        [HttpGet("patient/{patientId}")]
+        [Authorize(Roles = "Doctor, Receptionist")]
+        public async Task<IActionResult> GetMedicalRecordsByPatientId(int patientId)
+        {
+            try
+            {
+                var records = await _medicalRecordService.GetMedicalRecordsByPatientAsync(patientId);
+                return Ok(records);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
     }
 }

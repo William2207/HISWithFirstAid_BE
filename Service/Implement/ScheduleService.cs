@@ -21,15 +21,18 @@ namespace FirstAidAPI.Service.Implement
         private readonly IDoctorRepository _doctorRepository;
         private readonly IDoctorScheduleRepository _scheduleRepository;
         private readonly IClinicRepository _clinicRepository;
+        private readonly IWardRepository _wardRepository;
 
         public ScheduleService(
             IDoctorRepository doctorRepository,
             IDoctorScheduleRepository scheduleRepository,
-            IClinicRepository clinicRepository)
+            IClinicRepository clinicRepository,
+            IWardRepository wardRepository)
         {
             _doctorRepository = doctorRepository;
             _scheduleRepository = scheduleRepository;
             _clinicRepository = clinicRepository;
+            _wardRepository = wardRepository;
         }
 
         // ─────────────────────────────────────────────────────────────────
@@ -51,7 +54,8 @@ namespace FirstAidAPI.Service.Implement
             {
                 var doctors = allDoctors.Where(d => d.SpecialtyId == specialtyId).ToList();
                 var clinics = await _clinicRepository.GetBySpecialtyAsync(specialtyId);
-                var generated = GenerateForSpecialty(specialtyId, doctors, clinics, month, year);
+                var wards = await _wardRepository.GetBySpecialtyAsync(specialtyId);
+                var generated = GenerateForSpecialty(specialtyId, doctors, clinics, wards, month, year);
                 all.AddRange(generated);
             }
 
@@ -72,10 +76,12 @@ namespace FirstAidAPI.Service.Implement
                 throw new Exception("Không có bác sĩ nào trong khoa để xếp lịch!");
 
             var clinics = await _clinicRepository.GetBySpecialtyAsync(specialtyId);
-            if (!clinics.Any())
-                throw new Exception("Không có phòng khám nào trong khoa để xếp lịch!");
+            var wards = await _wardRepository.GetBySpecialtyAsync(specialtyId);
 
-            var schedules = GenerateForSpecialty(specialtyId, doctors, clinics, month, year);
+            if (!clinics.Any() && !wards.Any())
+                throw new Exception("Không có phòng khám hay phòng bệnh nào trong khoa để xếp lịch!");
+
+            var schedules = GenerateForSpecialty(specialtyId, doctors, clinics, wards, month, year);
             await _scheduleRepository.AddRangeAsync(schedules);
         }
 
@@ -105,6 +111,7 @@ namespace FirstAidAPI.Service.Implement
             int specialtyId,
             List<Doctor> doctors,
             List<Clinic> clinics,
+            List<Ward> wards,
             int month,
             int year)
         {
@@ -152,19 +159,43 @@ namespace FirstAidAPI.Service.Implement
                     .Where(d => !resting.Contains(d.Id))
                     .ToList();
 
-                // Kiểm tra đủ bác sĩ cho các phòng khám
-                int needed = clinics.Count + (hasNightShift ? 1 : 0);
-                if (available.Count < clinics.Count)
+                // Kiểm tra đủ bác sĩ cho các phòng khám và phòng bệnh
+                int needed = clinics.Count + wards.Count + (hasNightShift ? 1 : 0);
+                if (available.Count < (clinics.Count + wards.Count))
                 {
-                    // Không đủ bác sĩ: gán luân phiên hết những gì có, bỏ qua ca đêm
-                    // (tránh crash — thực tế nên có đủ bác sĩ)
-                    needed = Math.Min(available.Count, clinics.Count);
+                    // Không đủ bác sĩ: ưu tiên gán luân phiên phòng khám trước, sau đó tới phòng bệnh
+                    needed = Math.Min(available.Count, clinics.Count + wards.Count);
                 }
 
                 // ── Ca ngày: mỗi phòng khám 1 bác sĩ ──
                 var assignedToday = new HashSet<int>();
 
                 foreach (var clinic in clinics)
+                {
+                    var doctor = available
+                        .Where(d => !assignedToday.Contains(d.Id))
+                        .OrderBy(d => dayShiftCount[d.Id])   // ưu tiên người ít ca nhất
+                        .ThenBy(_ => Guid.NewGuid())                   // tiebreak ổn định
+                        .FirstOrDefault();
+
+                    if (doctor == null) break; // không còn bác sĩ rảnh
+
+                    schedules.Add(new DoctorSchedule
+                    {
+                        DoctorId = doctor.Id,
+                        Date = date,
+                        IsNightShift = false,
+                        ClinicId = clinic.Id,
+                        SpecialtyId = null,
+                        IsOff = false
+                    });
+
+                    dayShiftCount[doctor.Id]++;
+                    assignedToday.Add(doctor.Id);
+                }
+
+                // ── Ca ngày: mỗi phòng bệnh 1 bác sĩ ──
+                foreach (var ward in wards)
                 {
                     var doctor = available
                         .Where(d => !assignedToday.Contains(d.Id))
@@ -179,7 +210,8 @@ namespace FirstAidAPI.Service.Implement
                         DoctorId = doctor.Id,
                         Date = date,
                         IsNightShift = false,
-                        ClinicId = clinic.Id,
+                        ClinicId = null,
+                        WardId = ward.Id,
                         SpecialtyId = null,
                         IsOff = false
                     });
@@ -238,6 +270,7 @@ namespace FirstAidAPI.Service.Implement
                     ? "Ca đêm"
                     : "Ca ngày",
             ClinicRoom = s.Clinic?.RoomNumber,
+            WardRoom = s.Ward?.RoomNumber,
             SpecialtyId = s.SpecialtyId,
             IsOff = s.IsOff
         };

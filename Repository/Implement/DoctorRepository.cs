@@ -84,8 +84,14 @@ namespace FirstAidAPI.Repository.Implement
 
         public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DateTime dateTime)
         {
-            var date = DateOnly.FromDateTime(dateTime);
-            var timeOfDay = dateTime.TimeOfDay;
+            DateTime utcTime = dateTime.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc) 
+                : dateTime.ToUniversalTime();
+
+            DateTime localDateTime = utcTime.AddHours(7);
+
+            var date = DateOnly.FromDateTime(localDateTime);
+            var timeOfDay = localDateTime.TimeOfDay;
             bool isNight = timeOfDay >= new TimeSpan(17, 0, 0) || timeOfDay < new TimeSpan(7, 30, 0);
 
             return await _context.DoctorSchedules

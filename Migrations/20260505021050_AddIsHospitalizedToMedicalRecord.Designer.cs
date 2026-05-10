@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260505021050_AddIsHospitalizedToMedicalRecord")]
+    partial class AddIsHospitalizedToMedicalRecord
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -264,9 +267,6 @@ namespace FirstAidAPI.Migrations
                     b.Property<int?>("SpecialtyId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("WardId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ClinicId");
@@ -274,8 +274,6 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("DoctorId");
 
                     b.HasIndex("SpecialtyId");
-
-                    b.HasIndex("WardId");
 
                     b.ToTable("DoctorSchedule");
                 });
@@ -2458,17 +2456,11 @@ namespace FirstAidAPI.Migrations
                         .WithMany()
                         .HasForeignKey("SpecialtyId");
 
-                    b.HasOne("FirstAidAPI.Models.Ward", "Ward")
-                        .WithMany()
-                        .HasForeignKey("WardId");
-
                     b.Navigation("Clinic");
 
                     b.Navigation("Doctor");
 
                     b.Navigation("Specialty");
-
-                    b.Navigation("Ward");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Invoice", b =>

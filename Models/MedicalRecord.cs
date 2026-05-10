@@ -40,9 +40,11 @@ namespace FirstAidAPI.Models
         public DateTime? NextAppointmentDate { get; set; }  // Ngày tái khám
 
         // ═══════════════════════════════════════
-        // 5. GHI CHÚ CHUNG
+        // 5. GHI CHÚ CHUNG & QUYẾT ĐỊNH
         // ═══════════════════════════════════════
         public string? GeneralNotes { get; set; }
+
+        public bool IsHospitalized { get; set; } = false; // Quyết định nhập viện
 
         // ═══════════════════════════════════════
         // 6. METADATA

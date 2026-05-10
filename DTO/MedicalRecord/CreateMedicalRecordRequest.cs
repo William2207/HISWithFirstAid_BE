@@ -26,8 +26,9 @@ namespace FirstAidAPI.DTO.MedicalRecord
         public string? FollowUpInstructions { get; set; }
         public DateTime? NextAppointmentDate { get; set; }
 
-        // 5. Ghi chú chung
+        // 5. GHI CHÚ CHUNG & QUYẾT ĐỊNH
         public string? GeneralNotes { get; set; }
+        public bool IsHospitalized { get; set; } = false;
 
         // Dấu hiệu sinh tồn (tùy chọn)
         public CreateVitalSignRequest? VitalSigns { get; set; }

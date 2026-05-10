@@ -17,6 +17,8 @@ namespace FirstAidAPI.Models
         // Ca đêm → có SpecialtyId, không có ClinicId
         public int? SpecialtyId { get; set; }
 
+        public int? WardId { get; set; }
+
         public int MaxOnlineSlots { get; set; } = 10;
         public int MaxWalkInSlots { get; set; } = 10;
 
@@ -25,5 +27,6 @@ namespace FirstAidAPI.Models
 
         public Clinic? Clinic { get; set; }
         public Speciality? Specialty { get; set; }
+        public Ward? Ward { get; set; }
     }
 }
