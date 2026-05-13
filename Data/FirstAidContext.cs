@@ -53,6 +53,7 @@ namespace FirstAidAPI.Data
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<LabOrder> LabOrders { get; set; }
         public DbSet<LabOrderItem> LabOrderItems { get; set; }
+        public DbSet<AdmissionRecord> AdmissionRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -579,6 +580,38 @@ namespace FirstAidAPI.Data
             {
                 entity.Property(ms => ms.Price)
                     .HasColumnType("decimal(18,2)");
+            });
+
+            // Cấu hình AdmissionRecord
+            modelBuilder.Entity<AdmissionRecord>(entity =>
+            {
+                entity.HasKey(a => a.Id);
+
+                entity.HasOne(a => a.Patient)
+                    .WithMany()
+                    .HasForeignKey(a => a.PatientId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.Bed)
+                    .WithMany()
+                    .HasForeignKey(a => a.BedId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.MedicalRecord)
+                    .WithMany()
+                    .HasForeignKey(a => a.MedicalRecordId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.AdmittedByNurse)
+                    .WithMany()
+                    .HasForeignKey(a => a.AdmittedByNurseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(a => a.AdmittedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                // Index để query nhanh bệnh nhân đang nằm viện
+                entity.HasIndex(a => new { a.PatientId, a.DischargedAt });
             });
 
             ScenarioSeeder.SeedScenarios(modelBuilder);
