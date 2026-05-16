@@ -39,6 +39,16 @@ namespace FirstAidAPI.Controllers
         }
 
         /// <summary>
+        /// Lấy danh sách bệnh nhân đang nằm viện.
+        /// </summary>
+        [HttpGet("inpatients")]
+        public async Task<IActionResult> GetInpatients()
+        {
+            var records = await _admissionService.GetActiveAdmissionsAsync();
+            return Ok(records);
+        }
+
+        /// <summary>
         /// Gán giường cho bệnh nhân và lưu lịch sử nhập viện.
         /// </summary>
         [HttpPost("assign-bed")]

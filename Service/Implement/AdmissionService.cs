@@ -94,7 +94,11 @@ namespace FirstAidAPI.Service.Implement
                 MedicalRecordId = savedRecord.MedicalRecordId,
                 NurseName = nurse.User?.FullName,
                 AdmittedAt = savedRecord.AdmittedAt,
-                Notes = savedRecord.Notes
+                Notes = savedRecord.Notes,
+                DiagnosisName = null, // Can be loaded if needed, but usually not strictly required right after assign
+                DoctorName = null,
+                PatientAge = 0,
+                PatientGender = ""
             };
         }
 
@@ -114,6 +118,31 @@ namespace FirstAidAPI.Service.Implement
             bed.Status = "AVAILABLE";
             bed.CurrentPatientId = null;
             await _bedRepository.UpdateAsync(bed);
+        }
+
+        public async Task<List<AdmissionRecordDto>> GetActiveAdmissionsAsync()
+        {
+            var records = await _admissionRepository.GetActiveAdmissionsAsync();
+
+            return records.Select(a => new AdmissionRecordDto
+            {
+                Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient.FullNameDisplay,
+                BedId = a.BedId,
+                BedNumber = a.Bed.BedNumber,
+                RoomNumber = a.Bed.Ward.RoomNumber,
+                WardType = a.Bed.Ward.WardType,
+                MedicalRecordId = a.MedicalRecordId,
+                NurseName = a.AdmittedByNurse?.User?.FullName,
+                AdmittedAt = a.AdmittedAt,
+                DischargedAt = a.DischargedAt,
+                Notes = a.Notes,
+                DiagnosisName = a.MedicalRecord?.DiagnosisName,
+                DoctorName = a.MedicalRecord?.Doctor?.User?.FullName,
+                PatientAge = a.Patient.DateOfBirth.HasValue ? DateTime.Now.Year - a.Patient.DateOfBirth.Value.Year : 0,
+                PatientGender = a.Patient.Gender
+            }).ToList();
         }
     }
 }

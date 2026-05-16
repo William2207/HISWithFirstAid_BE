@@ -32,6 +32,18 @@ namespace FirstAidAPI.Repository.Implement
                 .FirstOrDefaultAsync(a => a.PatientId == patientId && a.DischargedAt == null);
         }
 
+        public async Task<List<AdmissionRecord>> GetActiveAdmissionsAsync()
+        {
+            return await _context.AdmissionRecords
+                .Include(a => a.Bed)
+                    .ThenInclude(b => b.Ward)
+                .Include(a => a.Patient)
+                .Include(a => a.MedicalRecord)
+                .Where(a => a.DischargedAt == null)
+                .OrderByDescending(a => a.AdmittedAt)
+                .ToListAsync();
+        }
+
         public async Task UpdateAsync(AdmissionRecord record)
         {
             _context.AdmissionRecords.Update(record);

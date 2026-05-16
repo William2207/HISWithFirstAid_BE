@@ -18,9 +18,11 @@ namespace FirstAidAPI.DTO.Nurse
         public string? IdCard { get; set; }
 
         // Nurse specific data
+        public int SpecialtyId { get; set; }
         public string? SpecialtyName { get; set; }
         public string? LicenseNumber { get; set; }
         public string? Qualifications { get; set; }
         public int YearsOfExperience { get; set; }
+        public bool IsHeadNurse { get; set; }
     }
 }

@@ -6,6 +6,7 @@ namespace FirstAidAPI.Repository
     {
         Task<AdmissionRecord> CreateAsync(AdmissionRecord record);
         Task<AdmissionRecord?> GetActiveAdmissionByPatientIdAsync(int patientId);
+        Task<List<AdmissionRecord>> GetActiveAdmissionsAsync();
         Task UpdateAsync(AdmissionRecord record);
     }
 }

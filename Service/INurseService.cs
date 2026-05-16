@@ -6,5 +6,6 @@ namespace FirstAidAPI.Service
     {
         Task<NurseProfileDto?> GetNurseProfileAsync(int userId);
         Task<bool> UpdateNurseProfileAsync(int userId, UpdateNurseProfileDto updateDto);
+        Task<int> GetNurseIdByUserId(int userId);
     }
 }

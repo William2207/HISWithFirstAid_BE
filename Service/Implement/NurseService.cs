@@ -36,10 +36,12 @@ namespace FirstAidAPI.Service.Implement
                 Gender = user.Gender,
                 Address = user.Address,
                 IdCard = user.IdCard,
+                SpecialtyId = nurse.SpecialityId,
                 SpecialtyName = nurse.Speciality?.Name ?? string.Empty,
                 LicenseNumber = nurse.LicenseNumber,
                 Qualifications = nurse.Qualifications,
-                YearsOfExperience = nurse.YearsOfExperience
+                YearsOfExperience = nurse.YearsOfExperience,
+                IsHeadNurse = nurse.Speciality?.HeadNurseId == nurse.Id
             };
         }
 
@@ -71,6 +73,13 @@ namespace FirstAidAPI.Service.Implement
             }
 
             return true;
+        }
+
+        public async Task<int> GetNurseIdByUserId(int userId)
+        {
+            var nurse = await _nurseRepository.GetByUserIdAsync(userId);
+            if (nurse == null) throw new Exception("Nurse not found for user ID: " + userId);
+            return nurse.Id;
         }
     }
 }

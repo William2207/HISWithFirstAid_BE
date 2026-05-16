@@ -13,6 +13,9 @@ namespace FirstAidAPI.Service
         /// <summary>Gán giường cho bệnh nhân và tạo AdmissionRecord. Trả về record vừa tạo.</summary>
         Task<AdmissionRecordDto> AssignBedAsync(int nurseUserId, AssignBedRequest request);
 
+        /// <summary>Danh sách bệnh nhân đang nằm viện.</summary>
+        Task<List<AdmissionRecordDto>> GetActiveAdmissionsAsync();
+
         /// <summary>Xuất viện: giải phóng giường và cập nhật DischargedAt.</summary>
         Task DischargePatientAsync(int patientId);
     }

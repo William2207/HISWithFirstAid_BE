@@ -13,6 +13,10 @@ namespace FirstAidAPI.DTO.Admission
         public string RoomNumber { get; set; } = string.Empty;
         public string WardType { get; set; } = string.Empty;
         public int MedicalRecordId { get; set; }
+        public string? DiagnosisName { get; set; }
+        public string? DoctorName { get; set; }
+        public int PatientAge { get; set; }
+        public string PatientGender { get; set; } = string.Empty;
         public string? NurseName { get; set; }
         public DateTime AdmittedAt { get; set; }
         public DateTime? DischargedAt { get; set; }

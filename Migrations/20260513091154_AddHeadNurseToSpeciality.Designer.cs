@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260513091154_AddHeadNurseToSpeciality")]
+    partial class AddHeadNurseToSpeciality
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -583,43 +586,6 @@ namespace FirstAidAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("Nurses", (string)null);
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.NurseSchedule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<bool>("IsNightShift")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsOff")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("NurseId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SpecialtyId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("WardId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NurseId");
-
-                    b.HasIndex("SpecialtyId");
-
-                    b.HasIndex("WardId");
-
-                    b.ToTable("NurseSchedule");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
@@ -2691,29 +2657,6 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Speciality");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.NurseSchedule", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Nurse", "Nurse")
-                        .WithMany()
-                        .HasForeignKey("NurseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.Speciality", "Specialty")
-                        .WithMany()
-                        .HasForeignKey("SpecialtyId");
-
-                    b.HasOne("FirstAidAPI.Models.Ward", "Ward")
-                        .WithMany()
-                        .HasForeignKey("WardId");
-
-                    b.Navigation("Nurse");
-
-                    b.Navigation("Specialty");
-
-                    b.Navigation("Ward");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Order", b =>

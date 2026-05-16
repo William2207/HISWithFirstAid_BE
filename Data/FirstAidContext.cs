@@ -51,6 +51,7 @@ namespace FirstAidAPI.Data
         public DbSet<MedicalService> MedicalServices { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
+        public DbSet<NurseSchedule> NurseSchedules { get; set; }
         public DbSet<LabOrder> LabOrders { get; set; }
         public DbSet<LabOrderItem> LabOrderItems { get; set; }
         public DbSet<AdmissionRecord> AdmissionRecords { get; set; }
@@ -180,6 +181,12 @@ namespace FirstAidAPI.Data
                 .HasOne(s => s.HeadDoctor)
                 .WithOne(d => d.HeadOfSpeciality)
                 .HasForeignKey<Speciality>(s => s.HeadDoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Speciality>()
+                .HasOne(s => s.HeadNurse)
+                .WithOne(n => n.HeadOfSpeciality)
+                .HasForeignKey<Speciality>(s => s.HeadNurseId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // User configuration

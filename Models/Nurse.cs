@@ -11,9 +11,9 @@ namespace FirstAidAPI.Models
         public bool IsAvailable { get; set; } = true;
 
         // Navigation
-        public Speciality Speciality { get; set; } = null!;
-
         public User User { get; set; } = null!;
+        public Speciality? HeadOfSpeciality { get; set; }
+        public Speciality Speciality { get; set; } = null!;
         public List<VitalSign> VitalSignsRecorded { get; set; } = new();
         //public List<MedicationAdministration> MedicationAdministrations { get; set; } = new();
     }
