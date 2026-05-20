@@ -3,6 +3,7 @@ using System;
 using FirstAidAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FirstAidAPI.Migrations
 {
     [DbContext(typeof(FirstAidContext))]
-    partial class FirstAidContextModelSnapshot : ModelSnapshot
+    [Migration("20260518004650_AddWardOrdersAndNotes")]
+    partial class AddWardOrdersAndNotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2202,9 +2205,6 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AdmissionRecordId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("BloodPressure")
                         .HasColumnType("text");
 
@@ -2214,7 +2214,7 @@ namespace FirstAidAPI.Migrations
                     b.Property<decimal?>("Height")
                         .HasColumnType("numeric");
 
-                    b.Property<int?>("MedicalRecordId")
+                    b.Property<int>("MedicalRecordId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("NurseId")
@@ -2236,8 +2236,6 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("numeric");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdmissionRecordId");
 
                     b.HasIndex("MedicalRecordId")
                         .IsUnique();
@@ -2352,9 +2350,6 @@ namespace FirstAidAPI.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -3070,20 +3065,15 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.VitalSign", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.AdmissionRecord", "AdmissionRecord")
-                        .WithMany()
-                        .HasForeignKey("AdmissionRecordId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("FirstAidAPI.Models.MedicalRecord", "MedicalRecord")
                         .WithOne("VitalSigns")
-                        .HasForeignKey("FirstAidAPI.Models.VitalSign", "MedicalRecordId");
+                        .HasForeignKey("FirstAidAPI.Models.VitalSign", "MedicalRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("FirstAidAPI.Models.Nurse", "Nurse")
                         .WithMany("VitalSignsRecorded")
                         .HasForeignKey("NurseId");
-
-                    b.Navigation("AdmissionRecord");
 
                     b.Navigation("MedicalRecord");
 

@@ -12,6 +12,7 @@ namespace FirstAidAPI.Models
 
         // Navigation
         public Doctor? HeadDoctor { get; set; }
+
         public Nurse? HeadNurse { get; set; }
 
         public List<Doctor> Doctors { get; set; } = new();

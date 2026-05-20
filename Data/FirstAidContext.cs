@@ -55,6 +55,8 @@ namespace FirstAidAPI.Data
         public DbSet<LabOrder> LabOrders { get; set; }
         public DbSet<LabOrderItem> LabOrderItems { get; set; }
         public DbSet<AdmissionRecord> AdmissionRecords { get; set; }
+        public DbSet<WardOrder> WardOrders { get; set; }
+        public DbSet<WardNote> WardNotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -534,6 +536,12 @@ namespace FirstAidAPI.Data
                 .HasIndex(v => v.MedicalRecordId)
                 .IsUnique();
 
+            modelBuilder.Entity<VitalSign>()
+                .HasOne(v => v.AdmissionRecord)
+                .WithMany()
+                .HasForeignKey(v => v.AdmissionRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Cấu hình LabOrder
             modelBuilder.Entity<LabOrder>(entity =>
             {
@@ -619,6 +627,48 @@ namespace FirstAidAPI.Data
 
                 // Index để query nhanh bệnh nhân đang nằm viện
                 entity.HasIndex(a => new { a.PatientId, a.DischargedAt });
+            });
+
+            // Cấu hình WardOrder
+            modelBuilder.Entity<WardOrder>(entity =>
+            {
+                entity.HasKey(wo => wo.Id);
+
+                entity.HasOne(wo => wo.AdmissionRecord)
+                    .WithMany()
+                    .HasForeignKey(wo => wo.AdmissionRecordId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wo => wo.CreatedByDoctor)
+                    .WithMany()
+                    .HasForeignKey(wo => wo.CreatedByDoctorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(wo => wo.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(wo => new { wo.AdmissionRecordId, wo.Status });
+            });
+
+            // Cấu hình WardNote
+            modelBuilder.Entity<WardNote>(entity =>
+            {
+                entity.HasKey(wn => wn.Id);
+
+                entity.HasOne(wn => wn.AdmissionRecord)
+                    .WithMany()
+                    .HasForeignKey(wn => wn.AdmissionRecordId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wn => wn.Author)
+                    .WithMany()
+                    .HasForeignKey(wn => wn.AuthorUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(wn => wn.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(wn => new { wn.AdmissionRecordId, wn.CreatedAt });
             });
 
             ScenarioSeeder.SeedScenarios(modelBuilder);
