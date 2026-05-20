@@ -59,5 +59,11 @@ namespace FirstAidAPI.Models
 
         [NotMapped]
         public string EmailDisplay => User?.Email ?? Email ?? "N/A";
+
+        [NotMapped]
+        public string AddressDisplay => User?.Address ?? Address ?? "N/A";
+
+        [NotMapped]
+        public string IdCardDisplay => User?.IdCard ?? IdCard ?? "N/A";
     }
 }

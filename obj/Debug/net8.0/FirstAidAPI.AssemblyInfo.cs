@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FirstAidAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6388931a3853548a1bbd7e165e96b90859298519")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b54dba50aa268402eb289154f40a04df7a5bdd5")]
 [assembly: System.Reflection.AssemblyProductAttribute("FirstAidAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FirstAidAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

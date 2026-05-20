@@ -98,7 +98,10 @@ namespace FirstAidAPI.Service.Implement
                 DiagnosisName = null, // Can be loaded if needed, but usually not strictly required right after assign
                 DoctorName = null,
                 PatientAge = 0,
-                PatientGender = ""
+                PatientGender = "",
+                DateOfBirth = null,
+                Address = null,
+                IdCard = null
             };
         }
 
@@ -140,8 +143,11 @@ namespace FirstAidAPI.Service.Implement
                 Notes = a.Notes,
                 DiagnosisName = a.MedicalRecord?.DiagnosisName,
                 DoctorName = a.MedicalRecord?.Doctor?.User?.FullName,
-                PatientAge = a.Patient.DateOfBirth.HasValue ? DateTime.Now.Year - a.Patient.DateOfBirth.Value.Year : 0,
-                PatientGender = a.Patient.Gender
+                PatientAge = a.Patient.DateOfBirthDisplay.HasValue ? DateTime.Now.Year - a.Patient.DateOfBirthDisplay.Value.Year : 0,
+                PatientGender = a.Patient.GenderDisplay,
+                DateOfBirth = a.Patient.DateOfBirthDisplay,
+                Address = a.Patient.AddressDisplay,
+                IdCard = a.Patient.IdCardDisplay
             }).ToList();
         }
     }
