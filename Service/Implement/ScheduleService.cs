@@ -108,40 +108,33 @@ namespace FirstAidAPI.Service.Implement
         // ─────────────────────────────────────────────────────────────────
 
         private List<DoctorSchedule> GenerateForSpecialty(
-            int specialtyId,
-            List<Doctor> doctors,
-            List<Clinic> clinics,
-            List<Ward> wards,
-            int month,
-            int year)
+    int specialtyId,
+    List<Doctor> doctors,
+    List<Clinic> clinics,
+    List<Ward> wards,
+    int month,
+    int year)
         {
             int daysInMonth = DateTime.DaysInMonth(year, month);
             var startDate = new DateOnly(year, month, 1);
 
-            // Đếm số ca để phân công công bằng
             var dayShiftCount = doctors.ToDictionary(d => d.Id, _ => 0);
             var nightShiftCount = doctors.ToDictionary(d => d.Id, _ => 0);
-
-            // restingOnDate[date] = tập bác sĩ phải nghỉ bù ngày đó (sau ca đêm)
             var restingOnDate = new Dictionary<DateOnly, HashSet<int>>();
-
             var schedules = new List<DoctorSchedule>();
 
             for (int dayIdx = 0; dayIdx < daysInMonth; dayIdx++)
             {
                 var date = startDate.AddDays(dayIdx);
 
-                // Chủ nhật không làm việc
                 if (date.DayOfWeek == DayOfWeek.Sunday)
                     continue;
 
-                // Thứ 7 không có ca đêm
                 bool hasNightShift = date.DayOfWeek != DayOfWeek.Saturday;
 
-                // Bác sĩ đang nghỉ bù hôm nay
                 var resting = restingOnDate.GetValueOrDefault(date, new HashSet<int>());
 
-                // Ghi nhận bản ghi nghỉ bù
+                // Ghi nhận nghỉ bù
                 foreach (var restingDoctorId in resting)
                 {
                     schedules.Add(new DoctorSchedule
@@ -154,31 +147,43 @@ namespace FirstAidAPI.Service.Implement
                     });
                 }
 
-                // Bác sĩ có thể làm việc hôm nay
                 var available = doctors
                     .Where(d => !resting.Contains(d.Id))
                     .ToList();
 
-                // Kiểm tra đủ bác sĩ cho các phòng khám và phòng bệnh
-                int needed = clinics.Count + wards.Count + (hasNightShift ? 1 : 0);
-                if (available.Count < (clinics.Count + wards.Count))
+                // Số bác sĩ tối thiểu cần: clinics + 1 ca đêm
+                int minNeeded = clinics.Count + (hasNightShift ? 1 : 0);
+                if (available.Count < minNeeded)
                 {
-                    // Không đủ bác sĩ: ưu tiên gán luân phiên phòng khám trước, sau đó tới phòng bệnh
-                    needed = Math.Min(available.Count, clinics.Count + wards.Count);
+                    // Không đủ bác sĩ tối thiểu → log/throw tuỳ bạn
+                    continue;
                 }
 
-                // ── Ca ngày: mỗi phòng khám 1 bác sĩ ──
                 var assignedToday = new HashSet<int>();
 
+                // ── Ưu tiên 1: Ca đêm (reserve trước để không bị lấy mất) ──
+                Doctor nightDoctor = null;
+                if (hasNightShift)
+                {
+                    nightDoctor = available
+                        .OrderBy(d => nightShiftCount[d.Id])
+                        .ThenBy(d => d.Id)
+                        .First();
+
+                    // Reserve trước, chưa add schedule
+                    assignedToday.Add(nightDoctor.Id);
+                }
+
+                // ── Ưu tiên 2: Mỗi clinic 1 bác sĩ (bắt buộc) ──
                 foreach (var clinic in clinics)
                 {
                     var doctor = available
                         .Where(d => !assignedToday.Contains(d.Id))
-                        .OrderBy(d => dayShiftCount[d.Id])   // ưu tiên người ít ca nhất
-                        .ThenBy(_ => Guid.NewGuid())                   // tiebreak ổn định
+                        .OrderBy(d => dayShiftCount[d.Id])
+                        .ThenBy(d => d.Id)
                         .FirstOrDefault();
 
-                    if (doctor == null) break; // không còn bác sĩ rảnh
+                    if (doctor == null) break;
 
                     schedules.Add(new DoctorSchedule
                     {
@@ -186,6 +191,7 @@ namespace FirstAidAPI.Service.Implement
                         Date = date,
                         IsNightShift = false,
                         ClinicId = clinic.Id,
+                        WardId = null,
                         SpecialtyId = null,
                         IsOff = false
                     });
@@ -194,61 +200,61 @@ namespace FirstAidAPI.Service.Implement
                     assignedToday.Add(doctor.Id);
                 }
 
-                // ── Ca ngày: mỗi phòng bệnh 1 bác sĩ ──
-                foreach (var ward in wards)
+                // ── Ưu tiên 3: Ward — bác sĩ còn lại chia nhau trực ──
+                // Lấy tất cả bác sĩ còn rảnh (không tính nightDoctor)
+                var allWardCandidates = available
+    .Where(d => !assignedToday.Contains(d.Id))
+    .OrderBy(d => dayShiftCount[d.Id])
+    .ThenBy(d => d.Id)
+    .ToList();
+
+                // Không cần nhiều hơn số ward
+                int wardDoctorCount = Math.Min(allWardCandidates.Count, wards.Count);
+                var wardDoctors = allWardCandidates.Take(wardDoctorCount).ToList();
+
+                if (wardDoctors.Count > 0)
                 {
-                    var doctor = available
-                        .Where(d => !assignedToday.Contains(d.Id))
-                        .OrderBy(d => dayShiftCount[d.Id])   // ưu tiên người ít ca nhất
-                        .ThenBy(d => d.Id)                   // tiebreak ổn định
-                        .FirstOrDefault();
-
-                    if (doctor == null) break; // không còn bác sĩ rảnh
-
-                    schedules.Add(new DoctorSchedule
+                    for (int i = 0; i < wards.Count; i++)
                     {
-                        DoctorId = doctor.Id,
-                        Date = date,
-                        IsNightShift = false,
-                        ClinicId = null,
-                        WardId = ward.Id,
-                        SpecialtyId = null,
-                        IsOff = false
-                    });
+                        var doctor = wardDoctors[i % wardDoctors.Count];
 
-                    dayShiftCount[doctor.Id]++;
-                    assignedToday.Add(doctor.Id);
-                }
-
-                // ── Ca đêm: 1 bác sĩ cho toàn khoa ──
-                if (hasNightShift)
-                {
-                    var nightDoctor = available
-                        .Where(d => !assignedToday.Contains(d.Id))
-                        .OrderBy(d => nightShiftCount[d.Id])  // ưu tiên người ít trực đêm nhất
-                        .ThenBy(d => d.Id)
-                        .FirstOrDefault();
-
-                    if (nightDoctor != null)
-                    {
                         schedules.Add(new DoctorSchedule
                         {
-                            DoctorId = nightDoctor.Id,
+                            DoctorId = doctor.Id,
                             Date = date,
-                            IsNightShift = true,
+                            IsNightShift = false,
                             ClinicId = null,
-                            SpecialtyId = specialtyId,
+                            WardId = wards[i].Id,
+                            SpecialtyId = null,
                             IsOff = false
                         });
-
-                        nightShiftCount[nightDoctor.Id]++;
-
-                        // Bác sĩ trực đêm nghỉ bù ngày hôm sau
-                        var nextDate = date.AddDays(1);
-                        if (!restingOnDate.ContainsKey(nextDate))
-                            restingOnDate[nextDate] = new HashSet<int>();
-                        restingOnDate[nextDate].Add(nightDoctor.Id);
                     }
+
+                    foreach (var d in wardDoctors)
+                        dayShiftCount[d.Id]++;
+                }
+
+                // ── Add ca đêm (đã reserve từ trước) ──
+                if (nightDoctor != null)
+                {
+                    schedules.Add(new DoctorSchedule
+                    {
+                        DoctorId = nightDoctor.Id,
+                        Date = date,
+                        IsNightShift = true,
+                        ClinicId = null,
+                        WardId = null,
+                        SpecialtyId = specialtyId,
+                        IsOff = false
+                    });
+
+                    nightShiftCount[nightDoctor.Id]++;
+
+                    // Nghỉ bù ngày hôm sau
+                    var nextDate = date.AddDays(1);
+                    if (!restingOnDate.ContainsKey(nextDate))
+                        restingOnDate[nextDate] = new HashSet<int>();
+                    restingOnDate[nextDate].Add(nightDoctor.Id);
                 }
             }
 
