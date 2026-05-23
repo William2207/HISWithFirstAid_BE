@@ -8,5 +8,9 @@ namespace FirstAidAPI.DTO.Specialty
         public decimal Price { get; set; }
         public bool IsActive { get; set; }
         public int DoctorCount { get; set; }
+        public int? HeadDoctorId { get; set; }
+        public string? HeadDoctorName { get; set; }
+        public int? HeadNurseId { get; set; }
+        public string? HeadNurseName { get; set; }
     }
 }

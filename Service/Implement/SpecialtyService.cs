@@ -57,6 +57,8 @@ namespace FirstAidAPI.Service.Implement
             specialty.Description = request.Description;
             specialty.Price = request.Price;
             specialty.IsActive = request.IsActive;
+            specialty.HeadDoctorId = request.HeadDoctorId;
+            specialty.HeadNurseId = request.HeadNurseId;
 
             await _specialtyRepository.UpdateAsync(specialty);
             return MapToDto(specialty);
@@ -79,7 +81,11 @@ namespace FirstAidAPI.Service.Implement
             Description = specialty.Description,
             Price = specialty.Price,
             IsActive = specialty.IsActive,
-            DoctorCount = specialty.Doctors?.Count ?? 0
+            DoctorCount = specialty.Doctors?.Count ?? 0,
+            HeadDoctorId = specialty.HeadDoctorId,
+            HeadDoctorName = specialty.HeadDoctor?.User?.FullName,
+            HeadNurseId = specialty.HeadNurseId,
+            HeadNurseName = specialty.HeadNurse?.User?.FullName
         };
 
         private static SpecialtyLookupDTO MapToLookupDto(Speciality specialty) => new()

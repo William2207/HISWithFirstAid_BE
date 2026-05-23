@@ -25,6 +25,8 @@ namespace FirstAidAPI.Repository.Implement
         {
             var query = _context.Specialties
                 .Include(s => s.Doctors)
+                .Include(s => s.HeadDoctor).ThenInclude(d => d.User)
+                .Include(s => s.HeadNurse).ThenInclude(n => n.User)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchQuery))
@@ -51,6 +53,8 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Specialties
                 .Include(s => s.Doctors)
+                .Include(s => s.HeadDoctor).ThenInclude(d => d.User)
+                .Include(s => s.HeadNurse).ThenInclude(n => n.User)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 

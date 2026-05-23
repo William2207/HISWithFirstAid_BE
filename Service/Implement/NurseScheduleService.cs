@@ -82,11 +82,11 @@ namespace FirstAidAPI.Service.Implement
         }
 
         private List<NurseSchedule> GenerateForSpecialty(
-    int specialtyId,
-    List<Nurse> nurses,
-    List<Ward> wards,
-    int month,
-    int year)
+            int specialtyId,
+            List<Nurse> nurses,
+            List<Ward> wards,
+            int month,
+            int year)
         {
             int daysInMonth = DateTime.DaysInMonth(year, month);
             var startDate = new DateOnly(year, month, 1);
@@ -95,44 +95,70 @@ namespace FirstAidAPI.Service.Implement
             var nightShiftCount = nurses.ToDictionary(n => n.Id, _ => 0);
             var schedules = new List<NurseSchedule>();
 
-            // Round Robin: chia 2 nhóm xoay vòng ca đêm
-            var shuffled = nurses.OrderBy(_ => Guid.NewGuid()).ToList();
-            var groupA = shuffled.Take(nurses.Count / 2).ToList();
-            var groupB = shuffled.Skip(nurses.Count / 2).ToList();
-
             for (int dayIdx = 0; dayIdx < daysInMonth; dayIdx++)
             {
                 var date = startDate.AddDays(dayIdx);
 
-                if (date.DayOfWeek == DayOfWeek.Sunday)
-                    continue;
+                //if (date.DayOfWeek == DayOfWeek.Sunday)
+                //    continue;
 
                 bool hasNightShift = date.DayOfWeek != DayOfWeek.Saturday;
 
-                var nightGroup = (dayIdx % 2 == 0) ? groupA : groupB;
-                var dayGroup = (dayIdx % 2 == 0) ? groupB : groupA;
+                // ── PASS 1: Ca ngày (2 nurses/ward, có thể trực nhiều ward) ──
+                // Mỗi ward cần 2 nurse → tổng slot ca ngày = wards.Count * 2
+                // Nurse ít ca ngày nhất được ưu tiên, và 1 nurse có thể trực nhiều ward
+                var daySlots = wards.Count * 2;
 
-                var assignedToday = new HashSet<int>();
+                // Round Robin: lấy tuần tự theo số ca ngày tăng dần, lặp lại nếu hết người
+                var dayRanked = nurses
+                    .OrderBy(n => dayShiftCount[n.Id])
+                    .ThenBy(_ => Guid.NewGuid())
+                    .ToList();
 
-                // ── PASS 1: Ca đêm ──────────────────────────────────────────
+                for (int slot = 0; slot < daySlots; slot++)
+                {
+                    var ward = wards[slot / 2];           // Mỗi ward 2 slot: slot 0,1 → ward[0], slot 2,3 → ward[1]...
+                    var nurse = dayRanked[slot % dayRanked.Count]; // Xoay vòng nếu hết người
+
+                    schedules.Add(new NurseSchedule
+                    {
+                        NurseId = nurse.Id,
+                        Date = date,
+                        IsNightShift = false,
+                        WardId = ward.Id,
+                        SpecialtyId = null,
+                        IsOff = false
+                    });
+
+                    dayShiftCount[nurse.Id]++;
+                }
+
+                // ── PASS 2: Ca đêm (tối thiểu 1, tối đa 2 nurses/ward) ──
                 if (hasNightShift)
                 {
-                    // Lọc người còn dưới giới hạn 10 ca đêm/tháng
-                    // Nếu nightGroup hết quota thì lấy từ dayGroup (fallback)
-                    var nightCandidates = nightGroup
-                        .Concat(dayGroup)
+                    // Chỉ lấy người còn dưới quota 10 ca đêm/tháng
+                    // Ưu tiên người ít ca đêm nhất, xoay vòng nếu hết người
+                    var nightRanked = nurses
                         .Where(n => nightShiftCount[n.Id] < MaxNightShiftsPerMonth)
-                        .OrderBy(n => nightShiftCount[n.Id])  // Ưu tiên người ít ca đêm nhất
+                        .OrderBy(n => nightShiftCount[n.Id])
                         .ThenBy(_ => Guid.NewGuid())
                         .ToList();
 
-                    // Pass 1a: Tối thiểu 1 người/ward (nếu còn người)
-                    foreach (var ward in wards)
+                    if (nightRanked.Count == 0)
                     {
-                        var nurse = nightCandidates
-                            .FirstOrDefault(n => !assignedToday.Contains(n.Id));
+                        // Tất cả đã hết quota → reset người ít ca nhất làm tiếp
+                        // (trường hợp hiếm, tháng quá dài hoặc nurses quá ít)
+                        nightRanked = nurses
+                            .OrderBy(n => nightShiftCount[n.Id])
+                            .ThenBy(_ => Guid.NewGuid())
+                            .ToList();
+                    }
 
-                        if (nurse == null) break; // Không đủ người → bỏ qua, không throw
+                    // Pass 2a: Bắt buộc 1 nurse/ward
+                    for (int i = 0; i < wards.Count; i++)
+                    {
+                        var nurse = nightRanked[i % nightRanked.Count]; // Xoay vòng
+                        var ward = wards[i];
 
                         schedules.Add(new NurseSchedule
                         {
@@ -145,20 +171,25 @@ namespace FirstAidAPI.Service.Implement
                         });
 
                         nightShiftCount[nurse.Id]++;
-                        assignedToday.Add(nurse.Id);
                     }
 
-                    // Pass 1b: Thêm người thứ 2/ward nếu còn người chưa đủ quota
-                    foreach (var ward in wards)
-                    {
-                        var secondNurse = nightCandidates
-                            .FirstOrDefault(n => !assignedToday.Contains(n.Id));
+                    // Pass 2b: Thêm nurse thứ 2/ward nếu còn người chưa hết quota
+                    var secondNightRanked = nurses
+                        .Where(n => nightShiftCount[n.Id] < MaxNightShiftsPerMonth)
+                        .OrderBy(n => nightShiftCount[n.Id])
+                        .ThenBy(_ => Guid.NewGuid())
+                        .ToList();
 
-                        if (secondNurse == null) break;
+                    for (int i = 0; i < wards.Count; i++)
+                    {
+                        if (secondNightRanked.Count == 0) break;
+
+                        var nurse = secondNightRanked[i % secondNightRanked.Count];
+                        var ward = wards[i];
 
                         schedules.Add(new NurseSchedule
                         {
-                            NurseId = secondNurse.Id,
+                            NurseId = nurse.Id,
                             Date = date,
                             IsNightShift = true,
                             WardId = ward.Id,
@@ -166,38 +197,7 @@ namespace FirstAidAPI.Service.Implement
                             IsOff = false
                         });
 
-                        nightShiftCount[secondNurse.Id]++;
-                        assignedToday.Add(secondNurse.Id);
-                    }
-                }
-
-                // ── PASS 2: Ca ngày ─────────────────────────────────────────
-                foreach (var ward in wards)
-                {
-                    for (int i = 0; i < 2; i++)
-                    {
-                        // Ưu tiên dayGroup (không làm đêm hôm nay), sau đó mới lấy nightGroup
-                        var nurse = dayGroup
-                            .Concat(nightGroup)
-                            .Where(n => !assignedToday.Contains(n.Id))
-                            .OrderBy(n => dayShiftCount[n.Id])
-                            .ThenBy(_ => Guid.NewGuid())
-                            .FirstOrDefault();
-
-                        if (nurse == null) break;
-
-                        schedules.Add(new NurseSchedule
-                        {
-                            NurseId = nurse.Id,
-                            Date = date,
-                            IsNightShift = false,
-                            WardId = ward.Id,
-                            SpecialtyId = null,
-                            IsOff = false
-                        });
-
-                        dayShiftCount[nurse.Id]++;
-                        assignedToday.Add(nurse.Id);
+                        nightShiftCount[nurse.Id]++;
                     }
                 }
             }
