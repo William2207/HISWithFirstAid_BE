@@ -126,7 +126,7 @@ namespace FirstAidAPI.Controllers
         /// Lấy toàn bộ bệnh án của một bệnh nhân theo Patient ID (Dành cho Bác sĩ)
         /// </summary>
         [HttpGet("patient/{patientId}")]
-        [Authorize(Roles = "Doctor, Receptionist")]
+        [Authorize(Roles = "Doctor, Receptionist, Nurse")]
         public async Task<IActionResult> GetMedicalRecordsByPatientId(int patientId)
         {
             try

@@ -8,7 +8,6 @@ namespace FirstAidAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Nurse")]
     public class AdmissionsController : ControllerBase
     {
         private readonly IAdmissionService _admissionService;
@@ -22,6 +21,7 @@ namespace FirstAidAPI.Controllers
         /// Lấy danh sách bệnh nhân bác sĩ đã chỉ định nhập viện nhưng chưa được gán giường.
         /// </summary>
         [HttpGet("pending")]
+        [Authorize(Roles = "Nurse")]
         public async Task<IActionResult> GetPendingAdmissions()
         {
             var pendingList = await _admissionService.GetPendingAdmissionsAsync();
@@ -32,6 +32,7 @@ namespace FirstAidAPI.Controllers
         /// Lấy danh sách giường đang trống để y tá lựa chọn.
         /// </summary>
         [HttpGet("available-beds")]
+        [Authorize(Roles = "Nurse")]
         public async Task<IActionResult> GetAvailableBeds()
         {
             var beds = await _admissionService.GetAvailableBedsAsync();
@@ -42,6 +43,7 @@ namespace FirstAidAPI.Controllers
         /// Lấy danh sách bệnh nhân đang nằm viện.
         /// </summary>
         [HttpGet("inpatients")]
+        [Authorize(Roles = "Nurse")]
         public async Task<IActionResult> GetInpatients()
         {
             var records = await _admissionService.GetActiveAdmissionsAsync();
@@ -52,6 +54,7 @@ namespace FirstAidAPI.Controllers
         /// Gán giường cho bệnh nhân và lưu lịch sử nhập viện.
         /// </summary>
         [HttpPost("assign-bed")]
+        [Authorize(Roles = "Nurse")]
         public async Task<IActionResult> AssignBed([FromBody] AssignBedRequest request)
         {
             var nurseUserId = GetCurrentUserId();
@@ -66,10 +69,22 @@ namespace FirstAidAPI.Controllers
         /// Xuất viện: giải phóng giường và đánh dấu thời gian xuất viện.
         /// </summary>
         [HttpPost("discharge/{patientId:int}")]
+        [Authorize(Roles = "Nurse")]
         public async Task<IActionResult> DischargePatient(int patientId)
         {
             await _admissionService.DischargePatientAsync(patientId);
             return Ok(new { message = $"Patient {patientId} discharged successfully." });
+        }
+
+        /// <summary>
+        /// Lấy toàn bộ lịch sử nhập viện của một bệnh nhân (kể cả đã xuất viện).
+        /// </summary>
+        [HttpGet("patient/{patientId:int}/history")]
+        [Authorize(Roles = "Nurse, Doctor, Receptionist")]
+        public async Task<IActionResult> GetAdmissionHistory(int patientId)
+        {
+            var history = await _admissionService.GetAdmissionHistoryByPatientIdAsync(patientId);
+            return Ok(history);
         }
 
         // ─── Helpers ────────────────────────────────────────────────────────────

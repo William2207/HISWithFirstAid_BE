@@ -147,7 +147,40 @@ namespace FirstAidAPI.Service.Implement
                 PatientGender = a.Patient.GenderDisplay,
                 DateOfBirth = a.Patient.DateOfBirthDisplay,
                 Address = a.Patient.AddressDisplay,
-                IdCard = a.Patient.IdCardDisplay
+                IdCard = a.Patient.IdCardDisplay,
+                TreatmentPlan = a.MedicalRecord?.TreatmentPlan,
+                Prescription = a.MedicalRecord?.Prescription,
+                ChiefComplaint = a.MedicalRecord?.ChiefComplaint
+            }).ToList();
+        }
+        public async Task<List<AdmissionRecordDto>> GetAdmissionHistoryByPatientIdAsync(int patientId)
+        {
+            var records = await _admissionRepository.GetAllByPatientIdAsync(patientId);
+
+            return records.Select(a => new AdmissionRecordDto
+            {
+                Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient?.FullNameDisplay ?? string.Empty,
+                BedId = a.BedId,
+                BedNumber = a.Bed?.BedNumber ?? string.Empty,
+                RoomNumber = a.Bed?.Ward?.RoomNumber ?? string.Empty,
+                WardType = a.Bed?.Ward?.WardType ?? string.Empty,
+                MedicalRecordId = a.MedicalRecordId,
+                DiagnosisName = a.MedicalRecord?.DiagnosisName,
+                DoctorName = a.MedicalRecord?.Doctor?.User?.FullName,
+                NurseName = a.AdmittedByNurse?.User?.FullName,
+                AdmittedAt = a.AdmittedAt,
+                DischargedAt = a.DischargedAt,
+                Notes = a.Notes,
+                PatientAge = 0,
+                PatientGender = string.Empty,
+                DateOfBirth = null,
+                Address = null,
+                IdCard = null,
+                TreatmentPlan = a.MedicalRecord?.TreatmentPlan,
+                Prescription = a.MedicalRecord?.Prescription,
+                ChiefComplaint = a.MedicalRecord?.ChiefComplaint
             }).ToList();
         }
     }

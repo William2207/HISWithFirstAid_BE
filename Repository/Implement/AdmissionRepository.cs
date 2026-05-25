@@ -46,6 +46,21 @@ namespace FirstAidAPI.Repository.Implement
                 .ToListAsync();
         }
 
+        public async Task<List<AdmissionRecord>> GetAllByPatientIdAsync(int patientId)
+        {
+            return await _context.AdmissionRecords
+                .Include(a => a.Bed)
+                    .ThenInclude(b => b.Ward)
+                .Include(a => a.AdmittedByNurse)
+                    .ThenInclude(n => n.User)
+                .Include(a => a.MedicalRecord)
+                    .ThenInclude(m => m.Doctor)
+                        .ThenInclude(d => d.User)
+                .Where(a => a.PatientId == patientId)
+                .OrderByDescending(a => a.AdmittedAt)
+                .ToListAsync();
+        }
+
         public async Task UpdateAsync(AdmissionRecord record)
         {
             _context.AdmissionRecords.Update(record);
