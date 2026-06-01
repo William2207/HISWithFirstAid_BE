@@ -538,7 +538,7 @@ namespace FirstAidAPI.Data
 
             modelBuilder.Entity<VitalSign>()
                 .HasOne(v => v.AdmissionRecord)
-                .WithMany()
+                .WithMany(a => a.VitalSigns)
                 .HasForeignKey(v => v.AdmissionRecordId)
                 .OnDelete(DeleteBehavior.Cascade);
 

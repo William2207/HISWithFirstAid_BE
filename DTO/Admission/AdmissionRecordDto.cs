@@ -1,3 +1,5 @@
+using FirstAidAPI.DTO.MedicalRecord;
+
 namespace FirstAidAPI.DTO.Admission
 {
     /// <summary>
@@ -24,10 +26,16 @@ namespace FirstAidAPI.DTO.Admission
         public DateTime AdmittedAt { get; set; }
         public DateTime? DischargedAt { get; set; }
         public string? Notes { get; set; }
-        
+
         // Detailed Medical Record Info
         public string? TreatmentPlan { get; set; }
         public string? Prescription { get; set; }
         public string? ChiefComplaint { get; set; }
+
+        /// <summary>
+        /// Chỉ số sinh tồn mới nhất được ghi nhận trong lần nhập viện này.
+        /// Null nếu chưa có điều dưỡng ghi nhận.
+        /// </summary>
+        public VitalSignDTO? LatestVitals { get; set; }
     }
 }

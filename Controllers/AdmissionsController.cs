@@ -87,6 +87,20 @@ namespace FirstAidAPI.Controllers
             return Ok(history);
         }
 
+        /// <summary>
+        /// Lấy toàn bộ lịch sử nhập viện của bệnh nhân hiện tại đang đăng nhập.
+        /// </summary>
+        [HttpGet("patient/me/history")]
+        public async Task<IActionResult> GetMyAdmissionHistory()
+        {
+            var userId = GetCurrentUserId();
+            if (userId is null)
+                return Unauthorized(new { message = "Invalid token." });
+
+            var history = await _admissionService.GetMyAdmissionHistoryAsync(userId.Value);
+            return Ok(history);
+        }
+
         // ─── Helpers ────────────────────────────────────────────────────────────
         private int? GetCurrentUserId()
         {

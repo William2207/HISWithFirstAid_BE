@@ -22,5 +22,6 @@ namespace FirstAidAPI.Models
         public Bed Bed { get; set; } = null!;
         public MedicalRecord MedicalRecord { get; set; } = null!;
         public Nurse AdmittedByNurse { get; set; } = null!;
+        public ICollection<VitalSign> VitalSigns { get; set; } = new List<VitalSign>();
     }
 }

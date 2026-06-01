@@ -4,18 +4,6 @@ using FirstAidAPI.DTO.Doctor;
 
 namespace FirstAidAPI.Service.Implement
 {
-    /// <summary>
-    /// Xếp lịch làm việc theo thuật toán Round-Robin công bằng.
-    ///
-    /// Quy tắc:
-    ///   • Thứ 2 – Thứ 7 (ngày làm việc):
-    ///       - Mỗi phòng khám (Clinic) trong khoa được giao đúng 1 bác sĩ (ca ngày).
-    ///       - Thứ 2 – Thứ 6: thêm 1 bác sĩ trực đêm cho cả khoa.
-    ///       - Thứ 7: chỉ có ca ngày, không có ca đêm.
-    ///   • Chủ nhật: không xếp ca.
-    ///   • Sau ca đêm, bác sĩ được nghỉ bù ngày hôm sau.
-    ///   • Phân công xoay vòng theo số ca đã nhận – bác sĩ có ít ca nhất được ưu tiên.
-    /// </summary>
     public class ScheduleService : IScheduleService
     {
         private readonly IDoctorRepository _doctorRepository;

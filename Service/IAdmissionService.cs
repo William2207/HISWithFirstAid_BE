@@ -19,6 +19,9 @@ namespace FirstAidAPI.Service
         /// <summary>Lịch sử tất cả lần nhập viện của một bệnh nhân (kể cả đã xuất viện).</summary>
         Task<List<AdmissionRecordDto>> GetAdmissionHistoryByPatientIdAsync(int patientId);
 
+        /// <summary>Lịch sử nhập viện của bệnh nhân hiện tại đang đăng nhập.</summary>
+        Task<List<AdmissionRecordDto>> GetMyAdmissionHistoryAsync(int patientUserId);
+
         /// <summary>Xuất viện: giải phóng giường và cập nhật DischargedAt.</summary>
         Task DischargePatientAsync(int patientId);
     }

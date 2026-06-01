@@ -1,4 +1,5 @@
 using FirstAidAPI.DTO.Admission;
+using FirstAidAPI.DTO.MedicalRecord;
 using FirstAidAPI.Models;
 using FirstAidAPI.Repository;
 
@@ -10,17 +11,20 @@ namespace FirstAidAPI.Service.Implement
         private readonly IBedRepository _bedRepository;
         private readonly IAdmissionRepository _admissionRepository;
         private readonly INurseRepository _nurseRepository;
+        private readonly IPatientRepository _patientRepository;
 
         public AdmissionService(
             IMedicalRecordRepository medicalRecordRepository,
             IBedRepository bedRepository,
             IAdmissionRepository admissionRepository,
-            INurseRepository nurseRepository)
+            INurseRepository nurseRepository,
+            IPatientRepository patientRepository)
         {
             _medicalRecordRepository = medicalRecordRepository;
             _bedRepository = bedRepository;
             _admissionRepository = admissionRepository;
             _nurseRepository = nurseRepository;
+            _patientRepository = patientRepository;
         }
 
         public async Task<List<PendingAdmissionDto>> GetPendingAdmissionsAsync()
@@ -150,7 +154,21 @@ namespace FirstAidAPI.Service.Implement
                 IdCard = a.Patient.IdCardDisplay,
                 TreatmentPlan = a.MedicalRecord?.TreatmentPlan,
                 Prescription = a.MedicalRecord?.Prescription,
-                ChiefComplaint = a.MedicalRecord?.ChiefComplaint
+                ChiefComplaint = a.MedicalRecord?.ChiefComplaint,
+                LatestVitals = a.VitalSigns != null && a.VitalSigns.Any()
+                    ? a.VitalSigns.OrderByDescending(v => v.RecordedAt).Select(v => new VitalSignDTO
+                      {
+                          Id = v.Id,
+                          BloodPressure = v.BloodPressure,
+                          HeartRate = v.HeartRate,
+                          Temperature = v.Temperature,
+                          RespiratoryRate = v.RespiratoryRate,
+                          SpO2 = v.SpO2,
+                          Weight = v.Weight,
+                          Height = v.Height,
+                          RecordedAt = v.RecordedAt
+                      }).FirstOrDefault()
+                    : null
             }).ToList();
         }
         public async Task<List<AdmissionRecordDto>> GetAdmissionHistoryByPatientIdAsync(int patientId)
@@ -180,8 +198,32 @@ namespace FirstAidAPI.Service.Implement
                 IdCard = null,
                 TreatmentPlan = a.MedicalRecord?.TreatmentPlan,
                 Prescription = a.MedicalRecord?.Prescription,
-                ChiefComplaint = a.MedicalRecord?.ChiefComplaint
+                ChiefComplaint = a.MedicalRecord?.ChiefComplaint,
+                LatestVitals = a.VitalSigns != null && a.VitalSigns.Any()
+                    ? a.VitalSigns.OrderByDescending(v => v.RecordedAt).Select(v => new VitalSignDTO
+                      {
+                          Id = v.Id,
+                          BloodPressure = v.BloodPressure,
+                          HeartRate = v.HeartRate,
+                          Temperature = v.Temperature,
+                          RespiratoryRate = v.RespiratoryRate,
+                          SpO2 = v.SpO2,
+                          Weight = v.Weight,
+                          Height = v.Height,
+                          RecordedAt = v.RecordedAt
+                      }).FirstOrDefault()
+                    : null
             }).ToList();
+        }
+
+        public async Task<List<AdmissionRecordDto>> GetMyAdmissionHistoryAsync(int patientUserId)
+        {
+            var patient = await _patientRepository.GetByUserIdAsync(patientUserId);
+            if (patient == null)
+            {
+                return new List<AdmissionRecordDto>();
+            }
+            return await GetAdmissionHistoryByPatientIdAsync(patient.Id);
         }
     }
 }
