@@ -40,11 +40,8 @@ namespace FirstAidAPI.Data
         public DbSet<Nurse> Nurses { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Receptionist> Receptionists { get; set; }
-        public DbSet<Department> Departments { get; set; }
         public DbSet<MedicalRecord> MedicalRecords { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
-        public DbSet<DoctorSpecialty> DoctorSpecialties { get; set; }
-        public DbSet<Queue> Queues { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Speciality> Specialties { get; set; }
         public DbSet<VitalSign> VitalSigns { get; set; }
@@ -54,6 +51,12 @@ namespace FirstAidAPI.Data
         public DbSet<MedicalService> MedicalServices { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
+        public DbSet<NurseSchedule> NurseSchedules { get; set; }
+        public DbSet<LabOrder> LabOrders { get; set; }
+        public DbSet<LabOrderItem> LabOrderItems { get; set; }
+        public DbSet<AdmissionRecord> AdmissionRecords { get; set; }
+        public DbSet<WardOrder> WardOrders { get; set; }
+        public DbSet<WardNote> WardNotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -95,10 +98,6 @@ namespace FirstAidAPI.Data
                 entity.ToTable("UserTokens"); // Đổi AspNetUserTokens -> UserTokens
             });
 
-            modelBuilder.Entity<Queue>(entity =>
-            {
-                entity.ToTable("Queues");
-            });
             modelBuilder.Entity<Appointment>(entity =>
             {
                 entity.ToTable("Appointments");
@@ -119,17 +118,9 @@ namespace FirstAidAPI.Data
             {
                 entity.ToTable("Beds");
             });
-            modelBuilder.Entity<Department>(entity =>
-            {
-                entity.ToTable("Departments");
-            });
             modelBuilder.Entity<Speciality>(entity =>
             {
                 entity.ToTable("Specialties");
-            });
-            modelBuilder.Entity<DoctorSpecialty>(entity =>
-            {
-                entity.ToTable("DoctorSpecialties");
             });
             modelBuilder.Entity<Doctor>(entity =>
             {
@@ -188,6 +179,18 @@ namespace FirstAidAPI.Data
                 .HasForeignKey(so => so.StepId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Speciality>()
+                .HasOne(s => s.HeadDoctor)
+                .WithOne(d => d.HeadOfSpeciality)
+                .HasForeignKey<Speciality>(s => s.HeadDoctorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Speciality>()
+                .HasOne(s => s.HeadNurse)
+                .WithOne(n => n.HeadOfSpeciality)
+                .HasForeignKey<Speciality>(s => s.HeadNurseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // User configuration
             modelBuilder.Entity<User>(entity =>
             {
@@ -231,9 +234,6 @@ namespace FirstAidAPI.Data
                 .HasForeignKey<Receptionist>(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Composite key
-            modelBuilder.Entity<DoctorSpecialty>()
-                .HasKey(ds => new { ds.DoctorId, ds.SpecialtyId });
             // One -to-One relationships for Appointment
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.MedicalRecord)
@@ -251,15 +251,6 @@ namespace FirstAidAPI.Data
                 .WithMany(d => d.Appointments)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Department>()
-                .HasOne(d => d.HeadDoctor)
-                .WithMany()
-                .HasForeignKey(d => d.HeadDoctorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            //Queue configuration
-            modelBuilder.Entity<Queue>()
-                .HasIndex(q => q.QueueDate);
             // UserScenarioProgress configuration
             modelBuilder.Entity<UserScenarioProgress>(entity =>
             {
@@ -544,6 +535,141 @@ namespace FirstAidAPI.Data
             modelBuilder.Entity<VitalSign>()
                 .HasIndex(v => v.MedicalRecordId)
                 .IsUnique();
+
+            modelBuilder.Entity<VitalSign>()
+                .HasOne(v => v.AdmissionRecord)
+                .WithMany(a => a.VitalSigns)
+                .HasForeignKey(v => v.AdmissionRecordId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Cấu hình LabOrder
+            modelBuilder.Entity<LabOrder>(entity =>
+            {
+                entity.HasKey(lo => lo.Id);
+
+                entity.Property(lo => lo.Status)
+                    .HasConversion<int>();
+
+                entity.Property(lo => lo.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasOne(lo => lo.Appointment)
+                    .WithMany()
+                    .HasForeignKey(lo => lo.AppointmentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(lo => lo.Items)
+                    .WithOne(li => li.LabOrder)
+                    .HasForeignKey(li => li.LabOrderId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Liên kết Invoice ↔ LabOrder (1-1)
+                entity.HasOne<Invoice>()
+                    .WithOne(i => i.LabOrder)
+                    .HasForeignKey<Invoice>(i => i.LabOrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Cấu hình LabOrderItem
+            modelBuilder.Entity<LabOrderItem>(entity =>
+            {
+                entity.HasKey(li => li.Id);
+
+                entity.Property(li => li.UnitPrice)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(li => li.Amount)
+                    .HasColumnType("decimal(18,2)");
+
+                entity.Property(li => li.Quantity)
+                    .HasDefaultValue(1);
+
+                entity.HasOne(li => li.MedicalService)
+                    .WithMany()
+                    .HasForeignKey(li => li.MedicalServiceId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Cấu hình MedicalService decimal
+            modelBuilder.Entity<MedicalService>(entity =>
+            {
+                entity.Property(ms => ms.Price)
+                    .HasColumnType("decimal(18,2)");
+            });
+
+            // Cấu hình AdmissionRecord
+            modelBuilder.Entity<AdmissionRecord>(entity =>
+            {
+                entity.HasKey(a => a.Id);
+
+                entity.HasOne(a => a.Patient)
+                    .WithMany()
+                    .HasForeignKey(a => a.PatientId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.Bed)
+                    .WithMany()
+                    .HasForeignKey(a => a.BedId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.MedicalRecord)
+                    .WithMany()
+                    .HasForeignKey(a => a.MedicalRecordId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.AdmittedByNurse)
+                    .WithMany()
+                    .HasForeignKey(a => a.AdmittedByNurseId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(a => a.AdmittedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                // Index để query nhanh bệnh nhân đang nằm viện
+                entity.HasIndex(a => new { a.PatientId, a.DischargedAt });
+            });
+
+            // Cấu hình WardOrder
+            modelBuilder.Entity<WardOrder>(entity =>
+            {
+                entity.HasKey(wo => wo.Id);
+
+                entity.HasOne(wo => wo.AdmissionRecord)
+                    .WithMany()
+                    .HasForeignKey(wo => wo.AdmissionRecordId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wo => wo.CreatedByDoctor)
+                    .WithMany()
+                    .HasForeignKey(wo => wo.CreatedByDoctorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(wo => wo.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(wo => new { wo.AdmissionRecordId, wo.Status });
+            });
+
+            // Cấu hình WardNote
+            modelBuilder.Entity<WardNote>(entity =>
+            {
+                entity.HasKey(wn => wn.Id);
+
+                entity.HasOne(wn => wn.AdmissionRecord)
+                    .WithMany()
+                    .HasForeignKey(wn => wn.AdmissionRecordId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(wn => wn.Author)
+                    .WithMany()
+                    .HasForeignKey(wn => wn.AuthorUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(wn => wn.CreatedAt)
+                    .HasDefaultValueSql("NOW()");
+
+                entity.HasIndex(wn => new { wn.AdmissionRecordId, wn.CreatedAt });
+            });
 
             ScenarioSeeder.SeedScenarios(modelBuilder);
         }

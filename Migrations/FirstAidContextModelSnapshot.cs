@@ -17,10 +17,54 @@ namespace FirstAidAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.26")
+                .HasAnnotation("ProductVersion", "8.0.27")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("FirstAidAPI.Models.AdmissionRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AdmittedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("AdmittedByNurseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BedId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DischargedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MedicalRecordId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdmittedByNurseId");
+
+                    b.HasIndex("BedId");
+
+                    b.HasIndex("MedicalRecordId");
+
+                    b.HasIndex("PatientId", "DischargedAt");
+
+                    b.ToTable("AdmissionRecords");
+                });
 
             modelBuilder.Entity("FirstAidAPI.Models.AnswerOption", b =>
                 {
@@ -133,9 +177,6 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Floor")
                         .HasColumnType("integer");
 
@@ -151,8 +192,6 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("SpecialtyId");
 
@@ -200,40 +239,6 @@ namespace FirstAidAPI.Migrations
                     b.ToTable("CourseEnrollments");
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.Department", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("HeadDoctorId")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HeadDoctorId");
-
-                    b.ToTable("Departments", (string)null);
-                });
-
             modelBuilder.Entity("FirstAidAPI.Models.Doctor", b =>
                 {
                     b.Property<int>("Id")
@@ -242,9 +247,6 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
 
@@ -252,11 +254,11 @@ namespace FirstAidAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("PrimarySpecialtyId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Qualifications")
                         .HasColumnType("text");
+
+                    b.Property<int>("SpecialtyId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -266,9 +268,7 @@ namespace FirstAidAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
-
-                    b.HasIndex("PrimarySpecialtyId");
+                    b.HasIndex("SpecialtyId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -287,16 +287,16 @@ namespace FirstAidAPI.Migrations
                     b.Property<int?>("ClinicId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("integer");
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
 
                     b.Property<int>("DoctorId")
                         .HasColumnType("integer");
 
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("interval");
+                    b.Property<bool>("IsNightShift")
+                        .HasColumnType("boolean");
 
-                    b.Property<bool>("IsAvailable")
+                    b.Property<bool>("IsOff")
                         .HasColumnType("boolean");
 
                     b.Property<int>("MaxOnlineSlots")
@@ -305,8 +305,11 @@ namespace FirstAidAPI.Migrations
                     b.Property<int>("MaxWalkInSlots")
                         .HasColumnType("integer");
 
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("interval");
+                    b.Property<int?>("SpecialtyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WardId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -314,25 +317,11 @@ namespace FirstAidAPI.Migrations
 
                     b.HasIndex("DoctorId");
 
-                    b.ToTable("DoctorSchedule");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.DoctorSpecialty", b =>
-                {
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SpecialtyId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("DoctorId", "SpecialtyId");
-
                     b.HasIndex("SpecialtyId");
 
-                    b.ToTable("DoctorSpecialties", (string)null);
+                    b.HasIndex("WardId");
+
+                    b.ToTable("DoctorSchedule");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Invoice", b =>
@@ -355,6 +344,9 @@ namespace FirstAidAPI.Migrations
                     b.Property<string>("InvoiceNumber")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int?>("LabOrderId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("PaidAmount")
                         .HasColumnType("numeric");
@@ -382,9 +374,81 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("AppointmentId")
                         .IsUnique();
 
+                    b.HasIndex("LabOrderId")
+                        .IsUnique();
+
                     b.HasIndex("PatientId");
 
                     b.ToTable("Invoices", (string)null);
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.LabOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.ToTable("LabOrders");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.LabOrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("LabOrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MedicalServiceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabOrderId");
+
+                    b.HasIndex("MedicalServiceId");
+
+                    b.ToTable("LabOrderItems");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.MedicalRecord", b =>
@@ -421,6 +485,9 @@ namespace FirstAidAPI.Migrations
 
                     b.Property<string>("GeneralNotes")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsHospitalized")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("MedicalHistory")
                         .HasColumnType("text");
@@ -474,7 +541,7 @@ namespace FirstAidAPI.Migrations
                         .HasColumnType("text");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -489,9 +556,6 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("integer");
-
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
 
@@ -502,6 +566,9 @@ namespace FirstAidAPI.Migrations
                     b.Property<string>("Qualifications")
                         .HasColumnType("text");
 
+                    b.Property<int>("SpecialityId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
@@ -510,12 +577,49 @@ namespace FirstAidAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
+                    b.HasIndex("SpecialityId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
 
                     b.ToTable("Nurses", (string)null);
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.NurseSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsNightShift")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOff")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("NurseId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SpecialtyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WardId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NurseId");
+
+                    b.HasIndex("SpecialtyId");
+
+                    b.HasIndex("WardId");
+
+                    b.ToTable("NurseSchedule");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
@@ -800,40 +904,6 @@ namespace FirstAidAPI.Migrations
                     b.HasIndex("StartDate");
 
                     b.ToTable("PracticalCourses");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.Queue", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CalledTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("CompletedTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("IssueTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly>("QueueDate")
-                        .HasColumnType("date");
-
-                    b.Property<int>("QueueNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QueueDate");
-
-                    b.ToTable("Queues", (string)null);
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.QuizQuestion", b =>
@@ -1244,11 +1314,14 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("DepartmentId")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Description")
                         .HasColumnType("text");
+
+                    b.Property<int?>("HeadDoctorId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("HeadNurseId")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -1262,7 +1335,11 @@ namespace FirstAidAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
+                    b.HasIndex("HeadDoctorId")
+                        .IsUnique();
+
+                    b.HasIndex("HeadNurseId")
+                        .IsUnique();
 
                     b.ToTable("Specialties", (string)null);
                 });
@@ -2125,6 +2202,9 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AdmissionRecordId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("BloodPressure")
                         .HasColumnType("text");
 
@@ -2134,7 +2214,7 @@ namespace FirstAidAPI.Migrations
                     b.Property<decimal?>("Height")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("MedicalRecordId")
+                    b.Property<int?>("MedicalRecordId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("NurseId")
@@ -2157,6 +2237,8 @@ namespace FirstAidAPI.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AdmissionRecordId");
+
                     b.HasIndex("MedicalRecordId")
                         .IsUnique();
 
@@ -2173,9 +2255,6 @@ namespace FirstAidAPI.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DepartmentId")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Floor")
                         .HasColumnType("integer");
 
@@ -2183,15 +2262,107 @@ namespace FirstAidAPI.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("SpecialityId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("WardType")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
+                    b.HasIndex("SpecialityId");
 
                     b.ToTable("Wards");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.WardNote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AdmissionRecordId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AuthorRole")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("AuthorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("AdmissionRecordId", "CreatedAt");
+
+                    b.ToTable("WardNotes");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.WardOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AdmissionRecordId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("CreatedByDoctorId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ScheduledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByDoctorId");
+
+                    b.HasIndex("AdmissionRecordId", "Status");
+
+                    b.ToTable("WardOrders");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -2326,6 +2497,41 @@ namespace FirstAidAPI.Migrations
                     b.ToTable("UserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("FirstAidAPI.Models.AdmissionRecord", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Nurse", "AdmittedByNurse")
+                        .WithMany()
+                        .HasForeignKey("AdmittedByNurseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.Bed", "Bed")
+                        .WithMany()
+                        .HasForeignKey("BedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.MedicalRecord", "MedicalRecord")
+                        .WithMany()
+                        .HasForeignKey("MedicalRecordId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AdmittedByNurse");
+
+                    b.Navigation("Bed");
+
+                    b.Navigation("MedicalRecord");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("FirstAidAPI.Models.AnswerOption", b =>
                 {
                     b.HasOne("FirstAidAPI.Models.QuizQuestion", "QuizQuestion")
@@ -2397,19 +2603,11 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Clinic", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Department", "Department")
-                        .WithMany("Clinics")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("FirstAidAPI.Models.Speciality", "Specialty")
                         .WithMany()
                         .HasForeignKey("SpecialtyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Department");
 
                     b.Navigation("Specialty");
                 });
@@ -2441,27 +2639,11 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.Department", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Doctor", "HeadDoctor")
-                        .WithMany()
-                        .HasForeignKey("HeadDoctorId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("HeadDoctor");
-                });
-
             modelBuilder.Entity("FirstAidAPI.Models.Doctor", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Department", "Department")
+                    b.HasOne("FirstAidAPI.Models.Speciality", "Specialty")
                         .WithMany("Doctors")
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FirstAidAPI.Models.Speciality", "PrimarySpecialty")
-                        .WithMany()
-                        .HasForeignKey("PrimarySpecialtyId")
+                        .HasForeignKey("SpecialtyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2471,9 +2653,7 @@ namespace FirstAidAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Department");
-
-                    b.Navigation("PrimarySpecialty");
+                    b.Navigation("Specialty");
 
                     b.Navigation("User");
                 });
@@ -2490,28 +2670,21 @@ namespace FirstAidAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Clinic");
-
-                    b.Navigation("Doctor");
-                });
-
-            modelBuilder.Entity("FirstAidAPI.Models.DoctorSpecialty", b =>
-                {
-                    b.HasOne("FirstAidAPI.Models.Doctor", "Doctor")
-                        .WithMany("DoctorSpecialties")
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("FirstAidAPI.Models.Speciality", "Specialty")
-                        .WithMany("DoctorSpecialties")
-                        .HasForeignKey("SpecialtyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithMany()
+                        .HasForeignKey("SpecialtyId");
+
+                    b.HasOne("FirstAidAPI.Models.Ward", "Ward")
+                        .WithMany()
+                        .HasForeignKey("WardId");
+
+                    b.Navigation("Clinic");
 
                     b.Navigation("Doctor");
 
                     b.Navigation("Specialty");
+
+                    b.Navigation("Ward");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Invoice", b =>
@@ -2519,6 +2692,11 @@ namespace FirstAidAPI.Migrations
                     b.HasOne("FirstAidAPI.Models.Appointment", "Appointment")
                         .WithOne("Invoice")
                         .HasForeignKey("FirstAidAPI.Models.Invoice", "AppointmentId");
+
+                    b.HasOne("FirstAidAPI.Models.LabOrder", "LabOrder")
+                        .WithOne()
+                        .HasForeignKey("FirstAidAPI.Models.Invoice", "LabOrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("FirstAidAPI.Models.Patient", "Patient")
                         .WithMany("Invoices")
@@ -2528,7 +2706,39 @@ namespace FirstAidAPI.Migrations
 
                     b.Navigation("Appointment");
 
+                    b.Navigation("LabOrder");
+
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.LabOrder", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.LabOrderItem", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.LabOrder", "LabOrder")
+                        .WithMany("Items")
+                        .HasForeignKey("LabOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.MedicalService", "MedicalService")
+                        .WithMany()
+                        .HasForeignKey("MedicalServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LabOrder");
+
+                    b.Navigation("MedicalService");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.MedicalRecord", b =>
@@ -2560,9 +2770,9 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Nurse", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Department", "Department")
+                    b.HasOne("FirstAidAPI.Models.Speciality", "Speciality")
                         .WithMany("Nurses")
-                        .HasForeignKey("DepartmentId")
+                        .HasForeignKey("SpecialityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2572,9 +2782,32 @@ namespace FirstAidAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Department");
+                    b.Navigation("Speciality");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.NurseSchedule", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.Nurse", "Nurse")
+                        .WithMany()
+                        .HasForeignKey("NurseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.Speciality", "Specialty")
+                        .WithMany()
+                        .HasForeignKey("SpecialtyId");
+
+                    b.HasOne("FirstAidAPI.Models.Ward", "Ward")
+                        .WithMany()
+                        .HasForeignKey("WardId");
+
+                    b.Navigation("Nurse");
+
+                    b.Navigation("Specialty");
+
+                    b.Navigation("Ward");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Order", b =>
@@ -2720,11 +2953,19 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Speciality", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Department", "Department")
-                        .WithMany("Specialties")
-                        .HasForeignKey("DepartmentId");
+                    b.HasOne("FirstAidAPI.Models.Doctor", "HeadDoctor")
+                        .WithOne("HeadOfSpeciality")
+                        .HasForeignKey("FirstAidAPI.Models.Speciality", "HeadDoctorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Department");
+                    b.HasOne("FirstAidAPI.Models.Nurse", "HeadNurse")
+                        .WithOne("HeadOfSpeciality")
+                        .HasForeignKey("FirstAidAPI.Models.Speciality", "HeadNurseId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("HeadDoctor");
+
+                    b.Navigation("HeadNurse");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.StepAnswer", b =>
@@ -2829,15 +3070,20 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.VitalSign", b =>
                 {
+                    b.HasOne("FirstAidAPI.Models.AdmissionRecord", "AdmissionRecord")
+                        .WithMany()
+                        .HasForeignKey("AdmissionRecordId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("FirstAidAPI.Models.MedicalRecord", "MedicalRecord")
                         .WithOne("VitalSigns")
-                        .HasForeignKey("FirstAidAPI.Models.VitalSign", "MedicalRecordId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("FirstAidAPI.Models.VitalSign", "MedicalRecordId");
 
                     b.HasOne("FirstAidAPI.Models.Nurse", "Nurse")
                         .WithMany("VitalSignsRecorded")
                         .HasForeignKey("NurseId");
+
+                    b.Navigation("AdmissionRecord");
 
                     b.Navigation("MedicalRecord");
 
@@ -2846,13 +3092,51 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Ward", b =>
                 {
-                    b.HasOne("FirstAidAPI.Models.Department", "Department")
-                        .WithMany("Wards")
-                        .HasForeignKey("DepartmentId")
+                    b.HasOne("FirstAidAPI.Models.Speciality", "Speciality")
+                        .WithMany()
+                        .HasForeignKey("SpecialityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Department");
+                    b.Navigation("Speciality");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.WardNote", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.AdmissionRecord", "AdmissionRecord")
+                        .WithMany()
+                        .HasForeignKey("AdmissionRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AdmissionRecord");
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.WardOrder", b =>
+                {
+                    b.HasOne("FirstAidAPI.Models.AdmissionRecord", "AdmissionRecord")
+                        .WithMany()
+                        .HasForeignKey("AdmissionRecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FirstAidAPI.Models.Doctor", "CreatedByDoctor")
+                        .WithMany()
+                        .HasForeignKey("CreatedByDoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AdmissionRecord");
+
+                    b.Navigation("CreatedByDoctor");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -2918,24 +3202,11 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Appointments");
                 });
 
-            modelBuilder.Entity("FirstAidAPI.Models.Department", b =>
-                {
-                    b.Navigation("Clinics");
-
-                    b.Navigation("Doctors");
-
-                    b.Navigation("Nurses");
-
-                    b.Navigation("Specialties");
-
-                    b.Navigation("Wards");
-                });
-
             modelBuilder.Entity("FirstAidAPI.Models.Doctor", b =>
                 {
                     b.Navigation("Appointments");
 
-                    b.Navigation("DoctorSpecialties");
+                    b.Navigation("HeadOfSpeciality");
 
                     b.Navigation("MedicalRecords");
 
@@ -2947,6 +3218,11 @@ namespace FirstAidAPI.Migrations
                     b.Navigation("Payments");
                 });
 
+            modelBuilder.Entity("FirstAidAPI.Models.LabOrder", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("FirstAidAPI.Models.MedicalRecord", b =>
                 {
                     b.Navigation("VitalSigns")
@@ -2955,6 +3231,8 @@ namespace FirstAidAPI.Migrations
 
             modelBuilder.Entity("FirstAidAPI.Models.Nurse", b =>
                 {
+                    b.Navigation("HeadOfSpeciality");
+
                     b.Navigation("VitalSignsRecorded");
                 });
 
@@ -2996,7 +3274,9 @@ namespace FirstAidAPI.Migrations
                 {
                     b.Navigation("Appointments");
 
-                    b.Navigation("DoctorSpecialties");
+                    b.Navigation("Doctors");
+
+                    b.Navigation("Nurses");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Technique", b =>

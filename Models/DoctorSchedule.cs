@@ -7,11 +7,17 @@ namespace FirstAidAPI.Models
     {
         public int Id { get; set; }
         public int DoctorId { get; set; }
-        public DayOfWeek DayOfWeek { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
+        public bool IsNightShift { get; set; } = false;
+        public DateOnly Date { get; set; }
+        public bool IsOff { get; set; } = false;
+
+        // Ca ngày → có ClinicId, không có SpecialtyId
         public int? ClinicId { get; set; }
-        public bool IsAvailable { get; set; } = true;
+
+        // Ca đêm → có SpecialtyId, không có ClinicId
+        public int? SpecialtyId { get; set; }
+
+        public int? WardId { get; set; }
 
         public int MaxOnlineSlots { get; set; } = 10;
         public int MaxWalkInSlots { get; set; } = 10;
@@ -20,5 +26,7 @@ namespace FirstAidAPI.Models
         public Doctor Doctor { get; set; } = null!;
 
         public Clinic? Clinic { get; set; }
+        public Speciality? Specialty { get; set; }
+        public Ward? Ward { get; set; }
     }
 }

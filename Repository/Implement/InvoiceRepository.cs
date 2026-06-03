@@ -43,6 +43,12 @@ namespace FirstAidAPI.Repository.Implement
                 .FirstOrDefaultAsync(i => i.AppointmentId == appointmentId);
         }
 
+        public async Task<Invoice?> GetByLabOrderIdAsync(int labOrderId)
+        {
+            return await _context.Invoices
+                .FirstOrDefaultAsync(i => i.LabOrderId == labOrderId);
+        }
+
         public async Task<List<Invoice>> GetByPatientIdAsync(int patientId)
         {
             return await _context.Invoices

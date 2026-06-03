@@ -61,5 +61,24 @@ namespace FirstAidAPI.Repository.Implement
             return await _context.MedicalRecords
                 .AnyAsync(m => m.AppointmentId == appointmentId);
         }
+
+        public async Task<List<MedicalRecord>> GetPendingAdmissionsAsync()
+        {
+            // Lấy PatientId của những bệnh nhân đang nằm viện (giường OCCUPIED)
+            var occupiedPatientIds = await _context.Beds
+                .Where(b => b.Status == "OCCUPIED" && b.CurrentPatientId.HasValue)
+                .Select(b => b.CurrentPatientId!.Value)
+                .ToListAsync();
+
+            return await _context.MedicalRecords
+                .Include(m => m.Patient)
+                    .ThenInclude(p => p.User)
+                .Include(m => m.Doctor)
+                    .ThenInclude(d => d.User)
+                .Where(m => m.IsHospitalized && !occupiedPatientIds.Contains(m.PatientId))
+                .OrderByDescending(m => m.CreatedAt)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

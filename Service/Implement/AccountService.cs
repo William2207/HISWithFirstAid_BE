@@ -17,7 +17,7 @@ namespace FirstAidAPI.Service.Implement
         private readonly IDoctorRepository _doctorRepository;
         private readonly INurseRepository _nurseRepository;
         private readonly IReceptionistRepository _receptionistRepository;
-        private readonly IDepartmentRepository _departmentRepository;
+        private readonly ISpecialtyRepository _specialtyRepository;
 
         public AccountService(
             UserManager<User> userManager,
@@ -28,7 +28,7 @@ namespace FirstAidAPI.Service.Implement
             IDoctorRepository doctorRepository,
             INurseRepository nurseRepository,
             IReceptionistRepository receptionistRepository,
-            IDepartmentRepository departmentRepository)
+            ISpecialtyRepository specialtyRepository)
         {
             _userManager = userManager;
             _emailService = emailService;
@@ -38,7 +38,7 @@ namespace FirstAidAPI.Service.Implement
             _doctorRepository = doctorRepository;
             _nurseRepository = nurseRepository;
             _receptionistRepository = receptionistRepository;
-            _departmentRepository = departmentRepository;
+            _specialtyRepository = specialtyRepository;
         }
 
         public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
@@ -151,21 +151,21 @@ namespace FirstAidAPI.Service.Implement
                 throw new InvalidOperationException("Role không hợp lệ. Phải là 'Doctor', 'Nurse' hoặc 'Receptionist'.");
             }
 
-            // Validate Department (chỉ cần cho Doctor và Nurse)
+            // Validate Specialty (chỉ cần cho Doctor và Nurse)
             if ((adminCreateAccountDto.Role == "Doctor" || adminCreateAccountDto.Role == "Nurse")
-                && string.IsNullOrWhiteSpace(adminCreateAccountDto.Department))
+                && adminCreateAccountDto.SpecialtyId <= 0)
             {
-                throw new InvalidOperationException($"Department là bắt buộc cho vai trò {adminCreateAccountDto.Role}.");
+                throw new InvalidOperationException($"Specialty là bắt buộc cho vai trò {adminCreateAccountDto.Role}.");
             }
 
-            // Lấy Department theo tên
-            Department? department = null;
-            if (!string.IsNullOrWhiteSpace(adminCreateAccountDto.Department))
+            // Lấy Specialty theo id
+            Speciality? specialty = null;
+            if (adminCreateAccountDto.SpecialtyId > 0)
             {
-                department = await _departmentRepository.GetByNameAsync(adminCreateAccountDto.Department);
-                if (department == null)
+                specialty = await _specialtyRepository.GetByIdAsync(adminCreateAccountDto.SpecialtyId);
+                if (specialty == null)
                 {
-                    throw new KeyNotFoundException($"Không tìm thấy department '{adminCreateAccountDto.Department}'.");
+                    throw new KeyNotFoundException($"Không tìm thấy specialty với ID = {adminCreateAccountDto.SpecialtyId}.");
                 }
             }
 
@@ -195,8 +195,7 @@ namespace FirstAidAPI.Service.Implement
                     var doctor = new Doctor
                     {
                         UserId = user.Id,
-                        DepartmentId = department!.Id,
-                        PrimarySpecialtyId = 0,  // Admin phải cập nhật sau
+                        SpecialtyId = specialty!.Id,
                         LicenseNumber = string.Empty,  // Admin phải cập nhật sau
                         YearsOfExperience = 0,
                         IsAvailable = true
@@ -208,7 +207,7 @@ namespace FirstAidAPI.Service.Implement
                     var nurse = new Nurse
                     {
                         UserId = user.Id,
-                        DepartmentId = department!.Id,
+                        SpecialityId = specialty!.Id,
                         LicenseNumber = string.Empty,  // Admin phải cập nhật sau
                         YearsOfExperience = 0,
                         IsAvailable = true

@@ -13,6 +13,7 @@ namespace FirstAidAPI.Service.Implement
         private readonly IInvoiceRepository _invoiceRepository;
         private readonly IPaymentRepository _paymentRepository;
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly ILabOrderRepository _labOrderRepository;
         private readonly IMomoService _momoService;
         private readonly IPatientRepository _patientRepository;
         private readonly ILogger<InvoiceService> _logger;
@@ -21,6 +22,7 @@ namespace FirstAidAPI.Service.Implement
             IInvoiceRepository invoiceRepository,
             IPaymentRepository paymentRepository,
             IAppointmentRepository appointmentRepository,
+            ILabOrderRepository labOrderRepository,
             IMomoService momoService,
             IPatientRepository patientRepository,
             ILogger<InvoiceService> logger)
@@ -28,48 +30,85 @@ namespace FirstAidAPI.Service.Implement
             _invoiceRepository = invoiceRepository;
             _paymentRepository = paymentRepository;
             _appointmentRepository = appointmentRepository;
+            _labOrderRepository = labOrderRepository;
             _momoService = momoService;
             _patientRepository = patientRepository;
             _logger = logger;
         }
 
-        public async Task<CreateInvoiceResponseDto> CreateInvoiceAsync(CreateInvoiceDto createInvoiceDto)
+        public async Task<CreateInvoiceResponseDto> CreateInvoiceAsync(CreateInvoiceDto dto)
         {
-            // Validate appointment
-            if (createInvoiceDto.AppointmentId == null)
-                throw new ArgumentException("AppointmentId is required.");
+            // Xác định loại invoice: Appointment hoặc LabOrder
+            if (dto.LabOrderId.HasValue)
+                return await CreateLabOrderInvoiceAsync(dto);
 
-            var appointment = await _appointmentRepository.GetByIdAsync(createInvoiceDto.AppointmentId.Value);
-            if (appointment == null)
-                throw new KeyNotFoundException("Appointment not found.");
+            return await CreateAppointmentInvoiceAsync(dto);
+        }
 
-            // Kiểm tra invoice đã tồn tại chưa (tránh tạo duplicate)
-            var existingInvoice = await _invoiceRepository.GetByAppointmentIdAsync(createInvoiceDto.AppointmentId.Value);
+        private async Task<CreateInvoiceResponseDto> CreateAppointmentInvoiceAsync(CreateInvoiceDto dto)
+        {
+            if (dto.AppointmentId == null)
+                throw new ArgumentException("AppointmentId là bắt buộc.");
+
+            var appointment = await _appointmentRepository.GetByIdAsync(dto.AppointmentId.Value)
+                ?? throw new KeyNotFoundException("Không tìm thấy lịch hẹn.");
+
+            var existingInvoice = await _invoiceRepository.GetByAppointmentIdAsync(dto.AppointmentId.Value);
             if (existingInvoice != null)
                 throw new InvalidOperationException(
-                    $"Invoice đã tồn tại cho appointment này (Invoice số: {existingInvoice.InvoiceNumber}).");
+                    $"Hóa đơn đã tồn tại cho lịch hẹn này (Số: {existingInvoice.InvoiceNumber}).");
 
-            // Tính tiền
             decimal subtotal = appointment.Specialty?.Price ?? 0;
-            decimal total = subtotal - createInvoiceDto.Discount;
-
+            decimal total = subtotal - dto.Discount;
             if (total < 0)
-            {
-                _logger.LogWarning("Discount exceeds subtotal. Subtotal: {Subtotal}, Discount: {Discount}",
-                    subtotal, createInvoiceDto.Discount);
-                throw new ArgumentException("Discount cannot exceed subtotal.");
-            }
+                throw new ArgumentException("Giảm giá không thể vượt quá tổng tiền.");
 
             var invoiceNumber = GenerateInvoiceNumber();
-
-            // Tạo Invoice (Pending - chờ thanh toán)
             var invoice = new Invoice
             {
-                AppointmentId = createInvoiceDto.AppointmentId,
+                AppointmentId = dto.AppointmentId,
                 PatientId = appointment.PatientId,
                 InvoiceNumber = invoiceNumber,
                 Subtotal = subtotal,
-                Discount = createInvoiceDto.Discount,
+                Discount = dto.Discount,
+                Total = total,
+                RemainingAmount = total,
+                Status = OrderStatus.Pending
+            };
+
+            await _invoiceRepository.AddAsync(invoice);
+
+            return await ProcessPaymentAsync(invoice, dto.PaymentMethod,
+                $"Thanh toán hóa đơn khám bệnh {invoiceNumber}",
+                dto.Discount, subtotal);
+        }
+
+        private async Task<CreateInvoiceResponseDto> CreateLabOrderInvoiceAsync(CreateInvoiceDto dto)
+        {
+            var labOrder = await _labOrderRepository.GetByIdAsync(dto.LabOrderId!.Value)
+                ?? throw new KeyNotFoundException($"Không tìm thấy chỉ định {dto.LabOrderId.Value}.");
+
+            if (labOrder.Status != LabOrderStatus.Pending)
+                throw new InvalidOperationException("Chỉ có thể tạo hóa đơn cho chỉ định đang ở trạng thái Chờ thanh toán.");
+
+            var existingInvoice = await _invoiceRepository.GetByLabOrderIdAsync(dto.LabOrderId.Value);
+            if (existingInvoice != null)
+                throw new InvalidOperationException(
+                    $"Hóa đơn đã tồn tại cho chỉ định này (Số: {existingInvoice.InvoiceNumber}).");
+
+            decimal subtotal = labOrder.Items.Sum(i => i.Amount);
+            decimal total = subtotal - dto.Discount;
+            if (total < 0)
+                throw new ArgumentException("Giảm giá không thể vượt quá tổng tiền.");
+
+            var invoiceNumber = GenerateInvoiceNumber();
+            var invoice = new Invoice
+            {
+                LabOrderId = dto.LabOrderId,
+                PatientId = labOrder.PatientId,
+                InvoiceNumber = invoiceNumber,
+                Subtotal = subtotal,
+                Discount = dto.Discount,
                 Total = total,
                 RemainingAmount = total,
                 Status = OrderStatus.Pending
@@ -79,49 +118,42 @@ namespace FirstAidAPI.Service.Implement
 
             string? paymentUrl = null;
 
-            if (createInvoiceDto.PaymentMethod == PaymentMethod.Cash)
+            if (dto.PaymentMethod == PaymentMethod.Cash)
             {
                 invoice.Status = OrderStatus.Completed;
                 invoice.PaidAmount = total;
                 invoice.RemainingAmount = 0;
                 invoice.PaidAt = DateTime.UtcNow;
-
                 await _invoiceRepository.UpdateAsync(invoice);
 
-                var payment = new Models.Payment
-                {
-                    InvoiceId = invoice.Id,
-                    PatientId = invoice.PatientId,
-                    Amount = invoice.Total,
-                    PaymentMethod = PaymentMethod.Cash,
-                    Status = PaymentStatus.Completed,
-                    TransactionId = "CASH-" + Guid.NewGuid().ToString("N")[..8].ToUpper(),
-                    PaidAt = DateTime.UtcNow
-                };
-                await _paymentRepository.AddAsync(payment);
-                
-                _logger.LogInformation("Cash Invoice created & completed. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
-                    invoiceNumber, appointment.PatientId, total);
+                await CreatePaymentRecordAsync(invoice, PaymentMethod.Cash,
+                    "CASH-" + Guid.NewGuid().ToString("N")[..8].ToUpper());
+
+                // Cập nhật trạng thái LabOrder → Paid
+                labOrder.Status = LabOrderStatus.Paid;
+                await _labOrderRepository.UpdateAsync(labOrder);
+
+                _logger.LogInformation(
+                    "LabOrder Invoice (Cash) completed. InvoiceNumber: {InvoiceNumber}, LabOrderId: {LabOrderId}, Total: {Total}",
+                    invoiceNumber, labOrder.Id, total);
             }
             else
             {
-                // Gọi Momo để tạo payment URL
                 var baseUrl = _momoService.GetBaseUrl();
                 var momoResponse = await _momoService.CreatePaymentAsync(new MomoCreatePaymentRequestDto
                 {
                     OrderNumber = invoiceNumber,
                     Amount = (long)total,
-                    OrderDescription = $"Thanh toán hóa đơn khám bệnh {invoiceNumber}",
+                    OrderDescription = $"Thanh toán chỉ định xét nghiệm {invoiceNumber}",
                     ReturnUrl = $"{baseUrl}/api/invoices/momo-callback"
                 });
 
                 if (momoResponse.ResultCode == 0)
-                {
                     paymentUrl = momoResponse.PayUrl;
-                }
 
-                _logger.LogInformation("Invoice created successfully. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
-                    invoiceNumber, appointment.PatientId, total);
+                _logger.LogInformation(
+                    "LabOrder Invoice (Momo) created. InvoiceNumber: {InvoiceNumber}, LabOrderId: {LabOrderId}, Total: {Total}",
+                    invoiceNumber, labOrder.Id, total);
             }
 
             return new CreateInvoiceResponseDto
@@ -129,11 +161,78 @@ namespace FirstAidAPI.Service.Implement
                 Id = invoice.Id,
                 InvoiceNumber = invoice.InvoiceNumber,
                 Subtotal = subtotal,
-                Discount = createInvoiceDto.Discount,
+                Discount = dto.Discount,
                 Total = total,
                 Status = invoice.Status,
                 PaymentUrl = paymentUrl
             };
+        }
+
+        private async Task<CreateInvoiceResponseDto> ProcessPaymentAsync(
+            Invoice invoice, PaymentMethod? paymentMethod,
+            string momoDescription, decimal discount, decimal subtotal)
+        {
+            string? paymentUrl = null;
+
+            if (paymentMethod == PaymentMethod.Cash)
+            {
+                invoice.Status = OrderStatus.Completed;
+                invoice.PaidAmount = invoice.Total;
+                invoice.RemainingAmount = 0;
+                invoice.PaidAt = DateTime.UtcNow;
+                await _invoiceRepository.UpdateAsync(invoice);
+
+                await CreatePaymentRecordAsync(invoice, PaymentMethod.Cash,
+                    "CASH-" + Guid.NewGuid().ToString("N")[..8].ToUpper());
+
+                _logger.LogInformation(
+                    "Cash Invoice completed. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
+                    invoice.InvoiceNumber, invoice.PatientId, invoice.Total);
+            }
+            else
+            {
+                var baseUrl = _momoService.GetBaseUrl();
+                var momoResponse = await _momoService.CreatePaymentAsync(new MomoCreatePaymentRequestDto
+                {
+                    OrderNumber = invoice.InvoiceNumber,
+                    Amount = (long)invoice.Total,
+                    OrderDescription = momoDescription,
+                    ReturnUrl = $"{baseUrl}/api/invoices/momo-callback"
+                });
+
+                if (momoResponse.ResultCode == 0)
+                    paymentUrl = momoResponse.PayUrl;
+
+                _logger.LogInformation(
+                    "Momo Invoice created. InvoiceNumber: {InvoiceNumber}, PatientId: {PatientId}, Total: {Total}",
+                    invoice.InvoiceNumber, invoice.PatientId, invoice.Total);
+            }
+
+            return new CreateInvoiceResponseDto
+            {
+                Id = invoice.Id,
+                InvoiceNumber = invoice.InvoiceNumber,
+                Subtotal = subtotal,
+                Discount = discount,
+                Total = invoice.Total,
+                Status = invoice.Status,
+                PaymentUrl = paymentUrl
+            };
+        }
+
+        private async Task CreatePaymentRecordAsync(Invoice invoice, PaymentMethod method, string transactionId)
+        {
+            var payment = new Models.Payment
+            {
+                InvoiceId = invoice.Id,
+                PatientId = invoice.PatientId,
+                Amount = invoice.Total,
+                PaymentMethod = method,
+                Status = PaymentStatus.Completed,
+                TransactionId = transactionId,
+                PaidAt = DateTime.UtcNow
+            };
+            await _paymentRepository.AddAsync(payment);
         }
 
         public async Task CompleteInvoiceAsync(int invoiceId, string transactionId)
@@ -146,6 +245,17 @@ namespace FirstAidAPI.Service.Implement
             {
                 _logger.LogInformation("Invoice {InvoiceNumber} already completed.", invoice.InvoiceNumber);
                 return;
+            }
+
+            // Cập nhật LabOrder.Status → Paid nếu invoice liên kết với LabOrder
+            if (invoice.LabOrderId.HasValue)
+            {
+                var labOrder = await _labOrderRepository.GetByIdAsync(invoice.LabOrderId.Value);
+                if (labOrder != null && labOrder.Status == LabOrderStatus.Pending)
+                {
+                    labOrder.Status = LabOrderStatus.Paid;
+                    await _labOrderRepository.UpdateAsync(labOrder);
+                }
             }
 
             // Kiểm tra payment đã tồn tại chưa

@@ -3,7 +3,8 @@ namespace FirstAidAPI.Models
     public class VitalSign
     {
         public int Id { get; set; }
-        public int MedicalRecordId { get; set; }
+        public int? MedicalRecordId { get; set; }
+        public int? AdmissionRecordId { get; set; }
         public int? NurseId { get; set; }
 
         public decimal? Temperature { get; set; }  // °C
@@ -17,7 +18,8 @@ namespace FirstAidAPI.Models
         public DateTime RecordedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
-        public MedicalRecord MedicalRecord { get; set; } = null!;
+        public MedicalRecord? MedicalRecord { get; set; }
+        public AdmissionRecord? AdmissionRecord { get; set; }
 
         public Nurse? Nurse { get; set; }
     }

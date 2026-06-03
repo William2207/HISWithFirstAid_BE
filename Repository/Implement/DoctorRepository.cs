@@ -40,8 +40,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Doctors
                 .Include(d => d.User)
-                .Include(d => d.Department)
-                .Include(d => d.PrimarySpecialty)
+                .Include(d => d.Specialty)
                 .FirstOrDefaultAsync(d => d.Id == id);
         }
 
@@ -49,8 +48,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Doctors
                 .Include(d => d.User)
-                .Include(d => d.Department)
-                .Include(d => d.PrimarySpecialty)
+                .Include(d => d.Specialty)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
         }
 
@@ -58,8 +56,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Doctors
                 .Include(d => d.User)
-                .Include(d => d.Department)
-                .Include(d => d.PrimarySpecialty)
+                .Include(d => d.Specialty)
                 .ToListAsync();
         }
 
@@ -73,10 +70,10 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Doctors
                 .Include(d => d.User)
-                .Include(d => d.PrimarySpecialty)
+                .Include(d => d.Specialty)
                 .Include(d => d.Schedules)
                     .ThenInclude(s => s.Clinic)
-                .Where(d => d.IsAvailable && d.PrimarySpecialtyId == specialtyId)
+                .Where(d => d.IsAvailable && d.SpecialtyId == specialtyId)
                 .ToListAsync();
         }
 
@@ -85,13 +82,23 @@ namespace FirstAidAPI.Repository.Implement
             return await _context.Clinics.FirstOrDefaultAsync(c => c.SpecialtyId == specialtyId);
         }
 
-        public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DayOfWeek dayOfWeek, TimeSpan timeOfDay)
+        public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DateTime dateTime)
         {
+            DateTime utcTime = dateTime.Kind == DateTimeKind.Unspecified 
+                ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc) 
+                : dateTime.ToUniversalTime();
+
+            DateTime localDateTime = utcTime.AddHours(7);
+
+            var date = DateOnly.FromDateTime(localDateTime);
+            var timeOfDay = localDateTime.TimeOfDay;
+            bool isNight = timeOfDay >= new TimeSpan(17, 0, 0) || timeOfDay < new TimeSpan(7, 30, 0);
+
             return await _context.DoctorSchedules
                 .FirstOrDefaultAsync(s => s.DoctorId == doctorId
-                                       && s.DayOfWeek == dayOfWeek
-                                       && s.StartTime <= timeOfDay
-                                       && s.EndTime >= timeOfDay);
+                                       && s.Date == date
+                                       && s.IsNightShift == isNight
+                                       && !s.IsOff);
         }
 
         public async Task UpdateScheduleAsync(DoctorSchedule schedule)

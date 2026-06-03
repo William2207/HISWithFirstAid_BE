@@ -52,6 +52,7 @@ namespace FirstAidAPI.Service.Implement
                 FollowUpInstructions = request.FollowUpInstructions,
                 NextAppointmentDate = request.NextAppointmentDate,
                 GeneralNotes = request.GeneralNotes,
+                IsHospitalized = request.IsHospitalized,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -137,6 +138,7 @@ namespace FirstAidAPI.Service.Implement
             record.FollowUpInstructions = request.FollowUpInstructions ?? record.FollowUpInstructions;
             record.NextAppointmentDate = request.NextAppointmentDate ?? record.NextAppointmentDate;
             record.GeneralNotes = request.GeneralNotes ?? record.GeneralNotes;
+            record.IsHospitalized = request.IsHospitalized; // Trực tiếp gán bool
 
             if (request.VitalSigns != null)
             {
@@ -178,6 +180,7 @@ namespace FirstAidAPI.Service.Implement
                 FollowUpInstructions = record.FollowUpInstructions,
                 NextAppointmentDate = record.NextAppointmentDate,
                 GeneralNotes = record.GeneralNotes,
+                IsHospitalized = record.IsHospitalized,
                 CreatedAt = record.CreatedAt,
                 VitalSigns = record.VitalSigns != null ? new VitalSignDTO
                 {

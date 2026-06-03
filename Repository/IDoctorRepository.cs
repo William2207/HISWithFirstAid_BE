@@ -22,7 +22,7 @@ namespace FirstAidAPI.Repository
 
         Task<Clinic?> GetDefaultClinicBySpecialtyAsync(int specialtyId);
 
-        Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DayOfWeek dayOfWeek, TimeSpan timeOfDay);
+        Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DateTime dateTime);
 
         Task UpdateScheduleAsync(DoctorSchedule schedule);
     }

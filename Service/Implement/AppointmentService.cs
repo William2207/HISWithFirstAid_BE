@@ -92,27 +92,26 @@ namespace FirstAidAPI.Service.Implement
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var dayOfWeek = request.AppointmentDateTime.DayOfWeek;
-                var timeOfDay = request.AppointmentDateTime.TimeOfDay;
+                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, request.AppointmentDateTime);
 
-                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, dayOfWeek, timeOfDay);
-
-                if (schedule != null)
+                if (schedule == null)
                 {
-                    if (appointmentType == AppointmentType.Online)
-                    {
-                        if (schedule.MaxOnlineSlots <= 0)
-                            throw new BusinessException("Đã hết slot đặt hẹn đăng ký online cho khung giờ này.");
-                        schedule.MaxOnlineSlots--;
-                    }
-                    else
-                    {
-                        if (schedule.MaxWalkInSlots <= 0)
-                            throw new BusinessException("Đã hết slot đặt hẹn đăng ký trực tiếp cho khung giờ này.");
-                        schedule.MaxWalkInSlots--;
-                    }
-                    await _doctorRepository.UpdateScheduleAsync(schedule);
+                    throw new BusinessException("Bác sĩ không có lịch làm việc vào thời gian này.");
                 }
+
+                if (appointmentType == AppointmentType.Online)
+                {
+                    if (schedule.MaxOnlineSlots <= 0)
+                        throw new BusinessException("Đã hết slot đặt hẹn đăng ký online cho khung giờ này.");
+                    schedule.MaxOnlineSlots--;
+                }
+                else
+                {
+                    if (schedule.MaxWalkInSlots <= 0)
+                        throw new BusinessException("Đã hết slot đặt hẹn đăng ký trực tiếp cho khung giờ này.");
+                    schedule.MaxWalkInSlots--;
+                }
+                await _doctorRepository.UpdateScheduleAsync(schedule);
 
                 var appointment = new Appointment
                 {
