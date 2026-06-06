@@ -62,5 +62,20 @@ namespace FirstAidAPI.Controllers
             var patients = await _patientService.GetPatientsBySpecialtyAsync(specialtyId);
             return Ok(patients);
         }
+
+        [HttpGet("{patientId}/summary")]
+        [Authorize(Roles = "Doctor, Admin")]
+        public async Task<IActionResult> GetPatientSummary(int patientId, [FromServices] IPatientSummaryService patientSummaryService)
+        {
+            try
+            {
+                var summary = await patientSummaryService.SummarizePatientAsync(patientId);
+                return Ok(new { summary = summary });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi tạo tóm tắt", error = ex.Message });
+            }
+        }
     }
 }
