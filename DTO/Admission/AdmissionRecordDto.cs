@@ -22,6 +22,11 @@ namespace FirstAidAPI.DTO.Admission
         public DateTime? DateOfBirth { get; set; }
         public string? Address { get; set; }
         public string? IdCard { get; set; }
+        
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContact { get; set; }
+        public string? EmergencyContactRelationship { get; set; }
+        
         public string? NurseName { get; set; }
         public DateTime AdmittedAt { get; set; }
         public DateTime? DischargedAt { get; set; }

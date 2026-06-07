@@ -9,6 +9,7 @@ namespace FirstAidAPI.DTO.Patient
 
         // User data
         public string? FullName { get; set; }
+
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Avatar { get; set; }
@@ -19,6 +20,8 @@ namespace FirstAidAPI.DTO.Patient
 
         // Patient specific data
         public string? InsuranceNumber { get; set; }
+
+        public string? Diagnosis { get; set; }
         public string? BloodType { get; set; }
         public string? Allergies { get; set; }
         public string? MedicalHistory { get; set; }

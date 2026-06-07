@@ -64,7 +64,13 @@ namespace FirstAidAPI.Service.Implement
                     sb.AppendLine($"- Ngày: {record.CreatedAt:dd/MM/yyyy HH:mm}");
                     sb.AppendLine($"  + Chẩn đoán: {record.DiagnosisName ?? "Không rõ"}");
                     sb.AppendLine($"  + Triệu chứng chính: {record.ChiefComplaint ?? record.Symptoms ?? "Không rõ"}");
+                    if (!string.IsNullOrEmpty(record.MedicalHistory))
+                        sb.AppendLine($"  + Tiền sử bản thân: {record.MedicalHistory}");
+                    if (!string.IsNullOrEmpty(record.FamilyHistory))
+                        sb.AppendLine($"  + Tiền sử gia đình: {record.FamilyHistory}");
                     sb.AppendLine($"  + Hướng điều trị: {record.TreatmentPlan ?? "Không có"}");
+                    if (record.NextAppointmentDate.HasValue)
+                        sb.AppendLine($"  + Lịch hẹn tiếp theo: {record.NextAppointmentDate.Value:dd/MM/yyyy HH:mm}");
                     if (!string.IsNullOrEmpty(record.Prescription))
                     {
                         sb.AppendLine($"  + Đơn thuốc: {FormatPrescription(record.Prescription)}");

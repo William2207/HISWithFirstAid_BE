@@ -18,14 +18,14 @@ namespace FirstAidAPI.Models
         public string? PhysicalExamination { get; set; }  // Khám lâm sàng
 
         // ═══════════════════════════════════════
-        // 2. CHẨN ĐOÁN (GỘP LUÔN)
+        // 2. CHẨN ĐOÁN
         // ═══════════════════════════════════════
         public string? DiagnosisName { get; set; }  // Tên chẩn đoán
 
         public string? DiagnosisNotes { get; set; }  // Ghi chú chẩn đoán
 
         // ═══════════════════════════════════════
-        // 3. ĐƠN THUỐC (TEXT/JSON - GỘP LUÔN)
+        // 3. ĐƠN THUỐC (TEXT/JSON)
         // ═══════════════════════════════════════
         public string? Prescription { get; set; }  // Lưu dạng text hoặc JSON
 
