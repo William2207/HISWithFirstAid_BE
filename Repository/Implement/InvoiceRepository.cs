@@ -66,5 +66,30 @@ namespace FirstAidAPI.Repository.Implement
             await _context.SaveChangesAsync();
             return invoice;
         }
+
+        public async Task<List<FirstAidAPI.DTO.Revenue.MonthlyRevenueDto>> GetMonthlyRevenueAsync(int year)
+        {
+            var monthlyData = await _context.Invoices
+                .Where(i => i.Status == Enums.OrderStatus.Completed
+                            && i.PaidAt.HasValue
+                            && i.PaidAt.Value.Year == year)
+                .GroupBy(i => i.PaidAt!.Value.Month)
+                .Select(g => new FirstAidAPI.DTO.Revenue.MonthlyRevenueDto
+                {
+                    Month = g.Key,
+                    HospitalRevenue = g.Sum(i => i.PaidAmount)
+                })
+                .OrderBy(x => x.Month)
+                .ToListAsync();
+
+            var allMonths = Enumerable.Range(1, 12).Select(month => new FirstAidAPI.DTO.Revenue.MonthlyRevenueDto
+            {
+                Month = month,
+                MonthName = new DateTime(year, month, 1).ToString("MMMM"),
+                HospitalRevenue = monthlyData.FirstOrDefault(m => m.Month == month)?.HospitalRevenue ?? 0
+            }).ToList();
+
+            return allMonths;
+        }
     }
 }

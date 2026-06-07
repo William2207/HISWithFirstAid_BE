@@ -44,6 +44,22 @@ namespace FirstAidAPI.Service.Implement
             };
         }
 
+        public async Task<AdminDashboardDto> GetAdminDashboardAsync()
+        {
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+
+            var totalPatients = await _context.Patients.CountAsync();
+            var totalAppointmentsToday = await _context.Appointments
+                .CountAsync(a => a.AppointmentDateTime >= today && a.AppointmentDateTime < tomorrow);
+
+            return new AdminDashboardDto
+            {
+                TotalPatients = totalPatients,
+                TotalAppointmentsToday = totalAppointmentsToday
+            };
+        }
+
         public async Task<List<DailyPatientCountDto>> GetDailyPatientCountsAsync(int days = 30)
         {
             var endDate = DateTime.UtcNow.Date;

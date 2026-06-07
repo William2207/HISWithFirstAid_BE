@@ -7,6 +7,12 @@ namespace FirstAidAPI.DTO.Statistics
         public int TotalAppointmentsToday { get; set; }
     }
 
+    public class AdminDashboardDto
+    {
+        public int TotalPatients { get; set; }
+        public int TotalAppointmentsToday { get; set; }
+    }
+
     public class DailyPatientCountDto
     {
         public string Date { get; set; } = string.Empty;
