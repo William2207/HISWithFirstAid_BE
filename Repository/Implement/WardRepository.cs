@@ -21,6 +21,45 @@ namespace FirstAidAPI.Repository.Implement
                 .ToListAsync();
         }
 
+        public async Task<List<Ward>> GetAllWardsAsync()
+        {
+            return await _context.Wards
+                .Include(w => w.Speciality)
+                .Include(w => w.Beds)
+                .OrderBy(w => w.Floor).ThenBy(w => w.RoomNumber)
+                .ToListAsync();
+        }
+
+        public async Task<Ward?> GetWardByIdAsync(int id)
+        {
+            return await _context.Wards
+                .Include(w => w.Beds)
+                .FirstOrDefaultAsync(w => w.Id == id);
+        }
+
+        public async Task<Ward> CreateWardAsync(Ward ward)
+        {
+            _context.Wards.Add(ward);
+            await _context.SaveChangesAsync();
+            return ward;
+        }
+
+        public async Task UpdateWardAsync(Ward ward)
+        {
+            _context.Wards.Update(ward);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteWardAsync(int id)
+        {
+            var ward = await _context.Wards.FindAsync(id);
+            if (ward != null)
+            {
+                _context.Wards.Remove(ward);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         public async Task<List<AdmissionRecord>> GetActiveAdmissionsByRoomAsync(string roomNumber)
         {
             return await _context.AdmissionRecords

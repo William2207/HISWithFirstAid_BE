@@ -21,8 +21,10 @@ namespace FirstAidAPI.DTO.Ward
     public class CreateWardOrderRequest
     {
         public int AdmissionRecordId { get; set; }
+
         /// <summary>"MEDICATION" | "PROCEDURE" | "MONITORING" | "IV"</summary>
         public string OrderType { get; set; } = string.Empty;
+
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime? ScheduledAt { get; set; }
@@ -80,5 +82,36 @@ namespace FirstAidAPI.DTO.Ward
         public int? RespiratoryRate { get; set; }
         public decimal? Weight { get; set; }
         public decimal? Height { get; set; }
+    }
+
+    // ─── Admin Ward DTOs ────────────────────────────────────────────────────────
+
+    public class CreateWardAdminRequest
+    {
+        public string RoomNumber { get; set; } = string.Empty;
+        public int SpecialityId { get; set; }
+        public string WardType { get; set; } = string.Empty;
+        public int Floor { get; set; }
+        public int NumberOfBeds { get; set; }
+    }
+
+    public class UpdateWardAdminRequest
+    {
+        public string RoomNumber { get; set; } = string.Empty;
+        public int SpecialityId { get; set; }
+        public string WardType { get; set; } = string.Empty;
+        public int Floor { get; set; }
+    }
+
+    public class WardAdminSummaryDto
+    {
+        public int Id { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public int SpecialityId { get; set; }
+        public string SpecialityName { get; set; } = string.Empty;
+        public string WardType { get; set; } = string.Empty;
+        public int Floor { get; set; }
+        public int TotalBeds { get; set; }
+        public int OccupiedBeds { get; set; }
     }
 }
