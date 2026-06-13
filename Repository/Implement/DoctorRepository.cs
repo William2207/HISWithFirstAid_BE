@@ -73,7 +73,7 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(d => d.Specialty)
                 .Include(d => d.Schedules)
                     .ThenInclude(s => s.Clinic)
-                .Where(d => d.IsAvailable && d.SpecialtyId == specialtyId)
+                .Where(d => d.IsAvailable && d.SpecialtyId == specialtyId && d.Schedules.Any(s => s.ClinicId != null))
                 .ToListAsync();
         }
 
@@ -84,8 +84,8 @@ namespace FirstAidAPI.Repository.Implement
 
         public async Task<DoctorSchedule?> GetScheduleAsync(int doctorId, DateTime dateTime)
         {
-            DateTime utcTime = dateTime.Kind == DateTimeKind.Unspecified 
-                ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc) 
+            DateTime utcTime = dateTime.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
                 : dateTime.ToUniversalTime();
 
             DateTime localDateTime = utcTime.AddHours(7);
