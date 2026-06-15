@@ -7,6 +7,11 @@ namespace FirstAidAPI.Repository
     {
         // ─── Wards ───────────────────────────────────────────────────────────
         Task<List<Ward>> GetBySpecialtyAsync(int specialtyId);
+        Task<List<Ward>> GetAllWardsAsync();
+        Task<Ward?> GetWardByIdAsync(int id);
+        Task<Ward> CreateWardAsync(Ward ward);
+        Task UpdateWardAsync(Ward ward);
+        Task DeleteWardAsync(int id);
 
         // ─── Admissions by Room ──────────────────────────────────────────────
         Task<List<AdmissionRecord>> GetActiveAdmissionsByRoomAsync(string roomNumber);

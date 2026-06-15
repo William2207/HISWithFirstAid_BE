@@ -33,6 +33,55 @@ namespace FirstAidAPI.Controllers
             return User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
         }
 
+        // ─── Admin Wards ──────────────────────────────────────────────────────────
+
+        [HttpGet("admin/all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllWardsForAdmin()
+        {
+            var wards = await _wardService.GetAllWardsForAdminAsync();
+            return Ok(wards);
+        }
+
+        [HttpPost("admin/create")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateWardAdmin([FromBody] CreateWardAdminRequest request)
+        {
+            var result = await _wardService.CreateWardAdminAsync(request);
+            return Ok(result);
+        }
+
+        [HttpPut("admin/update/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateWardAdmin(int id, [FromBody] UpdateWardAdminRequest request)
+        {
+            try
+            {
+                var result = await _wardService.UpdateWardAdminAsync(id, request);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("admin/delete/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteWardAdmin(int id)
+        {
+            try
+            {
+                var success = await _wardService.DeleteWardAdminAsync(id);
+                if (!success) return NotFound(new { message = "Ward not found" });
+                return Ok(new { message = "Ward deleted successfully" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // ─── Rooms ────────────────────────────────────────────────────────────────
 
         /// <summary>

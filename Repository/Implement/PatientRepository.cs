@@ -61,6 +61,7 @@ namespace FirstAidAPI.Repository.Implement
         {
             return await _context.Patients
                 .Include(p => p.User)
+                .Include(p => p.MedicalRecords)
                 .Where(p => _context.Appointments.Any(a => a.PatientId == p.Id && a.SpecialtyId == specialtyId))
                 .ToListAsync();
         }

@@ -11,5 +11,6 @@ namespace FirstAidAPI.Repository
         Task<Invoice?> GetByLabOrderIdAsync(int labOrderId);
         Task<List<Invoice>> GetByPatientIdAsync(int patientId);
         Task<Invoice> UpdateAsync(Invoice invoice);
+        Task<List<FirstAidAPI.DTO.Revenue.MonthlyRevenueDto>> GetMonthlyRevenueAsync(int year);
     }
 }

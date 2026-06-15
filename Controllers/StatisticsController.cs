@@ -35,6 +35,23 @@ namespace FirstAidAPI.Controllers
         }
 
         /// <summary>
+        /// Lấy dữ liệu tổng quan cho Admin
+        /// </summary>
+        [HttpGet("admin-dashboard")]
+        public async Task<ActionResult<AdminDashboardDto>> GetAdminDashboard()
+        {
+            try
+            {
+                var result = await _statisticsService.GetAdminDashboardAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving admin dashboard data", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Số bệnh nhân hàng ngày trong N ngày gần nhất (mặc định 30 ngày)
         /// </summary>
         [HttpGet("patients/daily")]

@@ -49,8 +49,13 @@ namespace FirstAidAPI.Service.Implement
         public async Task<List<PatientProfileDto>> GetPatientsBySpecialtyAsync(int specialtyId)
         {
             var patients = await _patientRepository.GetPatientsBySpecialtyAsync(specialtyId);
-            return patients.Select(patient => {
+            return patients.Select(patient =>
+            {
                 var user = patient.User;
+                var latestDiagnosis = patient.MedicalRecords?
+                    .Where(mr => mr.DiagnosisName != null)
+                    .OrderByDescending(mr => mr.CreatedAt)
+                    .FirstOrDefault()?.DiagnosisName ?? "Chưa có chẩn đoán";
                 return new PatientProfileDto
                 {
                     Id = patient.Id,
@@ -67,6 +72,7 @@ namespace FirstAidAPI.Service.Implement
                     BloodType = patient.BloodType,
                     Allergies = patient.Allergies,
                     MedicalHistory = patient.MedicalHistory,
+                    Diagnosis = latestDiagnosis,
                     EmergencyContactName = patient.EmergencyContactName,
                     EmergencyContact = patient.EmergencyContact,
                     EmergencyContactRelationship = patient.EmergencyContactRelationship

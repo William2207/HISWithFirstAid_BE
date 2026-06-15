@@ -264,5 +264,101 @@ namespace FirstAidAPI.Service.Implement
                 ? $"ĐD. {vs.Nurse.User?.FullName ?? ""}"
                 : (vs.MedicalRecord?.Doctor != null ? $"BS. {vs.MedicalRecord.Doctor.User?.FullName ?? ""}" : "Hệ thống")
         };
+
+        // ─── Admin Wards ────────────────────────────────────────────────────────
+
+        public async Task<List<WardAdminSummaryDto>> GetAllWardsForAdminAsync()
+        {
+            var wards = await _wardRepository.GetAllWardsAsync();
+            return wards.Select(w => new WardAdminSummaryDto
+            {
+                Id = w.Id,
+                RoomNumber = w.RoomNumber,
+                SpecialityId = w.SpecialityId,
+                SpecialityName = w.Speciality?.Name ?? string.Empty,
+                WardType = w.WardType,
+                Floor = w.Floor,
+                TotalBeds = w.Beds.Count,
+                OccupiedBeds = w.Beds.Count(b => b.Status == "OCCUPIED")
+            }).ToList();
+        }
+
+        public async Task<WardAdminSummaryDto> CreateWardAdminAsync(CreateWardAdminRequest request)
+        {
+            var ward = new Ward
+            {
+                RoomNumber = request.RoomNumber,
+                SpecialityId = request.SpecialityId,
+                WardType = request.WardType,
+                Floor = request.Floor,
+                Beds = new List<Bed>()
+            };
+
+            // Generate Beds
+            for (int i = 1; i <= request.NumberOfBeds; i++)
+            {
+                ward.Beds.Add(new Bed
+                {
+                    BedNumber = $"{request.RoomNumber}-B{i:D2}",
+                    Status = "AVAILABLE"
+                });
+            }
+
+            var saved = await _wardRepository.CreateWardAsync(ward);
+            var reloaded = await _wardRepository.GetWardByIdAsync(saved.Id); // Reload to get Speciality
+            
+            return new WardAdminSummaryDto
+            {
+                Id = saved.Id,
+                RoomNumber = saved.RoomNumber,
+                SpecialityId = saved.SpecialityId,
+                SpecialityName = reloaded?.Speciality?.Name ?? string.Empty,
+                WardType = saved.WardType,
+                Floor = saved.Floor,
+                TotalBeds = saved.Beds.Count,
+                OccupiedBeds = saved.Beds.Count(b => b.Status == "OCCUPIED")
+            };
+        }
+
+        public async Task<WardAdminSummaryDto> UpdateWardAdminAsync(int wardId, UpdateWardAdminRequest request)
+        {
+            var ward = await _wardRepository.GetWardByIdAsync(wardId);
+            if (ward == null) throw new KeyNotFoundException($"Ward {wardId} not found");
+
+            ward.RoomNumber = request.RoomNumber;
+            ward.SpecialityId = request.SpecialityId;
+            ward.WardType = request.WardType;
+            ward.Floor = request.Floor;
+
+            await _wardRepository.UpdateWardAsync(ward);
+            
+            var reloaded = await _wardRepository.GetWardByIdAsync(wardId);
+
+            return new WardAdminSummaryDto
+            {
+                Id = reloaded!.Id,
+                RoomNumber = reloaded.RoomNumber,
+                SpecialityId = reloaded.SpecialityId,
+                SpecialityName = reloaded.Speciality?.Name ?? string.Empty,
+                WardType = reloaded.WardType,
+                Floor = reloaded.Floor,
+                TotalBeds = reloaded.Beds.Count,
+                OccupiedBeds = reloaded.Beds.Count(b => b.Status == "OCCUPIED")
+            };
+        }
+
+        public async Task<bool> DeleteWardAdminAsync(int wardId)
+        {
+            var ward = await _wardRepository.GetWardByIdAsync(wardId);
+            if (ward == null) return false;
+
+            if (ward.Beds.Any(b => b.Status == "OCCUPIED"))
+            {
+                throw new InvalidOperationException("Cannot delete a ward with occupied beds.");
+            }
+
+            await _wardRepository.DeleteWardAsync(wardId);
+            return true;
+        }
     }
 }

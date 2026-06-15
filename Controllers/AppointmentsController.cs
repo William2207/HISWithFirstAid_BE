@@ -150,7 +150,7 @@ namespace FirstAidAPI.Controllers
 
         /// <summary>Hủy lịch hẹn</summary>
         [HttpDelete("{id}/cancel")]
-        [Authorize(Roles = "Patient,Receptionist")]
+        [Authorize(Roles = "User,Receptionist")]
         public async Task<IActionResult> CancelAppointment(int id)
         {
             try

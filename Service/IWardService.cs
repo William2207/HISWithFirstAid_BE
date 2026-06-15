@@ -23,5 +23,11 @@ namespace FirstAidAPI.Service
         // ─── Vital Signs ─────────────────────────────────────────────────────
         Task<List<VitalsDto>> GetVitalsHistoryByAdmissionAsync(int admissionRecordId);
         Task<VitalsDto> LogVitalsAsync(int? nurseUserId, int admissionRecordId, LogVitalsRequest request);
+
+        // ─── Admin ───────────────────────────────────────────────────────────
+        Task<List<WardAdminSummaryDto>> GetAllWardsForAdminAsync();
+        Task<WardAdminSummaryDto> CreateWardAdminAsync(CreateWardAdminRequest request);
+        Task<WardAdminSummaryDto> UpdateWardAdminAsync(int wardId, UpdateWardAdminRequest request);
+        Task<bool> DeleteWardAdminAsync(int wardId);
     }
 }

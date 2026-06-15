@@ -100,11 +100,18 @@ namespace FirstAidAPI.Service.Implement
         public async Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date)
         {
             var doctors = await _doctorRepository.GetDoctorsBySpecialtyForBookingAsync(specialtyId);
+            // Lọc bỏ schedules không có clinic
+            foreach (var doctor in doctors)
+            {
+                doctor.Schedules = doctor.Schedules
+                    .Where(s => s.ClinicId != null)
+                    .ToList();
+            }
+
+            // Bỏ luôn bác sĩ không còn schedule nào sau khi lọc
+            doctors = doctors.Where(d => d.Schedules.Any()).ToList();
             var result = new List<DoctorAvailabilityDTO>();
             var targetDate = DateOnly.FromDateTime(date);
-
-            // Lấy default clinic
-            var defaultClinic = await _doctorRepository.GetDefaultClinicBySpecialtyAsync(specialtyId);
 
             foreach (var doc in doctors)
             {
@@ -118,11 +125,11 @@ namespace FirstAidAPI.Service.Implement
                 foreach (var schedule in schedules)
                 {
                     if (schedule.IsNightShift) continue; // Bỏ qua ca đêm khi tìm slot đặt khám thường
-                    
+
                     // Ca sáng: 08:00 - 12:00
                     // Ca chiều: 13:00 - 17:00
                     // Tạm thời fix cứng slot cho ca ngày
-                    timeSlots.AddRange(new[] { 
+                    timeSlots.AddRange(new[] {
                         "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
                         "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00"
                     });
@@ -132,7 +139,7 @@ namespace FirstAidAPI.Service.Implement
                     continue;
 
                 var firstSchedule = schedules.First();
-                var clinic = firstSchedule.Clinic ?? defaultClinic;
+                var clinic = firstSchedule.Clinic;
 
                 result.Add(new DoctorAvailabilityDTO
                 {

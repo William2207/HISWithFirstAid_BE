@@ -76,6 +76,7 @@ namespace FirstAidAPI.Repository.Implement
                     && a.AppointmentDateTime >= startUtc
                     && a.AppointmentDateTime < endUtc)
                 .OrderBy(a => a.AppointmentDateTime)
+                .ThenBy(a => a.CreatedAt)
                 .ToListAsync();
         }
 

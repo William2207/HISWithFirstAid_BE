@@ -123,6 +123,7 @@ namespace FirstAidAPI.Service.Implement
                     AppointmentDateTime = request.AppointmentDateTime,
                     Type = appointmentType,
                     Status = AppointmentStatus.Registered,
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 var savedAppointment = await _appointmentRepository.AddAsync(appointment);
@@ -198,7 +199,8 @@ namespace FirstAidAPI.Service.Implement
                 throw new NotFoundException($"Không tìm thấy lịch hẹn có id {appointmentId}");
 
             _logger.LogInformation("Cancelling appointment {AppointmentId}", appointmentId);
-            await _appointmentRepository.DeleteAsync(appointment);
+            appointment.Status = AppointmentStatus.Cancelled;
+            await _appointmentRepository.UpdateAsync(appointment);
         }
 
         public async Task<AppointmentDTO> StartAppointmentAsync(int appointmentId, int doctorId)

@@ -1,4 +1,4 @@
-﻿using FirstAidAPI.Data;
+using FirstAidAPI.Data;
 using FirstAidAPI.DTO.Revenue;
 using FirstAidAPI.Enums;
 using FirstAidAPI.Models;
@@ -73,7 +73,7 @@ namespace FirstAidAPI.Repository.Implement
                 .Select(g => new MonthlyRevenueDto
                 {
                     Month = g.Key,
-                    Revenue = g.Sum(o => o.TotalAmount)
+                    CourseRevenue = g.Sum(o => o.TotalAmount)
                 })
                 .OrderBy(x => x.Month)
                 .ToListAsync();
@@ -83,7 +83,7 @@ namespace FirstAidAPI.Repository.Implement
             {
                 Month = month,
                 MonthName = new DateTime(year, month, 1).ToString("MMMM"),
-                Revenue = monthlyData.FirstOrDefault(m => m.Month == month)?.Revenue ?? 0
+                CourseRevenue = monthlyData.FirstOrDefault(m => m.Month == month)?.CourseRevenue ?? 0
             }).ToList();
 
             return allMonths;
@@ -96,7 +96,7 @@ namespace FirstAidAPI.Repository.Implement
             return new YearlyRevenueDto
             {
                 Year = year,
-                TotalRevenue = monthlyRevenues.Sum(m => m.Revenue),
+                TotalCourseRevenue = monthlyRevenues.Sum(m => m.CourseRevenue),
                 MonthlyRevenues = monthlyRevenues
             };
         }

@@ -17,7 +17,7 @@ namespace FirstAidAPI.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.27")
+                .HasAnnotation("ProductVersion", "8.0.28")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -104,6 +104,9 @@ namespace FirstAidAPI.Migrations
 
                     b.Property<int?>("ClinicId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CreatorId")
                         .HasColumnType("integer");
@@ -3071,7 +3074,7 @@ namespace FirstAidAPI.Migrations
             modelBuilder.Entity("FirstAidAPI.Models.VitalSign", b =>
                 {
                     b.HasOne("FirstAidAPI.Models.AdmissionRecord", "AdmissionRecord")
-                        .WithMany()
+                        .WithMany("VitalSigns")
                         .HasForeignKey("AdmissionRecordId")
                         .OnDelete(DeleteBehavior.Cascade);
 
@@ -3188,6 +3191,11 @@ namespace FirstAidAPI.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("FirstAidAPI.Models.AdmissionRecord", b =>
+                {
+                    b.Navigation("VitalSigns");
                 });
 
             modelBuilder.Entity("FirstAidAPI.Models.Appointment", b =>
