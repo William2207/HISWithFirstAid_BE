@@ -70,13 +70,29 @@ namespace FirstAidAPI.Service.Implement
             // Tạo token
             var token = _tokenService.CreateToken(user, roles);
 
+            // Build UserDto để trả về ngay, tránh gọi thêm /users/me
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email!,
+                FullName = user.FullName,
+                PhoneNumber = user.PhoneNumber,
+                Avatar = user.Avatar,
+                DateOfBirth = user.DateOfBirth,
+                Role = roles,
+                CreatedAt = user.CreatedAt,
+                LastLoginAt = user.LastLoginAt
+            };
+
             return new LoginResponseDto
             {
                 Token = token,
                 Email = user.Email!,
-                Roles = roles
+                Roles = roles,
+                User = userDto
             };
         }
+
 
         public async Task<string> RegisterAsync(RegisterDto registerDto, string scheme)
         {

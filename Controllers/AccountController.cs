@@ -68,11 +68,7 @@ public class AccountController : ControllerBase
             {
                 Message = "Đăng nhập thành công!",
                 Token = result.Token,
-                User = new
-                {
-                    Email = result.Email,
-                    Roles = result.Roles
-                }
+                User = result.User   // UserDto đầy đủ, frontend không cần gọi thêm /users/me
             });
         }
         catch (UnauthorizedAccessException ex)
