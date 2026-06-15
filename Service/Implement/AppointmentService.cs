@@ -123,6 +123,7 @@ namespace FirstAidAPI.Service.Implement
                     AppointmentDateTime = request.AppointmentDateTime,
                     Type = appointmentType,
                     Status = AppointmentStatus.Registered,
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 var savedAppointment = await _appointmentRepository.AddAsync(appointment);

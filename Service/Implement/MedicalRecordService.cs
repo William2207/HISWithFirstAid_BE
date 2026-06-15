@@ -136,7 +136,9 @@ namespace FirstAidAPI.Service.Implement
             record.Prescription = request.Prescription ?? record.Prescription;
             record.TreatmentPlan = request.TreatmentPlan ?? record.TreatmentPlan;
             record.FollowUpInstructions = request.FollowUpInstructions ?? record.FollowUpInstructions;
-            record.NextAppointmentDate = request.NextAppointmentDate ?? record.NextAppointmentDate;
+            record.NextAppointmentDate = request.NextAppointmentDate.HasValue
+             ? DateTime.SpecifyKind(request.NextAppointmentDate.Value, DateTimeKind.Utc)
+             : record.NextAppointmentDate;
             record.GeneralNotes = request.GeneralNotes ?? record.GeneralNotes;
             record.IsHospitalized = request.IsHospitalized; // Trực tiếp gán bool
 

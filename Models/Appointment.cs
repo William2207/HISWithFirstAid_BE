@@ -14,6 +14,7 @@ namespace FirstAidAPI.Models
         public DateTime AppointmentDateTime { get; set; }
         public AppointmentType Type { get; set; }
         public AppointmentStatus Status { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         // Navigation
         public Patient Patient { get; set; } = null!;
