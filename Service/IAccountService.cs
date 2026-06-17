@@ -11,5 +11,7 @@ namespace FirstAidAPI.Service
         Task ConfirmEmailAsync(int userId, string token);
 
         Task<string> CreateAccountAsAdminAsync(AdminCreateAccountDto adminCreateAccountDto);
+
+        Task<TokenApiModel> RefreshTokenAsync(TokenApiModel tokenApiModel);
     }
 }
