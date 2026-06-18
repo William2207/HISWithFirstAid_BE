@@ -12,5 +12,6 @@ namespace FirstAidAPI.DTO.Admission
         public string RoomNumber { get; set; } = string.Empty;
         public string WardType { get; set; } = string.Empty;
         public int Floor { get; set; }
+        public int SpecialityId { get; set; }
     }
 }

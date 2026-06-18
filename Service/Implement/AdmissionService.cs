@@ -54,7 +54,8 @@ namespace FirstAidAPI.Service.Implement
                 WardId = b.WardId,
                 RoomNumber = b.Ward.RoomNumber,
                 WardType = b.Ward.WardType,
-                Floor = b.Ward.Floor
+                Floor = b.Ward.Floor,
+                SpecialityId = b.Ward.SpecialityId
             }).ToList();
         }
 
@@ -160,20 +161,21 @@ namespace FirstAidAPI.Service.Implement
                 ChiefComplaint = a.MedicalRecord?.ChiefComplaint,
                 LatestVitals = a.VitalSigns != null && a.VitalSigns.Any()
                     ? a.VitalSigns.OrderByDescending(v => v.RecordedAt).Select(v => new VitalSignDTO
-                      {
-                          Id = v.Id,
-                          BloodPressure = v.BloodPressure,
-                          HeartRate = v.HeartRate,
-                          Temperature = v.Temperature,
-                          RespiratoryRate = v.RespiratoryRate,
-                          SpO2 = v.SpO2,
-                          Weight = v.Weight,
-                          Height = v.Height,
-                          RecordedAt = v.RecordedAt
-                      }).FirstOrDefault()
+                    {
+                        Id = v.Id,
+                        BloodPressure = v.BloodPressure,
+                        HeartRate = v.HeartRate,
+                        Temperature = v.Temperature,
+                        RespiratoryRate = v.RespiratoryRate,
+                        SpO2 = v.SpO2,
+                        Weight = v.Weight,
+                        Height = v.Height,
+                        RecordedAt = v.RecordedAt
+                    }).FirstOrDefault()
                     : null
             }).ToList();
         }
+
         public async Task<List<AdmissionRecordDto>> GetAdmissionHistoryByPatientIdAsync(int patientId)
         {
             var records = await _admissionRepository.GetAllByPatientIdAsync(patientId);
@@ -207,17 +209,17 @@ namespace FirstAidAPI.Service.Implement
                 ChiefComplaint = a.MedicalRecord?.ChiefComplaint,
                 LatestVitals = a.VitalSigns != null && a.VitalSigns.Any()
                     ? a.VitalSigns.OrderByDescending(v => v.RecordedAt).Select(v => new VitalSignDTO
-                      {
-                          Id = v.Id,
-                          BloodPressure = v.BloodPressure,
-                          HeartRate = v.HeartRate,
-                          Temperature = v.Temperature,
-                          RespiratoryRate = v.RespiratoryRate,
-                          SpO2 = v.SpO2,
-                          Weight = v.Weight,
-                          Height = v.Height,
-                          RecordedAt = v.RecordedAt
-                      }).FirstOrDefault()
+                    {
+                        Id = v.Id,
+                        BloodPressure = v.BloodPressure,
+                        HeartRate = v.HeartRate,
+                        Temperature = v.Temperature,
+                        RespiratoryRate = v.RespiratoryRate,
+                        SpO2 = v.SpO2,
+                        Weight = v.Weight,
+                        Height = v.Height,
+                        RecordedAt = v.RecordedAt
+                    }).FirstOrDefault()
                     : null
             }).ToList();
         }
