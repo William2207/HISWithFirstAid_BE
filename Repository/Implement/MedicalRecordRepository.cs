@@ -26,6 +26,8 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(m => m.VitalSigns)
                 .Include(m => m.Doctor)
                 .ThenInclude(d => d.User)
+                .Include(m => m.Doctor)
+                .ThenInclude(d => d.Specialty)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
@@ -35,6 +37,8 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(m => m.VitalSigns)
                 .Include(m => m.Doctor)
                 .ThenInclude(d => d.User)
+                .Include(m => m.Doctor)
+                .ThenInclude(d => d.Specialty)
                 .FirstOrDefaultAsync(m => m.AppointmentId == appointmentId);
         }
 
@@ -44,6 +48,8 @@ namespace FirstAidAPI.Repository.Implement
                 .Include(m => m.VitalSigns)
                 .Include(m => m.Doctor)
                 .ThenInclude(d => d.User)
+                .Include(m => m.Doctor)
+                .ThenInclude(d => d.Specialty)
                 .Where(m => m.PatientId == patientId)
                 .OrderByDescending(m => m.CreatedAt)
                 .ToListAsync();

@@ -6,6 +6,7 @@ namespace FirstAidAPI.DTO.MedicalRecord
         public int AppointmentId { get; set; }
         public int DoctorId { get; set; }
         public string? DoctorName { get; set; }
+        public string? DoctorSpecialty { get; set; }
 
         // 1. Triệu chứng & Khám lâm sàng
         public string? ChiefComplaint { get; set; }
