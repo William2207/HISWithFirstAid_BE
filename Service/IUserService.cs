@@ -20,6 +20,8 @@ namespace FirstAidAPI.Service
 
         Task<bool> DeleteUserAsync(int id);
 
+        Task<(bool Success, string Message, bool IsActive)> ToggleUserStatusAsync(int id);
+
         Task<IEnumerable<SavedTechnique>> GetSavedTechniquesByUserIdAsync(int userId);
 
         Task<IEnumerable<ScenarioAttempt>> GetScenarioAttemptsByUserIdAsync(int userId, int limit);

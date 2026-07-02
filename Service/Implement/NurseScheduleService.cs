@@ -99,9 +99,6 @@ namespace FirstAidAPI.Service.Implement
             {
                 var date = startDate.AddDays(dayIdx);
 
-                //if (date.DayOfWeek == DayOfWeek.Sunday)
-                //    continue;
-
                 bool hasNightShift = date.DayOfWeek != DayOfWeek.Saturday;
 
                 // ── PASS 1: Ca ngày (2 nurses/ward, có thể trực nhiều ward) ──

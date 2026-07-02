@@ -77,6 +77,29 @@ public class AccountController : ControllerBase
         }
     }
 
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] TokenApiModel tokenApiModel)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var newTokens = await _accountService.RefreshTokenAsync(tokenApiModel);
+            return Ok(newTokens);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { Message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { Message = "Internal server error" });
+        }
+    }
+
     [HttpGet("confirm-email")]
     public async Task<IActionResult> ConfirmEmail(int userId, string token)
     {

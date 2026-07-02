@@ -57,6 +57,7 @@ namespace FirstAidAPI.Data
         public DbSet<AdmissionRecord> AdmissionRecords { get; set; }
         public DbSet<WardOrder> WardOrders { get; set; }
         public DbSet<WardNote> WardNotes { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -669,6 +670,14 @@ namespace FirstAidAPI.Data
                     .HasDefaultValueSql("NOW()");
 
                 entity.HasIndex(wn => new { wn.AdmissionRecordId, wn.CreatedAt });
+            });
+
+            // Cấu hình AuditLog
+            modelBuilder.Entity<AuditLog>(entity =>
+            {
+                entity.HasKey(al => al.Id);
+                entity.Property(al => al.OldValues).HasColumnType("jsonb");
+                entity.Property(al => al.NewValues).HasColumnType("jsonb");
             });
 
             ScenarioSeeder.SeedScenarios(modelBuilder);

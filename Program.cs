@@ -2,6 +2,7 @@ using FirstAidAPI.Configurations;
 using FirstAidAPI.Data;
 using FirstAidAPI.Exceptions;
 using FirstAidAPI.Extensions;
+using FirstAidAPI.Interceptors;
 using FirstAidAPI.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -22,8 +23,15 @@ builder.Services.AddHttpClient();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<FirstAidContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<AuditSaveChangesInterceptor>();
+builder.Services.AddDbContext<FirstAidContext>((sp, options) =>
+{
+    var interceptor = sp.GetRequiredService<AuditSaveChangesInterceptor>();
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(interceptor);
+});
+
 builder.Services.Scan(scan => scan
     .FromAssemblyOf<Program>()
     .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository")))

@@ -14,6 +14,9 @@ namespace FirstAidAPI.Models
         public DateTime? LastLoginAt { get; set; }
         public bool IsActive { get; set; } = true;
 
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
+
         public string? Gender { get; set; }  // "Male", "Female", "Other"
         public string? Address { get; set; }
         public string? IdCard { get; set; }  // Số CCCD

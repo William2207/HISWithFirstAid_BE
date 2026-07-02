@@ -56,7 +56,7 @@ namespace FirstAidAPI.Controllers
         }
 
         [HttpGet("specialty/{specialtyId}")]
-        [Authorize(Roles = "Doctor, Admin")]
+        [Authorize(Roles = "Doctor, Admin, Nurse")]
         public async Task<IActionResult> GetBySpecialty(int specialtyId)
         {
             var patients = await _patientService.GetPatientsBySpecialtyAsync(specialtyId);
@@ -64,7 +64,7 @@ namespace FirstAidAPI.Controllers
         }
 
         [HttpGet("{patientId}/summary")]
-        [Authorize(Roles = "Doctor, Admin")]
+        [Authorize(Roles = "Doctor, Admin, Nurse")]
         public async Task<IActionResult> GetPatientSummary(int patientId, [FromServices] IPatientSummaryService patientSummaryService)
         {
             try

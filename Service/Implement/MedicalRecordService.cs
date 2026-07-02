@@ -170,6 +170,7 @@ namespace FirstAidAPI.Service.Implement
                 AppointmentId = record.AppointmentId,
                 DoctorId = record.DoctorId,
                 DoctorName = record.Doctor?.User?.FullName,
+                DoctorSpecialty = record.Doctor?.Specialty?.Name,
                 ChiefComplaint = record.ChiefComplaint,
                 MedicalHistory = record.MedicalHistory,
                 FamilyHistory = record.FamilyHistory,

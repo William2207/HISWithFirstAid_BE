@@ -19,6 +19,8 @@ namespace FirstAidAPI.Service.Implement
         private readonly IReceptionistRepository _receptionistRepository;
         private readonly ISpecialtyRepository _specialtyRepository;
 
+        private readonly IConfiguration _config;
+
         public AccountService(
             UserManager<User> userManager,
             IEmailService emailService,
@@ -28,7 +30,8 @@ namespace FirstAidAPI.Service.Implement
             IDoctorRepository doctorRepository,
             INurseRepository nurseRepository,
             IReceptionistRepository receptionistRepository,
-            ISpecialtyRepository specialtyRepository)
+            ISpecialtyRepository specialtyRepository,
+            IConfiguration config)
         {
             _userManager = userManager;
             _emailService = emailService;
@@ -39,6 +42,7 @@ namespace FirstAidAPI.Service.Implement
             _nurseRepository = nurseRepository;
             _receptionistRepository = receptionistRepository;
             _specialtyRepository = specialtyRepository;
+            _config = config;
         }
 
         public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
@@ -60,15 +64,21 @@ namespace FirstAidAPI.Service.Implement
                 throw new UnauthorizedAccessException("Email hoặc mật khẩu không hợp lệ.");
             }
 
-            // Cập nhật thời gian đăng nhập
-            user.LastLoginAt = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
-
             // Lấy roles
             var roles = await _userManager.GetRolesAsync(user);
 
             // Tạo token
             var token = _tokenService.CreateToken(user, roles);
+
+            // Tạo refresh token
+            var refreshToken = _tokenService.GenerateRefreshToken();
+            _ = int.TryParse(_config["JWT:RefreshTokenExpiryInDays"] ?? "7", out int refreshTokenExpiryInDays);
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(refreshTokenExpiryInDays);
+            user.LastLoginAt = DateTime.UtcNow;
+
+            await _userManager.UpdateAsync(user);
 
             // Build UserDto để trả về ngay, tránh gọi thêm /users/me
             var userDto = new UserDto
@@ -87,9 +97,53 @@ namespace FirstAidAPI.Service.Implement
             return new LoginResponseDto
             {
                 Token = token,
+                RefreshToken = refreshToken,
                 Email = user.Email!,
                 Roles = roles,
                 User = userDto
+            };
+        }
+
+        public async Task<TokenApiModel> RefreshTokenAsync(TokenApiModel tokenApiModel)
+        {
+            if (tokenApiModel is null)
+                throw new ArgumentNullException(nameof(tokenApiModel));
+
+            string? accessToken = tokenApiModel.AccessToken;
+            string? refreshToken = tokenApiModel.RefreshToken;
+
+            if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+                throw new UnauthorizedAccessException("Invalid client request");
+
+            var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
+            if (principal == null)
+                throw new UnauthorizedAccessException("Invalid access token or refresh token");
+
+            var email = principal.Claims.FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email)?.Value;
+            if (email == null)
+                throw new UnauthorizedAccessException("Invalid client request");
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            {
+                throw new UnauthorizedAccessException("Invalid access token or refresh token");
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var newAccessToken = _tokenService.CreateToken(user, roles);
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            
+            _ = int.TryParse(_config["JWT:RefreshTokenExpiryInDays"] ?? "7", out int refreshTokenExpiryInDays);
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(refreshTokenExpiryInDays);
+
+            await _userManager.UpdateAsync(user);
+
+            return new TokenApiModel
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
             };
         }
 

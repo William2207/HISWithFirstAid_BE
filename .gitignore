@@ -1,8 +1,19 @@
-﻿.vs/
+.vs/
+
+## Build output - KHÔNG push
+bin/
+obj/
+
 ## Sensitive files - KHÔNG push
 appsettings.Development.json
 appsettings.Production.json
 appsettings.*.json
 cleancodeSKILL.md
-## Ngoại trừ template
+
+## Ngoại trừ template gốc (không chứa secrets)
 !appsettings.json
+
+## User secrets
+*.pfx
+*.key
+secrets.json
