@@ -17,5 +17,6 @@ namespace FirstAidAPI.DTO.User
         public bool IsHeadNurse { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastLoginAt { get; set; }
+        public bool IsActive { get; set; }
     }
 }

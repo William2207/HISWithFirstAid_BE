@@ -1,6 +1,7 @@
 using FirstAidAPI.Data;
 using FirstAidAPI.DTO.User;
 using FirstAidAPI.Models;
+using FirstAidAPI.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,11 +20,13 @@ namespace FirstAidAPI.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly FirstAidContext _context;
+        private readonly IUserService _userService;
 
-        public StaffController(UserManager<User> userManager, FirstAidContext context)
+        public StaffController(UserManager<User> userManager, FirstAidContext context, IUserService userService)
         {
             _userManager = userManager;
             _context = context;
+            _userService = userService;
         }
 
         [HttpGet("all")]
@@ -83,7 +86,8 @@ namespace FirstAidAPI.Controllers
                     IsHeadDoctor = isHeadDoctor,
                     IsHeadNurse = isHeadNurse,
                     CreatedAt = user.CreatedAt,
-                    LastLoginAt = user.LastLoginAt
+                    LastLoginAt = user.LastLoginAt,
+                    IsActive = user.IsActive
                 });
             }
 
@@ -213,6 +217,23 @@ namespace FirstAidAPI.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Cập nhật tài khoản nhân viên thành công!" });
+        }
+
+        [HttpPut("{id:int}/toggle-status")]
+        public async Task<IActionResult> ToggleStaffStatus(int id)
+        {
+            var result = await _userService.ToggleUserStatusAsync(id);
+
+            if (!result.Success)
+            {
+                if (result.Message.Contains("tìm thấy"))
+                {
+                    return NotFound(new { message = result.Message });
+                }
+                return BadRequest(new { message = result.Message });
+            }
+
+            return Ok(new { message = result.Message, isActive = result.IsActive });
         }
     }
 }

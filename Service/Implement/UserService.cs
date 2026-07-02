@@ -119,5 +119,25 @@ namespace FirstAidAPI.Service.Implement
 
             return await _userRepository.SaveChangesAsync();
         }
+
+        public async Task<(bool Success, string Message, bool IsActive)> ToggleUserStatusAsync(int id)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == id);
+            
+            if (user == null)
+            {
+                return (false, "Không tìm thấy nhân viên.", false);
+            }
+
+            user.IsActive = !user.IsActive;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return (false, "Không thể cập nhật trạng thái nhân viên.", user.IsActive);
+            }
+
+            return (true, user.IsActive ? "Tài khoản đã được kích hoạt." : "Tài khoản đã bị vô hiệu hóa.", user.IsActive);
+        }
     }
 }
