@@ -49,7 +49,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175", configuration["Frontend:Url"] ?? "",
             configuration["Frontend:HISUrl"] ?? "",
-            configuration["Frontend:StoreUrl"] ?? "") // URL frontend
+            configuration["Frontend:StoreUrl"] ?? "",
+            configuration["Frontend:AdminUrl"] ?? "") // URL frontend
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
