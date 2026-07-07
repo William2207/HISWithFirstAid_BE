@@ -76,6 +76,7 @@ namespace FirstAidAPI.Service.Implement
 
             if (updateDto.FullName != null) user.FullName = updateDto.FullName;
             if (updateDto.PhoneNumber != null) user.PhoneNumber = updateDto.PhoneNumber;
+            if (updateDto.Avatar != null) user.Avatar = updateDto.Avatar;
             if (updateDto.DateOfBirth.HasValue) user.DateOfBirth = DateTime.SpecifyKind(updateDto.DateOfBirth.Value, DateTimeKind.Utc);
             if (updateDto.Gender != null) user.Gender = updateDto.Gender;
             if (updateDto.Address != null) user.Address = updateDto.Address;
