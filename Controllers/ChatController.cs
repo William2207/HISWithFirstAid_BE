@@ -37,7 +37,7 @@ namespace FirstAidAPI.Controllers
 
             try
             {
-                var ragBaseUrl = _configuration["RagSettings:BaseUrl"] ?? "http://localhost:9621";
+                var ragBaseUrl = _configuration["RagSettings:BaseUrl"];
                 var url = $"{ragBaseUrl.TrimEnd('/')}/query";
 
                 var payload = new

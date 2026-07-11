@@ -9,11 +9,13 @@ namespace FirstAidAPI.Service.Implement
     {
         private readonly IDoctorRepository _doctorRepository;
         private readonly UserManager<User> _userManager;
+        private readonly IAppointmentRepository _appointmentRepository;
 
-        public DoctorService(IDoctorRepository doctorRepository, UserManager<User> userManager)
+        public DoctorService(IDoctorRepository doctorRepository, UserManager<User> userManager, IAppointmentRepository appointmentRepository)
         {
             _doctorRepository = doctorRepository;
             _userManager = userManager;
+            _appointmentRepository = appointmentRepository;
         }
 
         public async Task<List<DoctorLookupDTO>> GetDoctorsForLookupAsync()
@@ -98,7 +100,7 @@ namespace FirstAidAPI.Service.Implement
             return true;
         }
 
-        public async Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date)
+        public async Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date, bool isReceptionist = false)
         {
             var doctors = await _doctorRepository.GetDoctorsBySpecialtyForBookingAsync(specialtyId);
             // Lọc bỏ schedules không có clinic
@@ -122,18 +124,42 @@ namespace FirstAidAPI.Service.Implement
                 if (!schedules.Any())
                     continue;
 
-                var timeSlots = new List<string>();
+                // Tối ưu hóa: Lấy tất cả lịch hẹn trong ngày của bác sĩ và gom nhóm theo giờ để truy vấn O(1)
+                var appointmentsForDay = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(doc.Id, date);
+                var onlineAppointmentsCountByHour = appointmentsForDay
+                    .Where(a => a.Type == FirstAidAPI.Enums.AppointmentType.Online)
+                    .GroupBy(a => a.AppointmentDateTime.TimeOfDay)
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                var timeSlots = new List<TimeSlotDTO>();
                 foreach (var schedule in schedules)
                 {
                     if (schedule.IsNightShift) continue; // Bỏ qua ca đêm khi tìm slot đặt khám thường
 
                     // Ca sáng: 08:00 - 12:00
                     // Ca chiều: 13:00 - 17:00
-                    // Tạm thời fix cứng slot cho ca ngày
-                    timeSlots.AddRange(new[] {
+                    var potentialSlots = new[] {
                         "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00",
                         "13:00 - 14:00", "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00"
-                    });
+                    };
+
+                    foreach (var slotStr in potentialSlots)
+                    {
+                        var startTimeStr = slotStr.Split(" - ")[0]; // "08:00"
+                        if (TimeSpan.TryParse(startTimeStr, out var startTimeSpan))
+                        {
+                            var onlineCount = onlineAppointmentsCountByHour.TryGetValue(startTimeSpan, out int count) ? count : 0;
+                            var isAvailable = onlineCount < 10;
+                            
+                            // Nếu là receptionist, họ có thể đặt lịch walk-in nên coi như luôn available trên UI của họ (sẽ chặn ở BE nếu walkInCount >= 10).
+                            // Còn bệnh nhân sẽ thấy isAvailable = false nếu onlineCount >= 10.
+                            timeSlots.Add(new TimeSlotDTO
+                            {
+                                Time = slotStr,
+                                IsAvailable = isReceptionist || isAvailable
+                            });
+                        }
+                    }
                 }
 
                 if (!timeSlots.Any())
@@ -150,7 +176,7 @@ namespace FirstAidAPI.Service.Implement
                     ClinicId = clinic?.Id,
                     ClinicRoom = clinic?.RoomNumber ?? "Chưa sắp phòng",
                     ClinicFloor = clinic?.Floor,
-                    AvailableTimeSlots = timeSlots
+                    TimeSlots = timeSlots
                 });
             }
 

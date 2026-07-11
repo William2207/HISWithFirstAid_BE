@@ -99,19 +99,20 @@ namespace FirstAidAPI.Service.Implement
                     throw new BusinessException("Bác sĩ không có lịch làm việc vào thời gian này.");
                 }
 
+                var existingAppointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(request.DoctorId, request.AppointmentDateTime.Date);
+
                 if (appointmentType == AppointmentType.Online)
                 {
-                    if (schedule.MaxOnlineSlots <= 0)
+                    var onlineCount = existingAppointments.Count(a => a.Type == AppointmentType.Online && a.AppointmentDateTime == request.AppointmentDateTime);
+                    if (onlineCount >= 10)
                         throw new BusinessException("Đã hết slot đặt hẹn đăng ký online cho khung giờ này.");
-                    schedule.MaxOnlineSlots--;
                 }
                 else
                 {
-                    if (schedule.MaxWalkInSlots <= 0)
+                    var walkInCount = existingAppointments.Count(a => a.Type == AppointmentType.WalkIn && a.AppointmentDateTime == request.AppointmentDateTime);
+                    if (walkInCount >= 10)
                         throw new BusinessException("Đã hết slot đặt hẹn đăng ký trực tiếp cho khung giờ này.");
-                    schedule.MaxWalkInSlots--;
                 }
-                await _doctorRepository.UpdateScheduleAsync(schedule);
 
                 var appointment = new Appointment
                 {
