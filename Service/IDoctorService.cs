@@ -6,7 +6,7 @@ namespace FirstAidAPI.Service
     {
         Task<List<DoctorLookupDTO>> GetDoctorsForLookupAsync();
 
-        Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date);
+        Task<List<DoctorAvailabilityDTO>> GetAvailableDoctorsAsync(int specialtyId, DateTime date, bool isReceptionist = false);
 
         Task<int> GetDoctorIdByUserId(int userId);
 

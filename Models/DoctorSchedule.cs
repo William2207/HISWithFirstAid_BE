@@ -19,8 +19,6 @@ namespace FirstAidAPI.Models
 
         public int? WardId { get; set; }
 
-        public int MaxOnlineSlots { get; set; } = 10;
-        public int MaxWalkInSlots { get; set; } = 10;
 
         // Navigation
         public Doctor Doctor { get; set; } = null!;

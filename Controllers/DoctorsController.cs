@@ -28,7 +28,8 @@ namespace FirstAidAPI.Controllers
         [HttpGet("available")]
         public async Task<IActionResult> GetAvailableDoctors([FromQuery] int specialtyId, [FromQuery] DateTime date)
         {
-            var result = await _doctorService.GetAvailableDoctorsAsync(specialtyId, date);
+            var isReceptionist = User.IsInRole("Receptionist");
+            var result = await _doctorService.GetAvailableDoctorsAsync(specialtyId, date, isReceptionist);
             return Ok(result);
         }
 
