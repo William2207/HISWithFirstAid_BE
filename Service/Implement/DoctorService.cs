@@ -149,14 +149,16 @@ namespace FirstAidAPI.Service.Implement
                         if (TimeSpan.TryParse(startTimeStr, out var startTimeSpan))
                         {
                             var onlineCount = onlineAppointmentsCountByHour.TryGetValue(startTimeSpan, out int count) ? count : 0;
-                            var isAvailable = onlineCount < 10;
+                            var slotDateTime = date.Date.Add(startTimeSpan);
+                            var isPast = slotDateTime <= DateTime.Now;
+                            var isAvailable = onlineCount < 10 && !isPast;
 
                             // Nếu là receptionist, họ có thể đặt lịch walk-in nên coi như luôn available trên UI của họ (sẽ chặn ở BE nếu walkInCount >= 10).
-                            // Còn bệnh nhân sẽ thấy isAvailable = false nếu onlineCount >= 10.
+                            // Tuy nhiên, đối với slot đã qua thì receptionist cũng không thể đặt được.
                             timeSlots.Add(new TimeSlotDTO
                             {
                                 Time = slotStr,
-                                IsAvailable = isReceptionist || isAvailable
+                                IsAvailable = (isReceptionist && !isPast) || isAvailable
                             });
                         }
                     }
