@@ -23,10 +23,6 @@ namespace FirstAidAPI.Service.Implement
             _wardRepository = wardRepository;
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        //  Public API
-        // ─────────────────────────────────────────────────────────────────
-
         public async Task GenerateMonthlyScheduleAsync(int month, int year)
         {
             // Xóa lịch cũ toàn hệ thống
@@ -115,8 +111,8 @@ namespace FirstAidAPI.Service.Implement
             {
                 var date = startDate.AddDays(dayIdx);
 
-                if (date.DayOfWeek == DayOfWeek.Sunday)
-                    continue;
+                //if (date.DayOfWeek == DayOfWeek.Sunday)
+                //    continue;
 
                 bool hasNightShift = date.DayOfWeek != DayOfWeek.Saturday;
 
