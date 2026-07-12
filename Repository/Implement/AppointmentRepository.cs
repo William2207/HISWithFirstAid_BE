@@ -1,6 +1,7 @@
 using FirstAidAPI.Data;
 using FirstAidAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace FirstAidAPI.Repository.Implement
 {
@@ -114,6 +115,30 @@ namespace FirstAidAPI.Repository.Implement
                 a.PatientId == patientId &&
                 a.SpecialtyId == specialtyId &&
                 a.AppointmentDateTime == dateTime);
+        }
+
+        /// <inheritdoc/>
+        public async Task<int> GetSlotCountWithLockAsync(int doctorId, DateTime appointmentDateTime, int appointmentType)
+        {
+            // Dùng raw SQL với FOR UPDATE để lock các row phù hợp,
+            // ngăn transaction khác đọc/ghi cùng lúc (Pessimistic Locking).
+            var sql = @"
+                SELECT * FROM ""Appointments""
+                WHERE ""DoctorId"" = @doctorId
+                  AND ""AppointmentDateTime"" = @dateTime
+                  AND ""Type"" = @type
+                  AND ""Status"" != @cancelledStatus
+                FOR UPDATE";
+
+            var count = await _context.Appointments
+                .FromSqlRaw(sql,
+                    new NpgsqlParameter("@doctorId", doctorId),
+                    new NpgsqlParameter("@dateTime", appointmentDateTime),
+                    new NpgsqlParameter("@type", appointmentType),
+                    new NpgsqlParameter("@cancelledStatus", (int)FirstAidAPI.Enums.AppointmentStatus.Cancelled))
+                .CountAsync();
+
+            return count;
         }
     }
 }
