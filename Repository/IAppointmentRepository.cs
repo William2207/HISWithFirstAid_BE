@@ -21,5 +21,11 @@ namespace FirstAidAPI.Repository
         Task<IEnumerable<Appointment>> GetCompletedAppointmentsAsync();
         
         Task<bool> ExistsOverlapAsync(int patientId, int specialtyId, DateTime dateTime);
+
+        /// <summary>
+        /// Đếm số lượng appointment theo bác sĩ, thời gian và loại, đồng thời lock các row này (FOR UPDATE)
+        /// để tránh race condition khi nhiều request đặt slot cùng lúc.
+        /// </summary>
+        Task<int> GetSlotCountWithLockAsync(int doctorId, DateTime appointmentDateTime, int appointmentType);
     }
 }

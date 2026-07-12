@@ -10,6 +10,7 @@ using FirstAidAPI.Repository;
 using FirstAidAPI.Service.Payment;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace FirstAidAPI.Service.Implement
 {
@@ -82,36 +83,36 @@ namespace FirstAidAPI.Service.Implement
                 appointmentType = AppointmentType.Online;
             }
 
-            // Kiểm tra trùng lịch hẹn (Same Patient, Same Specialty, Same Time)
-            var isDuplicate = await _appointmentRepository.ExistsOverlapAsync(resolvedPatientId, request.SpecialtyId, request.AppointmentDateTime);
-            if (isDuplicate)
-            {
-                throw new BusinessException("Bạn đã có lịch hẹn cho chuyên khoa này vào khung giờ đã chọn. Vui lòng kiểm tra lại trong lịch sử đặt lịch.");
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            // Dùng Serializable isolation level để tránh phantom reads,
+            // kết hợp Pessimistic Locking (FOR UPDATE) bên trong để chống race condition.
+            using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
             try
             {
-                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, request.AppointmentDateTime);
+                // Kiểm tra trùng lịch hẹn bên trong transaction để đảm bảo tính nhất quán
+                var isDuplicate = await _appointmentRepository.ExistsOverlapAsync(resolvedPatientId, request.SpecialtyId, request.AppointmentDateTime);
+                if (isDuplicate)
+                {
+                    throw new BusinessException("Bạn đã có lịch hẹn cho chuyên khoa này vào khung giờ đã chọn. Vui lòng kiểm tra lại trong lịch sử đặt lịch.");
+                }
 
+                var schedule = await _doctorRepository.GetScheduleAsync(request.DoctorId, request.AppointmentDateTime);
                 if (schedule == null)
                 {
                     throw new BusinessException("Bác sĩ không có lịch làm việc vào thời gian này.");
                 }
 
-                var existingAppointments = await _appointmentRepository.GetAppointmentsByDoctorAndDateAsync(request.DoctorId, request.AppointmentDateTime.Date);
+                // Dùng GetSlotCountWithLockAsync (FOR UPDATE) để lock các row appointment
+                // cùng bác sĩ + khung giờ + loại, ngăn request khác chen vào giữa check và insert.
+                var slotCount = await _appointmentRepository.GetSlotCountWithLockAsync(
+                    request.DoctorId,
+                    request.AppointmentDateTime,
+                    (int)appointmentType);
 
-                if (appointmentType == AppointmentType.Online)
+                const int MaxSlotsPerType = 10;
+                if (slotCount >= MaxSlotsPerType)
                 {
-                    var onlineCount = existingAppointments.Count(a => a.Type == AppointmentType.Online && a.AppointmentDateTime == request.AppointmentDateTime);
-                    if (onlineCount >= 10)
-                        throw new BusinessException("Đã hết slot đặt hẹn đăng ký online cho khung giờ này.");
-                }
-                else
-                {
-                    var walkInCount = existingAppointments.Count(a => a.Type == AppointmentType.WalkIn && a.AppointmentDateTime == request.AppointmentDateTime);
-                    if (walkInCount >= 10)
-                        throw new BusinessException("Đã hết slot đặt hẹn đăng ký trực tiếp cho khung giờ này.");
+                    var slotTypeName = appointmentType == AppointmentType.Online ? "online" : "trực tiếp";
+                    throw new BusinessException($"Đã hết slot đặt hẹn đăng ký {slotTypeName} cho khung giờ này.");
                 }
 
                 var appointment = new Appointment
