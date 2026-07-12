@@ -11,6 +11,10 @@ namespace FirstAidAPI.Models
         public int Quantity { get; set; } = 1;
         public decimal Amount { get; set; }       // UnitPrice * Quantity
 
+        public string? ResultImageUrl { get; set; }
+        public string? ResultNote { get; set; }
+        public string? ResultData { get; set; } // JSON: [{name, value, unit, refRange, isAbnormal}]
+
         // Navigation
         public LabOrder LabOrder { get; set; } = null!;
 

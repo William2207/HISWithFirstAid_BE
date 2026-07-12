@@ -12,6 +12,7 @@ namespace FirstAidAPI.Service.Implement
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IMedicalServiceRepository _medicalServiceRepository;
         private readonly IDoctorRepository _doctorRepository;
+        private readonly IPatientRepository _patientRepository;
         private readonly ILogger<LabOrderService> _logger;
 
         public LabOrderService(
@@ -19,12 +20,14 @@ namespace FirstAidAPI.Service.Implement
             IAppointmentRepository appointmentRepository,
             IMedicalServiceRepository medicalServiceRepository,
             IDoctorRepository doctorRepository,
+            IPatientRepository patientRepository,
             ILogger<LabOrderService> logger)
         {
             _labOrderRepository = labOrderRepository;
             _appointmentRepository = appointmentRepository;
             _medicalServiceRepository = medicalServiceRepository;
             _doctorRepository = doctorRepository;
+            _patientRepository = patientRepository;
             _logger = logger;
         }
 
@@ -66,6 +69,23 @@ namespace FirstAidAPI.Service.Implement
         public async Task<List<LabOrderResponseDto>> GetByAppointmentIdAsync(int appointmentId)
         {
             var labOrders = await _labOrderRepository.GetByAppointmentIdAsync(appointmentId);
+            return labOrders.Select(MapToResponseDto).ToList();
+        }
+
+        public async Task<List<LabOrderResponseDto>> GetByPatientIdAsync(int patientId)
+        {
+            var labOrders = await _labOrderRepository.GetByPatientIdAsync(patientId);
+            return labOrders.Select(MapToResponseDto).ToList();
+        }
+
+        public async Task<List<LabOrderResponseDto>> GetByUserIdAsync(int userId)
+        {
+            var patient = await _patientRepository.GetByUserIdAsync(userId);
+            if (patient == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy hồ sơ bệnh nhân.");
+            }
+            var labOrders = await _labOrderRepository.GetByPatientIdAsync(patient.Id);
             return labOrders.Select(MapToResponseDto).ToList();
         }
 
@@ -138,7 +158,10 @@ namespace FirstAidAPI.Service.Implement
                     Quantity = li.Quantity,
                     UnitPrice = li.UnitPrice,
                     Amount = li.Amount,
-                    Note = li.Note
+                    Note = li.Note,
+                    ResultImageUrl = li.ResultImageUrl,
+                    ResultNote = li.ResultNote,
+                    ResultData = li.ResultData
                 }).ToList()
             };
         }

@@ -38,6 +38,16 @@ namespace FirstAidAPI.Repository.Implement
                 .ToListAsync();
         }
 
+        public async Task<List<LabOrder>> GetByPatientIdAsync(int patientId)
+        {
+            return await _context.LabOrders
+                .Include(lo => lo.Items)
+                    .ThenInclude(li => li.MedicalService)
+                .Where(lo => lo.PatientId == patientId)
+                .OrderByDescending(lo => lo.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<List<LabOrder>> GetPendingWithNoInvoiceAsync()
         {
             return await _context.LabOrders
