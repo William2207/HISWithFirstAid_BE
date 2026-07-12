@@ -25,5 +25,8 @@ namespace FirstAidAPI.DTO.LabOrder
         public decimal UnitPrice { get; set; }
         public decimal Amount { get; set; }
         public string? Note { get; set; }
+        public string? ResultImageUrl { get; set; }
+        public string? ResultNote { get; set; }
+        public string? ResultData { get; set; }
     }
 }

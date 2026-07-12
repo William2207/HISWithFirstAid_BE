@@ -86,6 +86,49 @@ namespace FirstAidAPI.Controllers
         }
 
         /// <summary>
+        /// Lấy danh sách chỉ định theo bệnh nhân
+        /// </summary>
+        [HttpGet("patient/{patientId:int}")]
+        [Authorize]
+        public async Task<IActionResult> GetByPatientId(int patientId)
+        {
+            try
+            {
+                var result = await _labOrderService.GetByPatientIdAsync(patientId);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy chỉ định theo patient {PatientId}", patientId);
+                return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi." });
+            }
+        }
+
+        /// <summary>
+        /// Lấy toàn bộ chỉ định của bệnh nhân đang đăng nhập
+        /// </summary>
+        [HttpGet("patient/me")]
+        [Authorize]
+        public async Task<IActionResult> GetMyLabOrders()
+        {
+            try
+            {
+                var userId = GetCurrentUserId();
+                var result = await _labOrderService.GetByUserIdAsync(userId);
+                return Ok(new { success = true, data = result });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy chỉ định của bệnh nhân đang đăng nhập");
+                return StatusCode(500, new { success = false, message = "Đã xảy ra lỗi." });
+            }
+        }
+
+        /// <summary>
         /// Receptionist lấy danh sách chỉ định Pending chưa có hóa đơn
         /// </summary>
         [HttpGet("pending")]

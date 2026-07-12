@@ -11,6 +11,12 @@ namespace FirstAidAPI.Service
         /// <summary>Lấy danh sách chỉ định theo lịch hẹn</summary>
         Task<List<LabOrderResponseDto>> GetByAppointmentIdAsync(int appointmentId);
 
+        /// <summary>Lấy danh sách chỉ định theo bệnh nhân</summary>
+        Task<List<LabOrderResponseDto>> GetByPatientIdAsync(int patientId);
+
+        /// <summary>Lấy danh sách chỉ định theo UserId của bệnh nhân</summary>
+        Task<List<LabOrderResponseDto>> GetByUserIdAsync(int userId);
+
         /// <summary>Receptionist lấy danh sách chỉ định Pending chưa có hóa đơn</summary>
         Task<List<LabOrderResponseDto>> GetPendingLabOrdersAsync();
 

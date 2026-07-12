@@ -7,6 +7,7 @@ namespace FirstAidAPI.Repository
     {
         Task<LabOrder?> GetByIdAsync(int id);
         Task<List<LabOrder>> GetByAppointmentIdAsync(int appointmentId);
+        Task<List<LabOrder>> GetByPatientIdAsync(int patientId);
 
         /// <summary>Lấy danh sách LabOrder Pending chưa có Invoice — cho Receptionist</summary>
         Task<List<LabOrder>> GetPendingWithNoInvoiceAsync();
