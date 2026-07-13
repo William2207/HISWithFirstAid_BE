@@ -62,7 +62,7 @@ namespace FirstAidAPI.Service.Implement
 
             var roles = await _userManager.GetRolesAsync(creator);
 
-            if (request.AppointmentDateTime <= DateTime.UtcNow)
+            if (request.AppointmentDateTime <= DateTime.UtcNow.AddHours(7))
                 throw new BusinessException("Thời gian hẹn phải ở tương lai.");
 
             int resolvedPatientId;
