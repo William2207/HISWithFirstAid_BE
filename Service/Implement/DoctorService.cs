@@ -150,7 +150,8 @@ namespace FirstAidAPI.Service.Implement
                         {
                             var onlineCount = onlineAppointmentsCountByHour.TryGetValue(startTimeSpan, out int count) ? count : 0;
                             var slotDateTime = date.Date.Add(startTimeSpan);
-                            var isPast = slotDateTime <= DateTime.Now;
+                            // Sử dụng DateTime.UtcNow.AddHours(7) (Múi giờ Việt Nam) thay vì DateTime.Now để tránh lỗi sai múi giờ khi deploy server
+                            var isPast = slotDateTime <= DateTime.UtcNow.AddHours(7);
                             var isAvailable = onlineCount < 10 && !isPast;
 
                             // Nếu là receptionist, họ có thể đặt lịch walk-in nên coi như luôn available trên UI của họ (sẽ chặn ở BE nếu walkInCount >= 10).
